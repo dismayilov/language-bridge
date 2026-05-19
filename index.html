@@ -5,7 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Language Bridges — find your next language</title>
 <meta name="description" content="Tell us what you speak. We'll show which languages will feel easiest to learn next, broken down by lexicon, grammar, phonology, and writing system.">
+<script>
+  // Set theme BEFORE Tailwind/Alpine load to avoid a flash of light content.
+  (function() {
+    const saved = localStorage.getItem('lb-theme');
+    // Default to dark unless the user explicitly chose light
+    const useDark = saved !== 'light';
+    if (useDark) document.documentElement.classList.add('dark');
+  })();
+</script>
 <script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 <style>
   body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
@@ -13,34 +25,57 @@
   .chip.selected { background: #0F6E56; color: white; }
   details > summary { list-style: none; cursor: pointer; }
   details > summary::-webkit-details-marker { display: none; }
+  /* CSS variables for inline SVG so radar charts adapt to theme */
+  :root { --radar-grid: #e7e5e4; --radar-label: #78716c; --radar-fill: #0F6E56; }
+  .dark { --radar-grid: #44403c; --radar-label: #a8a29e; --radar-fill: #34d399; }
+  /* The Tailwind Play CDN sets a default range thumb; nudge it for dark */
+  .dark input[type=range] { accent-color: #34d399; }
 </style>
 </head>
-<body class="bg-stone-50 text-stone-900 min-h-screen">
+<body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
 
 <div class="max-w-5xl mx-auto px-4 py-8 md:py-12" x-data="app()" x-init="init()">
 
   <!-- Header -->
-  <header class="mb-8">
-    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Language Bridges</h1>
-    <p class="mt-2 text-stone-600 max-w-2xl">
-      Tell us what you speak. We'll show which languages will feel easiest to learn next — and explain <em>why</em>, broken down across vocabulary, grammar, sounds, and writing system.
-    </p>
+  <header class="mb-8 flex items-start justify-between gap-4">
+    <div>
+      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Language Bridges</h1>
+      <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl">
+        Tell us what you speak. We'll show which languages will feel easiest to learn next — and explain <em>why</em>, broken down across vocabulary, grammar, sounds, and writing system.
+      </p>
+    </div>
+    <button
+      @click="toggleTheme()"
+      :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+      :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
+      class="flex-shrink-0 p-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+    >
+      <!-- Sun icon when in dark mode (click to go light) -->
+      <svg x-show="isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4"/>
+        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+      </svg>
+      <!-- Moon icon when in light mode (click to go dark) -->
+      <svg x-show="!isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+      </svg>
+    </button>
   </header>
 
   <!-- Language selector -->
-  <section class="bg-white rounded-xl border border-stone-200 p-5 md:p-6 mb-6">
+  <section class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6 mb-6">
     <div class="flex items-center justify-between mb-3">
       <h2 class="text-lg font-medium">Languages you speak</h2>
-      <span class="text-sm text-stone-500" x-text="speakers.length + ' selected'"></span>
+      <span class="text-sm text-stone-500 dark:text-stone-400" x-text="speakers.length + ' selected'"></span>
     </div>
-    <p class="text-sm text-stone-500 mb-4">Pick all the languages you know, even partially. Order doesn't matter.</p>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">Pick all the languages you know, even partially. Order doesn't matter.</p>
 
     <!-- Search box -->
     <input
       type="text"
       placeholder="Search languages…"
       x-model="search"
-      class="w-full px-3 py-2 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400 mb-3 text-sm"
+      class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 mb-3 text-sm"
     >
 
     <!-- Chips grid -->
@@ -48,8 +83,8 @@
       <template x-for="code in filteredLanguages" :key="code">
         <button
           @click="toggleSpeaker(code)"
-          :class="speakers.includes(code) ? 'chip selected' : 'chip bg-stone-100 hover:bg-stone-200 text-stone-700'"
-          class="px-3 py-1.5 rounded-full text-sm border border-stone-300"
+          :class="speakers.includes(code) ? 'chip selected' : 'chip bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200'"
+          class="px-3 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700"
         >
           <span x-text="DATA.languages[code].name"></span>
         </button>
@@ -58,24 +93,24 @@
   </section>
 
   <!-- Weights (collapsible) -->
-  <section class="bg-white rounded-xl border border-stone-200 p-5 md:p-6 mb-6">
+  <section class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6 mb-6">
     <details>
       <summary class="flex items-center justify-between">
         <div>
           <h2 class="text-lg font-medium">What matters most to you?</h2>
-          <p class="text-sm text-stone-500">Adjust how much each dimension counts in the score.</p>
+          <p class="text-sm text-stone-500 dark:text-stone-400">Adjust how much each dimension counts in the score.</p>
         </div>
-        <span class="text-stone-400 text-sm">Tap to expand</span>
+        <span class="text-stone-400 dark:text-stone-500 text-sm">Tap to expand</span>
       </summary>
       <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <template x-for="dim in weightDims" :key="dim.key">
           <label class="flex items-center gap-3">
-            <span class="w-32 text-sm text-stone-700" x-text="dim.label"></span>
+            <span class="w-32 text-sm text-stone-700 dark:text-stone-300" x-text="dim.label"></span>
             <input type="range" min="0" max="100" x-model.number="weights[dim.key]" class="flex-1 accent-emerald-700">
             <span class="w-10 text-right text-sm text-stone-500 tabular-nums" x-text="weights[dim.key]"></span>
           </label>
         </template>
-        <button @click="resetWeights()" class="md:col-span-2 text-sm text-emerald-700 hover:underline justify-self-start">
+        <button @click="resetWeights()" class="md:col-span-2 text-sm text-emerald-700 dark:text-emerald-400 hover:underline justify-self-start">
           Reset to defaults
         </button>
       </div>
@@ -86,19 +121,19 @@
   <section x-show="speakers.length > 0" class="space-y-3">
     <h2 class="text-lg font-medium mb-2">
       Languages to consider learning next
-      <span class="text-sm font-normal text-stone-500">(top <span x-text="topN"></span>)</span>
+      <span class="text-sm font-normal text-stone-500 dark:text-stone-400">(top <span x-text="topN"></span>)</span>
     </h2>
 
     <template x-for="(rec, idx) in recommendations" :key="rec.target">
-      <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5">
+      <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-4 md:p-5">
         <div class="flex flex-col md:flex-row md:items-start md:gap-5">
 
           <!-- Rank + Name + Score -->
           <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
-            <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 text-stone-500 text-sm font-medium" x-text="idx+1"></div>
+            <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
             <div>
-              <div class="font-medium text-stone-900" x-text="DATA.languages[rec.target].name"></div>
-              <div class="text-xs text-stone-500" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
+              <div class="font-medium text-stone-900 dark:text-stone-100" x-text="DATA.languages[rec.target].name"></div>
+              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
             </div>
             <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
           </div>
@@ -108,11 +143,11 @@
 
           <!-- Explanation + sub-scores -->
           <div class="flex-1">
-            <p class="text-sm text-stone-700 leading-relaxed mb-3" x-text="explain(rec)"></p>
+            <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
             <div class="flex flex-wrap gap-2 text-xs">
               <template x-for="dim in subscoreDims" :key="dim.key">
-                <div class="px-2 py-1 rounded bg-stone-50 border border-stone-200">
-                  <span class="text-stone-500" x-text="dim.label + ': '"></span>
+                <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+                  <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
                   <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
                 </div>
               </template>
@@ -122,18 +157,18 @@
           <!-- Score (desktop) -->
           <div class="hidden md:flex flex-col items-end ml-3">
             <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-            <div class="text-xs text-stone-500">score</div>
+            <div class="text-xs text-stone-500 dark:text-stone-400">score</div>
           </div>
         </div>
       </div>
     </template>
   </section>
 
-  <p x-show="speakers.length === 0" class="text-stone-500 text-sm py-12 text-center">
+  <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center">
     Pick at least one language above to see recommendations.
   </p>
 
-  <footer class="mt-12 pt-6 border-t border-stone-200 text-xs text-stone-500">
+  <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400">
     Curated dataset of 96 languages across 17 language families. Scoring combines genealogical kinship, lexical overlap, typological grammar, phonology, writing system, and documented contact effects. Built as a research-preview prototype.
   </footer>
 </div>
@@ -150,6 +185,18 @@ function app() {
     speakers: ['az','tr','de','en','ru'].filter(c => c in DATA.languages),
     weights: {...DEFAULT_WEIGHTS},
     topN: 15,
+    isDark: document.documentElement.classList.contains('dark'),
+
+    toggleTheme() {
+      this.isDark = !this.isDark;
+      if (this.isDark) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('lb-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('lb-theme', 'light');
+      }
+    },
     weightDims: [
       {key:'lexical',label:'Lexicon'},
       {key:'grammatical',label:'Grammar'},
@@ -363,7 +410,7 @@ function app() {
       else parts.push(`Grammar is structurally very different and will be the hardest part.`);
 
       if (s.writing_system < 1.0) {
-        if (s.writing_system === 0.0) parts.push(`The script is different — you'll need to learn a new alphabet.`);
+     if (s.writing_system === 0.0) parts.push(`The script is different — you'll need to learn a new alphabet.`);
         else parts.push(`The script overlaps but isn't identical.`);
       }
       if (s.phonological >= 0.5) parts.push(`Sound system shares many of the same distinctive sounds.`);
@@ -376,8 +423,6 @@ function app() {
       const v = key === 'lexical' ? rec.lexical_with_contact_bonus : rec.sub_scores[key];
       return v.toFixed(2);
     },
-
-    // ====== RADAR CHART (mini SVG) ======
 
     radarSvg(rec) {
       const dims = ['lexical','grammatical','phonological','writing_system','genealogical'];
@@ -394,20 +439,20 @@ function app() {
         const angle = (Math.PI*2 * i / dims.length) - Math.PI/2;
         const x = cx + Math.cos(angle)*R;
         const y = cy + Math.sin(angle)*R;
-        return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e7e5e4" stroke-width="0.5"/>`;
+        return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--radar-grid)" stroke-width="0.5"/>`;
       }).join('');
       const labelEls = labels.map((label, i) => {
         const angle = (Math.PI*2 * i / dims.length) - Math.PI/2;
         const x = cx + Math.cos(angle)*(R+10);
         const y = cy + Math.sin(angle)*(R+10);
-        return `<text x="${x}" y="${y}" font-size="8" fill="#78716c" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
+        return `<text x="${x}" y="${y}" font-size="8" fill="var(--radar-label)" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
       }).join('');
       return `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e7e5e4" stroke-width="0.5"/>
-        <circle cx="${cx}" cy="${cy}" r="${R*0.66}" fill="none" stroke="#e7e5e4" stroke-width="0.3"/>
-        <circle cx="${cx}" cy="${cy}" r="${R*0.33}" fill="none" stroke="#e7e5e4" stroke-width="0.3"/>
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="var(--radar-grid)" stroke-width="0.5"/>
+        <circle cx="${cx}" cy="${cy}" r="${R*0.66}" fill="none" stroke="var(--radar-grid)" stroke-width="0.3"/>
+        <circle cx="${cx}" cy="${cy}" r="${R*0.33}" fill="none" stroke="var(--radar-grid)" stroke-width="0.3"/>
         ${axes}
-        <polygon points="${polygon}" fill="#0F6E56" fill-opacity="0.2" stroke="#0F6E56" stroke-width="1"/>
+        <polygon points="${polygon}" fill="var(--radar-fill)" fill-opacity="0.25" stroke="var(--radar-fill)" stroke-width="1"/>
         ${labelEls}
       </svg>`;
     },
