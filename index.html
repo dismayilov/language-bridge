@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Language Bridges — find your next language</title>
+<meta name="description" content="Tell us what you speak. We'll show which languages will feel easiest to learn next, broken down by lexicon, grammar, phonology, and writing system.">
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<style>
+  body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+  .chip { transition: all 0.15s; }
+  .chip.selected { background: #0F6E56; color: white; }
+  details > summary { list-style: none; cursor: pointer; }
+  details > summary::-webkit-details-marker { display: none; }
+</style>
+</head>
+<body class="bg-stone-50 text-stone-900 min-h-screen">
+
+<div class="max-w-5xl mx-auto px-4 py-8 md:py-12" x-data="app()" x-init="init()">
+
+  <!-- Header -->
+  <header class="mb-8">
+    <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Language Bridges</h1>
+    <p class="mt-2 text-stone-600 max-w-2xl">
+      Tell us what you speak. We'll show which languages will feel easiest to learn next — and explain <em>why</em>, broken down across vocabulary, grammar, sounds, and writing system.
+    </p>
+  </header>
+
+  <!-- Language selector -->
+  <section class="bg-white rounded-xl border border-stone-200 p-5 md:p-6 mb-6">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-lg font-medium">Languages you speak</h2>
+      <span class="text-sm text-stone-500" x-text="speakers.length + ' selected'"></span>
+    </div>
+    <p class="text-sm text-stone-500 mb-4">Pick all the languages you know, even partially. Order doesn't matter.</p>
+
+    <!-- Search box -->
+    <input
+      type="text"
+      placeholder="Search languages…"
+      x-model="search"
+      class="w-full px-3 py-2 rounded-lg border border-stone-300 focus:outline-none focus:ring-2 focus:ring-stone-400 mb-3 text-sm"
+    >
+
+    <!-- Chips grid -->
+    <div class="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-1">
+      <template x-for="code in filteredLanguages" :key="code">
+        <button
+          @click="toggleSpeaker(code)"
+          :class="speakers.includes(code) ? 'chip selected' : 'chip bg-stone-100 hover:bg-stone-200 text-stone-700'"
+          class="px-3 py-1.5 rounded-full text-sm border border-stone-300"
+        >
+          <span x-text="DATA.languages[code].name"></span>
+        </button>
+      </template>
+    </div>
+  </section>
+
+  <!-- Weights (collapsible) -->
+  <section class="bg-white rounded-xl border border-stone-200 p-5 md:p-6 mb-6">
+    <details>
+      <summary class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-medium">What matters most to you?</h2>
+          <p class="text-sm text-stone-500">Adjust how much each dimension counts in the score.</p>
+        </div>
+        <span class="text-stone-400 text-sm">Tap to expand</span>
+      </summary>
+      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+        <template x-for="dim in weightDims" :key="dim.key">
+          <label class="flex items-center gap-3">
+            <span class="w-32 text-sm text-stone-700" x-text="dim.label"></span>
+            <input type="range" min="0" max="100" x-model.number="weights[dim.key]" class="flex-1 accent-emerald-700">
+            <span class="w-10 text-right text-sm text-stone-500 tabular-nums" x-text="weights[dim.key]"></span>
+          </label>
+        </template>
+        <button @click="resetWeights()" class="md:col-span-2 text-sm text-emerald-700 hover:underline justify-self-start">
+          Reset to defaults
+        </button>
+      </div>
+    </details>
+  </section>
+
+  <!-- Results -->
+  <section x-show="speakers.length > 0" class="space-y-3">
+    <h2 class="text-lg font-medium mb-2">
+      Languages to consider learning next
+      <span class="text-sm font-normal text-stone-500">(top <span x-text="topN"></span>)</span>
+    </h2>
+
+    <template x-for="(rec, idx) in recommendations" :key="rec.target">
+      <div class="bg-white rounded-xl border border-stone-200 p-4 md:p-5">
+        <div class="flex flex-col md:flex-row md:items-start md:gap-5">
+
+          <!-- Rank + Name + Score -->
+          <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
+            <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 text-stone-500 text-sm font-medium" x-text="idx+1"></div>
+            <div>
+              <div class="font-medium text-stone-900" x-text="DATA.languages[rec.target].name"></div>
+              <div class="text-xs text-stone-500" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
+            </div>
+            <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
+          </div>
+
+          <!-- Radar -->
+          <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
+
+          <!-- Explanation + sub-scores -->
+          <div class="flex-1">
+            <p class="text-sm text-stone-700 leading-relaxed mb-3" x-text="explain(rec)"></p>
+            <div class="flex flex-wrap gap-2 text-xs">
+              <template x-for="dim in subscoreDims" :key="dim.key">
+                <div class="px-2 py-1 rounded bg-stone-50 border border-stone-200">
+                  <span class="text-stone-500" x-text="dim.label + ': '"></span>
+                  <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- Score (desktop) -->
+          <div class="hidden md:flex flex-col items-end ml-3">
+            <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
+            <div class="text-xs text-stone-500">score</div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </section>
+
+  <p x-show="speakers.length === 0" class="text-stone-500 text-sm py-12 text-center">
+    Pick at least one language above to see recommendations.
+  </p>
+
+  <footer class="mt-12 pt-6 border-t border-stone-200 text-xs text-stone-500">
+    Curated dataset of 96 languages across 17 language families. Scoring combines genealogical kinship, lexical overlap, typological grammar, phonology, writing system, and documented contact effects. Built as a research-preview prototype.
+  </footer>
+</div>
+
+<script>
+const DATA = {"languages": {"de": {"name": "German", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pf", "umlaut", "x", "ç", "ʁ"], "speakers_m": 95}, "nl": {"name": "Dutch", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["diphthongs", "long_short_vowels", "x", "ɣ"], "speakers_m": 25}, "en": {"name": "English", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["diphthongs", "ð", "ɹ", "θ"], "speakers_m": 1500}, "af": {"name": "Afrikaans", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "V2", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["diphthongs", "long_short_vowels", "x", "ɣ"], "speakers_m": 17}, "yi": {"name": "Yiddish", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Hebrew", "case_count": 3, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["diphthongs", "x", "ʁ"], "speakers_m": 1.5}, "lb": {"name": "Luxembourgish", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 3, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["umlaut", "x", "ç", "ʁ"], "speakers_m": 0.6}, "sv": {"name": "Swedish", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent", "ɧ"], "speakers_m": 13}, "no": {"name": "Norwegian", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent"], "speakers_m": 5}, "da": {"name": "Danish", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "stød"], "speakers_m": 6}, "is": {"name": "Icelandic", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def(suffix)", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "ð", "θ"], "speakers_m": 0.4}, "fo": {"name": "Faroese", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def(suffix)", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels"], "speakers_m": 0.07}, "es": {"name": "Spanish", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "x", "ɲ"], "speakers_m": 590}, "pt": {"name": "Portuguese", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ɲ", "ʎ"], "speakers_m": 270}, "gl": {"name": "Galician", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ɲ", "ʎ"], "speakers_m": 2.4}, "fr": {"name": "French", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["front_rounded_y", "nasal_vowels", "ʁ"], "speakers_m": 310}, "it": {"name": "Italian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "ɲ", "ʎ"], "speakers_m": 68}, "ro": {"name": "Romanian", "family": "Indo-European", "branch": "Romance", "subbranch": "Eastern Romance", "writing_system": "Latin", "case_count": 3, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["central_vowels", "ə", "ɨ"], "speakers_m": 25}, "ca": {"name": "Catalan", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ə", "ʎ"], "speakers_m": 9}, "oc": {"name": "Occitan", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ɲ", "ʎ"], "speakers_m": 0.8}, "sc": {"name": "Sicilian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "retroflex", "trill_r"], "speakers_m": 4.7}, "srd": {"name": "Sardinian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "trill_r"], "speakers_m": 1.0}, "ht": {"name": "Haitian Creole", "family": "Indo-European", "branch": "Romance", "subbranch": "French Creole", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ʁ"], "speakers_m": 12}, "ru": {"name": "Russian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r", "x"], "speakers_m": 260}, "uk": {"name": "Ukrainian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["h", "palatalized_consonants", "trill_r"], "speakers_m": 40}, "be": {"name": "Belarusian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r"], "speakers_m": 5}, "pl": {"name": "Polish", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 7, "gender_count": 5, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "palatalized_consonants", "trill_r", "ɕ", "ʑ"], "speakers_m": 45}, "cs": {"name": "Czech", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "trill_r", "ř"], "speakers_m": 11}, "sk": {"name": "Slovak", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "trill_r"], "speakers_m": 5}, "bg": {"name": "Bulgarian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 3, "articles": "def(suffix)", "word_order": "SVO", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r", "ə"], "speakers_m": 8}, "mk": {"name": "Macedonian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 3, "articles": "def(suffix)", "word_order": "SVO", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r"], "speakers_m": 2}, "hr": {"name": "Croatian/Serbian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Latin/Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "pitch_accent", "trill_r"], "speakers_m": 17}, "sl": {"name": "Slovenian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Latin", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["dual_number", "pitch_accent", "trill_r", "ə"], "speakers_m": 2.5}, "el": {"name": "Greek", "family": "Indo-European", "branch": "Hellenic", "subbranch": "Hellenic", "writing_system": "Greek", "case_count": 4, "gender_count": 3, "articles": "def+indef", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ð", "ɣ", "θ"], "speakers_m": 13}, "sq": {"name": "Albanian", "family": "Indo-European", "branch": "Albanian", "subbranch": "Albanian", "writing_system": "Latin", "case_count": 5, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ð", "ɫ", "θ"], "speakers_m": 7.5}, "hy": {"name": "Armenian", "family": "Indo-European", "branch": "Armenian", "subbranch": "Armenian", "writing_system": "Armenian", "case_count": 7, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "ejectives", "trill_r"], "speakers_m": 6.7}, "lv": {"name": "Latvian", "family": "Indo-European", "branch": "Baltic", "subbranch": "East Baltic", "writing_system": "Latin", "case_count": 7, "gender_count": 2, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent", "trill_r"], "speakers_m": 1.5}, "lt": {"name": "Lithuanian", "family": "Indo-European", "branch": "Baltic", "subbranch": "East Baltic", "writing_system": "Latin", "case_count": 7, "gender_count": 2, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "pitch_accent", "trill_r"], "speakers_m": 3}, "ga": {"name": "Irish", "family": "Indo-European", "branch": "Celtic", "subbranch": "Goidelic", "writing_system": "Latin", "case_count": 4, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["broad_slender", "lenition", "palatalized_consonants"], "speakers_m": 1.2}, "cy": {"name": "Welsh", "family": "Indo-European", "branch": "Celtic", "subbranch": "Brythonic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["mutations", "trill_r", "ɬ"], "speakers_m": 0.9}, "fa": {"name": "Persian (Farsi)", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Arabic", "case_count": 0, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x", "ɣ", "ʔ"], "speakers_m": 110}, "tg": {"name": "Tajik", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x", "ɣ"], "speakers_m": 8}, "ku": {"name": "Kurdish", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Latin/Arabic", "case_count": 2, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["pharyngeal", "q", "trill_r", "x", "ɣ"], "speakers_m": 30}, "ps": {"name": "Pashto", "family": "Indo-European", "branch": "Iranian", "subbranch": "Eastern Iranian", "writing_system": "Arabic", "case_count": 4, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["q", "retroflex", "trill_r", "x"], "speakers_m": 60}, "hi": {"name": "Hindi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Central", "writing_system": "Devanagari", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "nasal_vowels", "retroflex", "trill_r"], "speakers_m": 600}, "ur": {"name": "Urdu", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Central", "writing_system": "Arabic", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "nasal_vowels", "retroflex", "trill_r"], "speakers_m": 230}, "bn": {"name": "Bengali", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Eastern", "writing_system": "Bengali", "case_count": 4, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 270}, "pa": {"name": "Punjabi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Northwestern", "writing_system": "Gurmukhi/Arabic", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "tones", "trill_r"], "speakers_m": 125}, "mr": {"name": "Marathi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Southern", "writing_system": "Devanagari", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 99}, "gu": {"name": "Gujarati", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Western", "writing_system": "Gujarati", "case_count": 2, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 60}, "ne": {"name": "Nepali", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Northern", "writing_system": "Devanagari", "case_count": 6, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 25}, "si": {"name": "Sinhala", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Insular", "writing_system": "Sinhala", "case_count": 5, "gender_count": 2, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "prenasalized", "retroflex"], "speakers_m": 17}, "fi": {"name": "Finnish", "family": "Uralic", "branch": "Finnic", "subbranch": "Finnic", "writing_system": "Latin", "case_count": 15, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["geminates", "long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 5.5}, "et": {"name": "Estonian", "family": "Uralic", "branch": "Finnic", "subbranch": "Finnic", "writing_system": "Latin", "case_count": 14, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["three_length_grades", "ɤ"], "speakers_m": 1.1}, "hu": {"name": "Hungarian", "family": "Uralic", "branch": "Ugric", "subbranch": "Ugric", "writing_system": "Latin", "case_count": 18, "gender_count": 0, "articles": "def+indef", "word_order": "topic-focus(free)", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 13}, "se": {"name": "Northern Sami", "family": "Uralic", "branch": "Sami", "subbranch": "Western Sami", "writing_system": "Latin", "case_count": 8, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["consonant_gradation", "long_short_vowels"], "speakers_m": 0.025}, "tr": {"name": "Turkish", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɯ"], "speakers_m": 90}, "az": {"name": "Azerbaijani", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɯ"], "speakers_m": 30}, "tk": {"name": "Turkmen", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "long_short_vowels", "vowel_harmony_front_back", "vowel_harmony_rounding"], "speakers_m": 7}, "kk": {"name": "Kazakh", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Nogai", "writing_system": "Cyrillic/Latin", "case_count": 7, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɣ"], "speakers_m": 13}, "ky": {"name": "Kyrgyz", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Nogai", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɣ"], "speakers_m": 5}, "tt": {"name": "Tatar", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Bulgar", "writing_system": "Cyrillic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "ɯ"], "speakers_m": 5.2}, "uz": {"name": "Uzbek", "family": "Turkic", "branch": "Karluk", "subbranch": "Karluk", "writing_system": "Latin/Cyrillic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x"], "speakers_m": 35}, "ug": {"name": "Uyghur", "family": "Turkic", "branch": "Karluk", "subbranch": "Karluk", "writing_system": "Arabic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "x", "ɣ"], "speakers_m": 11}, "mn": {"name": "Mongolian", "family": "Mongolic", "branch": "Mongolic", "subbranch": "Central", "writing_system": "Cyrillic", "case_count": 8, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 5.7}, "ar": {"name": "Arabic (MSA)", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Central Semitic", "writing_system": "Arabic", "case_count": 3, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["emphatic_consonants", "pharyngeal", "q", "trill_r", "ħ", "ʔ"], "speakers_m": 420}, "he": {"name": "Hebrew", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Northwest Semitic", "writing_system": "Hebrew", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ħ", "ʔ"], "speakers_m": 9}, "mt": {"name": "Maltese", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Central Semitic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "pharyngeal", "ħ", "ʔ"], "speakers_m": 0.5}, "am": {"name": "Amharic", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "South Semitic", "writing_system": "Ge'ez", "case_count": 2, "gender_count": 2, "articles": "def(suffix)", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "palatalized_consonants", "ʔ"], "speakers_m": 57}, "ti": {"name": "Tigrinya", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "South Semitic", "writing_system": "Ge'ez", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "pharyngeal", "ʔ"], "speakers_m": 9}, "ha": {"name": "Hausa", "family": "Afro-Asiatic", "branch": "Chadic", "subbranch": "West Chadic", "writing_system": "Latin/Arabic", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "implosives", "tones"], "speakers_m": 80}, "so": {"name": "Somali", "family": "Afro-Asiatic", "branch": "Cushitic", "subbranch": "East Cushitic", "writing_system": "Latin", "case_count": 4, "gender_count": 2, "articles": "def", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": true, "phoneme_features": ["pharyngeal", "retroflex", "tones", "ʔ"], "speakers_m": 22}, "ka": {"name": "Georgian", "family": "Kartvelian", "branch": "Kartvelian", "subbranch": "Karto-Zan", "writing_system": "Georgian", "case_count": 7, "gender_count": 0, "articles": "none", "word_order": "SOV(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["consonant_clusters", "ejectives", "ergative"], "speakers_m": 4}, "ta": {"name": "Tamil", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Tamil", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "retroflex"], "speakers_m": 85}, "te": {"name": "Telugu", "family": "Dravidian", "branch": "South-Central Dravidian", "subbranch": "Telugu", "writing_system": "Telugu", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex"], "speakers_m": 96}, "kn": {"name": "Kannada", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Kannada", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex"], "speakers_m": 56}, "ml": {"name": "Malayalam", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Malayalam", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "retroflex"], "speakers_m": 38}, "zh": {"name": "Mandarin Chinese", "family": "Sino-Tibetan", "branch": "Sinitic", "subbranch": "Mandarin", "writing_system": "Chinese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "tones"], "speakers_m": 1100}, "yue": {"name": "Cantonese", "family": "Sino-Tibetan", "branch": "Sinitic", "subbranch": "Yue", "writing_system": "Chinese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 85}, "my": {"name": "Burmese", "family": "Sino-Tibetan", "branch": "Tibeto-Burman", "subbranch": "Lolo-Burmese", "writing_system": "Burmese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "analytic-agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "creaky_voice", "tones"], "speakers_m": 33}, "bo": {"name": "Tibetan", "family": "Sino-Tibetan", "branch": "Tibeto-Burman", "subbranch": "Bodish", "writing_system": "Tibetan", "case_count": 5, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 6}, "ja": {"name": "Japanese", "family": "Japonic", "branch": "Japonic", "subbranch": "Japanese", "writing_system": "Japanese", "case_count": 9, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["geminates", "long_short_vowels", "pitch_accent"], "speakers_m": 125}, "ko": {"name": "Korean", "family": "Koreanic", "branch": "Koreanic", "subbranch": "Korean", "writing_system": "Hangul", "case_count": 7, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tense_stops", "three_way_stop_contrast"], "speakers_m": 80}, "vi": {"name": "Vietnamese", "family": "Austroasiatic", "branch": "Vietic", "subbranch": "Viet-Muong", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["creaky_voice", "tones", "ʔ"], "speakers_m": 85}, "km": {"name": "Khmer", "family": "Austroasiatic", "branch": "Khmeric", "subbranch": "Khmer", "writing_system": "Khmer", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "register_voice"], "speakers_m": 17}, "th": {"name": "Thai", "family": "Tai-Kadai", "branch": "Tai", "subbranch": "Southwestern Tai", "writing_system": "Thai", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "tones"], "speakers_m": 60}, "lo": {"name": "Lao", "family": "Tai-Kadai", "branch": "Tai", "subbranch": "Southwestern Tai", "writing_system": "Lao", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 30}, "id": {"name": "Indonesian", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Malayic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 200}, "ms": {"name": "Malay", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Malayic", "writing_system": "Latin/Arabic", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 80}, "tl": {"name": "Tagalog", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Philippine", "writing_system": "Latin", "case_count": 3, "gender_count": 0, "articles": "def+indef", "word_order": "VSO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 80}, "jv": {"name": "Javanese", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Javanese", "writing_system": "Latin/Javanese", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["retroflex", "ʔ"], "speakers_m": 82}, "sw": {"name": "Swahili", "family": "Niger-Congo", "branch": "Bantu", "subbranch": "Sabaki", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["prenasalized", "trill_r"], "speakers_m": 200}, "zu": {"name": "Zulu", "family": "Niger-Congo", "branch": "Bantu", "subbranch": "Nguni", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "click_consonants", "tones"], "speakers_m": 28}, "yo": {"name": "Yoruba", "family": "Niger-Congo", "branch": "Volta-Niger", "subbranch": "Yoruboid", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": true, "phoneme_features": ["nasal_vowels", "tones"], "speakers_m": 47}, "qu": {"name": "Quechua", "family": "Quechuan", "branch": "Quechuan", "subbranch": "Quechua II", "writing_system": "Latin", "case_count": 11, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "ejectives", "trill_r"], "speakers_m": 8}, "gn": {"name": "Guarani", "family": "Tupian", "branch": "Tupi-Guarani", "subbranch": "Guarani", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ʔ"], "speakers_m": 6}, "eu": {"name": "Basque", "family": "Isolate", "branch": "Isolate", "subbranch": "Isolate", "writing_system": "Latin", "case_count": 12, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["ergative", "palatalized_consonants", "trill_r"], "speakers_m": 0.75}}, "lexical": {"de|nl": 0.8, "de|en": 0.6, "de|sv": 0.55, "de|no": 0.55, "da|de": 0.55, "de|is": 0.45, "de|fo": 0.4, "en|nl": 0.63, "nl|sv": 0.48, "nl|no": 0.48, "da|nl": 0.48, "en|sv": 0.45, "en|no": 0.45, "da|en": 0.45, "en|is": 0.35, "no|sv": 0.89, "da|sv": 0.85, "da|no": 0.88, "is|sv": 0.55, "is|no": 0.55, "da|is": 0.5, "fo|is": 0.75, "fo|no": 0.55, "fo|sv": 0.5, "da|fo": 0.65, "de|yi": 0.75, "de|lb": 0.85, "lb|nl": 0.55, "af|nl": 0.85, "af|de": 0.55, "af|en": 0.5, "he|yi": 0.2, "es|pt": 0.89, "es|it": 0.82, "es|fr": 0.75, "ca|es": 0.85, "es|ro": 0.71, "es|gl": 0.85, "es|oc": 0.75, "it|pt": 0.8, "fr|pt": 0.75, "ca|pt": 0.82, "pt|ro": 0.72, "gl|pt": 0.85, "fr|it": 0.85, "ca|it": 0.8, "it|ro": 0.77, "it|sc": 0.75, "it|srd": 0.7, "it|oc": 0.75, "ca|fr": 0.8, "fr|ro": 0.75, "fr|oc": 0.78, "fr|ht": 0.55, "ca|ro": 0.73, "ca|oc": 0.85, "en|ht": 0.15, "es|ht": 0.2, "ru|uk": 0.62, "be|ru": 0.8, "be|uk": 0.85, "pl|ru": 0.38, "cs|ru": 0.4, "ru|sk": 0.41, "bg|ru": 0.56, "hr|ru": 0.55, "ru|sl": 0.5, "mk|ru": 0.55, "pl|uk": 0.4, "cs|uk": 0.4, "sk|uk": 0.43, "bg|uk": 0.55, "be|pl": 0.55, "cs|pl": 0.78, "pl|sk": 0.8, "cs|sk": 0.91, "hr|sl": 0.78, "bg|hr": 0.65, "hr|mk": 0.65, "bg|mk": 0.95, "bg|sl": 0.65, "hr|pl": 0.55, "cs|hr": 0.55, "lt|lv": 0.65, "cy|ga": 0.3, "en|fr": 0.27, "en|es": 0.18, "en|it": 0.18, "en|pt": 0.18, "de|fr": 0.18, "fr|nl": 0.2, "de|pl": 0.15, "cs|de": 0.18, "de|sk": 0.15, "de|hr": 0.12, "de|sl": 0.15, "de|hu": 0.18, "lv|ru": 0.2, "lt|ru": 0.18, "hu|ru": 0.1, "et|ru": 0.07, "fi|ru": 0.05, "az|ru": 0.18, "ru|tr": 0.06, "kk|ru": 0.15, "ru|tt": 0.2, "ru|uz": 0.15, "ky|ru": 0.15, "ru|tg": 0.18, "ru|tk": 0.12, "mn|ru": 0.15, "hy|ru": 0.18, "ka|ru": 0.1, "el|en": 0.18, "el|es": 0.15, "el|it": 0.16, "el|fr": 0.17, "et|fi": 0.45, "fi|hu": 0.18, "et|hu": 0.18, "fi|se": 0.2, "no|se": 0.1, "az|tr": 0.85, "az|tk": 0.8, "tk|tr": 0.75, "az|uz": 0.6, "tr|uz": 0.6, "tk|uz": 0.55, "az|kk": 0.55, "kk|tr": 0.5, "kk|tk": 0.55, "kk|ky": 0.85, "kk|tt": 0.55, "ky|tt": 0.55, "kk|uz": 0.6, "ky|uz": 0.55, "ug|uz": 0.75, "tr|ug": 0.5, "az|ug": 0.5, "tr|tt": 0.45, "az|tt": 0.5, "ky|tr": 0.5, "az|ky": 0.5, "fa|tr": 0.22, "az|fa": 0.28, "fa|tk": 0.22, "fa|uz": 0.3, "fa|tg": 0.85, "fa|ku": 0.32, "fa|ps": 0.3, "ar|fa": 0.18, "fa|ug": 0.25, "fa|kk": 0.15, "fa|ky": 0.15, "ar|tr": 0.12, "ar|az": 0.14, "ar|ur": 0.2, "ar|ku": 0.15, "ar|sw": 0.15, "ar|es": 0.08, "ar|he": 0.3, "ar|mt": 0.55, "am|ar": 0.2, "ar|ti": 0.22, "ar|id": 0.06, "ar|ms": 0.06, "ar|ha": 0.1, "ar|so": 0.1, "hi|ur": 0.95, "bn|hi": 0.5, "hi|pa": 0.55, "hi|mr": 0.55, "gu|hi": 0.55, "hi|ne": 0.6, "bn|ur": 0.5, "pa|ur": 0.55, "fa|ur": 0.35, "bn|ne": 0.45, "bn|si": 0.2, "fa|hi": 0.2, "ku|tr": 0.1, "ta|te": 0.4, "kn|ta": 0.45, "ml|ta": 0.7, "kn|te": 0.55, "ml|te": 0.4, "kn|ml": 0.5, "yue|zh": 0.65, "ja|zh": 0.3, "ko|zh": 0.3, "vi|zh": 0.3, "ja|ko": 0.15, "ja|yue": 0.2, "ko|yue": 0.2, "th|vi": 0.1, "km|vi": 0.1, "lo|th": 0.75, "km|th": 0.15, "id|ms": 0.9, "id|jv": 0.5, "id|tl": 0.3, "jv|ms": 0.45, "ms|tl": 0.3, "jv|tl": 0.3, "am|he": 0.15, "am|ti": 0.5, "he|mt": 0.15, "sw|zu": 0.2, "yo|zu": 0.05, "sw|yo": 0.05, "hy|tr": 0.1, "fa|hy": 0.15, "ar|hy": 0.1, "hy|ka": 0.1, "ka|tr": 0.05, "ro|ru": 0.18, "hr|ro": 0.18, "bg|ro": 0.2, "ro|uk": 0.18, "hr|hu": 0.12, "hu|sk": 0.1, "hu|tr": 0.06, "bg|tr": 0.1, "hr|tr": 0.08, "it|mt": 0.35, "en|mt": 0.2, "es|mt": 0.18, "it|sq": 0.2, "el|sq": 0.15, "sq|tr": 0.1, "hr|sq": 0.12, "kk|mn": 0.15, "mn|tr": 0.06, "az|mn": 0.06, "en|ja": 0.1, "en|ko": 0.1, "en|zh": 0.04, "en|hi": 0.12, "en|ur": 0.12, "en|id": 0.1, "en|ms": 0.1, "en|tl": 0.2, "ar|en": 0.05, "en|th": 0.06, "en|tr": 0.06, "en|ru": 0.04, "en|sw": 0.1, "en|he": 0.06, "en|yi": 0.1, "en|vi": 0.06}, "contact": {"de|pl": {"bonus": 0.15, "note": "Polish has hundreds of German loanwords (industry, household, military)."}, "de|cs": {"bonus": 0.18, "note": "Czech absorbed extensive German vocabulary during the Austro-Hungarian period."}, "de|hu": {"bonus": 0.18, "note": "Hungarian has thousands of German loanwords from centuries of Habsburg contact."}, "de|hr": {"bonus": 0.12, "note": "Croatian (esp. Zagreb dialect) has substantial German loan vocabulary."}, "de|sl": {"bonus": 0.15, "note": "Slovenian shares many German loanwords from centuries of contact."}, "de|sk": {"bonus": 0.12, "note": "Slovak shares German loan vocabulary from the Habsburg era."}, "de|yi": {"bonus": 0.2, "note": "Yiddish IS a Germanic language at its core — vocabulary directly recognizable from German."}, "de|lb": {"bonus": 0.1, "note": "Luxembourgish is a standardized Moselle Franconian dialect of German."}, "ru|pl": {"bonus": 0.1, "note": "Cognate roots and shared Slavic grammar make Polish much easier from Russian."}, "ru|uk": {"bonus": 0.2, "note": "Russian and Ukrainian share extensive vocabulary and identical Cyrillic basics."}, "ru|be": {"bonus": 0.22, "note": "Belarusian is the closest Slavic language to Russian — high mutual intelligibility."}, "ru|bg": {"bonus": 0.15, "note": "Bulgarian shares Slavic roots; vocabulary highly recognizable to Russian speakers."}, "ru|mk": {"bonus": 0.15, "note": "Macedonian, like Bulgarian, shares Slavic roots transparent to Russian speakers."}, "ru|hr": {"bonus": 0.1, "note": "Croatian/Serbian shares Slavic core vocabulary; cases work similarly."}, "ru|cs": {"bonus": 0.08, "note": "Czech shares Slavic vocabulary core, though false friends are common."}, "ru|sk": {"bonus": 0.08, "note": "Slovak shares Slavic vocabulary core with Russian."}, "ru|lv": {"bonus": 0.1, "note": "Latvian has many Russian loanwords and shares Baltic-Slavic patterns."}, "ru|lt": {"bonus": 0.08, "note": "Lithuanian shares Baltic-Slavic grammatical patterns; some Russian loans."}, "ru|az": {"bonus": 0.1, "note": "Azerbaijani has many Russian loanwords from the Soviet era."}, "ru|kk": {"bonus": 0.12, "note": "Kazakh absorbed extensive Russian vocabulary in the Soviet period; uses Cyrillic."}, "ru|ky": {"bonus": 0.12, "note": "Kyrgyz has extensive Russian loanwords and uses Cyrillic script."}, "ru|tt": {"bonus": 0.12, "note": "Tatar has extensive Russian vocabulary and uses Cyrillic script."}, "ru|uz": {"bonus": 0.08, "note": "Uzbek has many Russian loanwords from the Soviet period."}, "ru|tk": {"bonus": 0.08, "note": "Turkmen carries a Soviet-era Russian vocabulary layer."}, "ru|mn": {"bonus": 0.1, "note": "Mongolian uses Cyrillic and carries Soviet-era Russian loanwords."}, "ru|hy": {"bonus": 0.08, "note": "Armenian has many Russian loanwords from imperial and Soviet periods."}, "ru|ka": {"bonus": 0.06, "note": "Georgian has Soviet-era Russian loanwords."}, "ru|tg": {"bonus": 0.12, "note": "Tajik uses Cyrillic and carries an extensive Soviet-era Russian vocabulary layer."}, "en|fr": {"bonus": 0.1, "note": "English vocabulary is ~30% French/Norman in origin — huge reading-comprehension boost."}, "fr|en": {"bonus": 0.1, "note": "Norman vocabulary in English means French speakers recognize a huge share of English words."}, "tr|az": {"bonus": 0.1, "note": "Near-mutual intelligibility — same agglutinative grammar, same vowel harmony, ~85% shared vocabulary."}, "az|tr": {"bonus": 0.1, "note": "Near-mutual intelligibility — same agglutinative grammar, same vowel harmony, ~85% shared vocabulary."}, "tr|tk": {"bonus": 0.08, "note": "Turkmen is in the same Oghuz subbranch as Turkish — closely related grammar and core vocabulary."}, "az|tk": {"bonus": 0.1, "note": "Turkmen is in the same Oghuz subbranch as Azerbaijani — very close grammar and core vocabulary."}, "tr|uz": {"bonus": 0.06, "note": "Uzbek shares Turkic grammar and many Persian/Arabic loanwords with Turkish."}, "az|uz": {"bonus": 0.06, "note": "Uzbek shares Turkic grammar and many Persian/Arabic loanwords with Azerbaijani."}, "tr|kk": {"bonus": 0.06, "note": "Kazakh shares Turkic agglutinative grammar and vowel harmony — different lexical core."}, "az|kk": {"bonus": 0.06, "note": "Kazakh shares Turkic agglutinative grammar and vowel harmony with Azerbaijani."}, "tr|ug": {"bonus": 0.05, "note": "Uyghur shares Turkic structure and Persian/Arabic loan vocabulary."}, "az|ug": {"bonus": 0.05, "note": "Uyghur shares Turkic structure and Persian/Arabic loan vocabulary."}, "tr|tt": {"bonus": 0.05, "note": "Tatar shares Turkic structure but with a different Kipchak vocabulary core."}, "az|tt": {"bonus": 0.05, "note": "Tatar shares Turkic structure but with a different Kipchak vocabulary core."}, "tr|ky": {"bonus": 0.05, "note": "Kyrgyz shares Turkic agglutinative grammar and vowel harmony."}, "az|ky": {"bonus": 0.05, "note": "Kyrgyz shares Turkic agglutinative grammar and vowel harmony."}, "tr|hu": {"bonus": 0.05, "note": "Vowel harmony and agglutinative grammar feel familiar; some old Turkic loan layer in Hungarian."}, "az|hu": {"bonus": 0.05, "note": "Vowel harmony and agglutinative grammar feel familiar; some old Turkic loan layer in Hungarian."}, "tr|fi": {"bonus": 0.04, "note": "Vowel harmony and agglutinative grammar will feel familiar, though vocabulary is foreign."}, "az|fi": {"bonus": 0.04, "note": "Vowel harmony and agglutinative grammar will feel familiar, though vocabulary is foreign."}, "tr|et": {"bonus": 0.03, "note": "Agglutinative grammar feels familiar (no vowel harmony in Estonian, though)."}, "tr|mn": {"bonus": 0.05, "note": "Agglutinative grammar and vowel harmony feel familiar; some shared old loans."}, "az|mn": {"bonus": 0.05, "note": "Agglutinative grammar and vowel harmony feel familiar; some shared old loans."}, "kk|mn": {"bonus": 0.1, "note": "Centuries of contact have produced significant shared vocabulary alongside structural similarity."}, "fa|tr": {"bonus": 0.1, "note": "Persian was a high-prestige loan source for Ottoman Turkish — much abstract/literary vocabulary."}, "fa|az": {"bonus": 0.15, "note": "Azerbaijani has an especially heavy Persian vocabulary layer (geography, religion, literature)."}, "fa|uz": {"bonus": 0.15, "note": "Uzbek has a heavy Persian vocabulary layer from centuries of Persianate cultural dominance."}, "fa|tg": {"bonus": 0.2, "note": "Tajik is essentially a Cyrillic-written variant of Persian — near-mutual intelligibility."}, "fa|ku": {"bonus": 0.15, "note": "Kurdish is an Iranian language closely related to Persian, with much shared vocabulary."}, "fa|ur": {"bonus": 0.2, "note": "Urdu absorbed extensive Persian vocabulary — Persian was the literary language of Mughal India."}, "fa|hi": {"bonus": 0.08, "note": "Hindi shares a Persian loan layer with Urdu, though less prominent in formal Hindi."}, "ar|fa": {"bonus": 0.15, "note": "Persian absorbed enormous Arabic vocabulary after the Islamic conquests."}, "ar|tr": {"bonus": 0.1, "note": "Ottoman Turkish was full of Arabic religious and abstract vocabulary; many words survive."}, "ar|az": {"bonus": 0.12, "note": "Azerbaijani inherited a substantial Arabic loan layer through Persian and Islamic learning."}, "ar|ur": {"bonus": 0.15, "note": "Urdu has extensive Arabic vocabulary through Persian and Islamic religious texts."}, "ar|sw": {"bonus": 0.15, "note": "Swahili absorbed extensive Arabic vocabulary through Indian Ocean trade."}, "ar|id": {"bonus": 0.05, "note": "Indonesian has Arabic loans (mostly religious) but a small share of total vocabulary."}, "ar|ms": {"bonus": 0.05, "note": "Malay has Arabic loans (mostly religious) but a small share of total vocabulary."}, "ar|es": {"bonus": 0.05, "note": "Spanish has thousands of Arabic loanwords from the Moorish period in Iberia."}, "ar|mt": {"bonus": 0.1, "note": "Maltese descends directly from Sicilian Arabic — core vocabulary IS Arabic."}, "ar|ha": {"bonus": 0.08, "note": "Hausa absorbed Arabic religious and abstract vocabulary through centuries of Islamic contact."}, "it|mt": {"bonus": 0.15, "note": "Maltese has a huge Italian/Sicilian loan layer in everyday vocabulary."}, "el|en": {"bonus": 0.05, "note": "Greek roots permeate English scientific/academic vocabulary."}, "es|ca": {"bonus": 0.05, "note": "Catalan and Spanish share extensive everyday vocabulary on top of close Romance kinship."}, "es|gl": {"bonus": 0.05, "note": "Galician and Spanish share extensive vocabulary on top of close Romance kinship."}, "hi|ur": {"bonus": 0.1, "note": "Hindi and Urdu are essentially the same colloquial language, differing mainly in formal vocabulary and script."}, "ur|hi": {"bonus": 0.1, "note": "Urdu and Hindi are essentially the same colloquial language."}, "hi|id": {"bonus": 0.05, "note": "Indonesian retains a Sanskrit-derived loan layer (state, law, religion) from the Indianized kingdoms."}, "hi|ms": {"bonus": 0.05, "note": "Malay retains a Sanskrit-derived loan layer from the Indianized kingdoms."}, "hi|km": {"bonus": 0.05, "note": "Khmer retains an extensive Sanskrit/Pali vocabulary layer from Indianized Khmer civilization."}, "hi|th": {"bonus": 0.05, "note": "Thai retains an extensive Sanskrit/Pali vocabulary layer in religion, government, literature."}, "hi|si": {"bonus": 0.15, "note": "Sinhala is Indo-Aryan, sharing core vocabulary and Pali/Sanskrit religious terms with Hindi."}, "zh|ja": {"bonus": 0.2, "note": "Japanese kanji and ~60% of formal/written Japanese vocabulary comes from Chinese (Sino-Japanese)."}, "zh|ko": {"bonus": 0.2, "note": "Korean Sino-Korean vocabulary (~60% of the formal lexicon) is recognizable to Mandarin speakers."}, "zh|vi": {"bonus": 0.2, "note": "Vietnamese has an enormous Sino-Vietnamese vocabulary layer from ~1000 years of Chinese rule."}, "yue|ja": {"bonus": 0.1, "note": "Cantonese shares Sino vocabulary with Japanese (often closer to historical pronunciations than Mandarin)."}, "yue|ko": {"bonus": 0.1, "note": "Cantonese shares Sino vocabulary with Korean."}, "yue|vi": {"bonus": 0.15, "note": "Cantonese and Vietnamese share many Sino-derived words."}, "ja|ko": {"bonus": 0.05, "note": "Almost identical grammar (SOV, agglutinative, particles, honorifics) — vocabulary unrelated but structure feels native."}, "ko|ja": {"bonus": 0.05, "note": "Almost identical grammar (SOV, agglutinative, particles, honorifics) — vocabulary unrelated but structure feels native."}, "id|ms": {"bonus": 0.1, "note": "Indonesian and Malay are essentially the same language — mostly differ in spelling and a few loan sources."}, "ms|id": {"bonus": 0.1, "note": "Indonesian and Malay are essentially the same language."}, "th|lo": {"bonus": 0.15, "note": "Thai and Lao are largely mutually intelligible — same Tai branch, parallel scripts."}, "lo|th": {"bonus": 0.15, "note": "Lao and Thai are largely mutually intelligible — same Tai branch, parallel scripts."}, "bg|mk": {"bonus": 0.15, "note": "Macedonian and Bulgarian are linguistically extremely close — same South Slavic dialect continuum."}, "mk|bg": {"bonus": 0.15, "note": "Macedonian and Bulgarian are linguistically extremely close — same South Slavic dialect continuum."}, "nl|af": {"bonus": 0.1, "note": "Afrikaans descended directly from 17th-century Dutch — vocabulary core almost identical."}, "af|nl": {"bonus": 0.1, "note": "Afrikaans descended directly from 17th-century Dutch — vocabulary core almost identical."}, "he|yi": {"bonus": 0.15, "note": "Yiddish has an extensive Hebrew/Aramaic vocabulary layer — religious, abstract, idiomatic."}, "yi|he": {"bonus": 0.1, "note": "Knowing Yiddish gives you a head start on Hebrew religious/abstract vocabulary."}, "hy|tr": {"bonus": 0.06, "note": "Armenian has Turkish/Ottoman vocabulary from centuries of coexistence."}, "hy|fa": {"bonus": 0.08, "note": "Armenian has significant Persian loan vocabulary going back to the Achaemenid period."}}};
+
+const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
+
+function app() {
+  return {
+    DATA,
+    search: '',
+    speakers: ['az','tr','de','en','ru'].filter(c => c in DATA.languages),
+    weights: {...DEFAULT_WEIGHTS},
+    topN: 15,
+    weightDims: [
+      {key:'lexical',label:'Lexicon'},
+      {key:'grammatical',label:'Grammar'},
+      {key:'phonological',label:'Phonology'},
+      {key:'writing_system',label:'Writing system'},
+      {key:'genealogical',label:'Family'},
+    ],
+    subscoreDims: [
+      {key:'lexical',label:'Lex'},
+      {key:'grammatical',label:'Gram'},
+      {key:'phonological',label:'Phon'},
+      {key:'writing_system',label:'Script'},
+      {key:'genealogical',label:'Family'},
+    ],
+
+    init() {},
+
+    get filteredLanguages() {
+      const codes = Object.keys(DATA.languages).sort((a,b)=> DATA.languages[a].name.localeCompare(DATA.languages[b].name));
+      const q = this.search.toLowerCase().trim();
+      if (!q) return codes;
+      return codes.filter(c => DATA.languages[c].name.toLowerCase().includes(q));
+    },
+
+    toggleSpeaker(code) {
+      const i = this.speakers.indexOf(code);
+      if (i >= 0) this.speakers.splice(i, 1);
+      else this.speakers.push(code);
+    },
+
+    resetWeights() { this.weights = {...DEFAULT_WEIGHTS}; },
+
+    // ====== SCORING (port of similarity.py) ======
+
+    k(a,b) { return a < b ? a+'|'+b : b+'|'+a; },
+
+    lexicalSimilarity(a,b) {
+      if (a===b) return 1.0;
+      const key = this.k(a,b);
+      if (DATA.lexical[key] !== undefined) return DATA.lexical[key];
+      const la = DATA.languages[a], lb = DATA.languages[b];
+      if (la.family !== lb.family) return 0.03;
+      if (la.branch !== lb.branch) return 0.10;
+      if (la.subbranch !== lb.subbranch) return 0.30;
+      return 0.55;
+    },
+
+    genealogical(a,b) {
+      const la = DATA.languages[a], lb = DATA.languages[b];
+      if (la.family !== lb.family) return 0.0;
+      if (la.branch !== lb.branch) return 0.4;
+      if (la.subbranch !== lb.subbranch) return 0.7;
+      return 1.0;
+    },
+
+    wordOrderSim(la,lb) {
+      const fam = {
+        'SVO': ['SVO'],
+        'V2': ['V2','SVO'],
+        'SOV': ['SOV'],
+        'VSO': ['VSO'],
+        'SVO(free)': ['SVO(free)','SVO'],
+        'SOV(free)': ['SOV(free)','SOV'],
+        'topic-focus(free)': ['topic-focus(free)','SVO(free)','SVO'],
+      };
+      if (la.word_order === lb.word_order) return 1.0;
+      if ((fam[la.word_order]||[]).includes(lb.word_order)) return 0.7;
+      if ((fam[lb.word_order]||[]).includes(la.word_order)) return 0.7;
+      return 0.0;
+    },
+
+    morphSim(la,lb) {
+      if (la.morphology === lb.morphology) return 1.0;
+      const pairs = {
+        'analytic|analytic-fusional': 0.8,
+        'fusional|analytic-fusional': 0.8,
+        'analytic|fusional': 0.3,
+        'fusional|agglutinative': 0.2,
+        'analytic|agglutinative': 0.1,
+        'analytic-fusional|agglutinative': 0.15,
+        'analytic|analytic-agglutinative': 0.4,
+        'agglutinative|analytic-agglutinative': 0.6,
+      };
+      const key = [la.morphology, lb.morphology].sort().join('|');
+      return pairs[key] || 0.0;
+    },
+
+    grammatical(a,b) {
+      const la = DATA.languages[a], lb = DATA.languages[b];
+      const caseDiff = Math.abs(la.case_count - lb.case_count);
+      const caseScore = Math.max(0, 1 - caseDiff/8);
+      const genderDiff = Math.abs(la.gender_count - lb.gender_count);
+      const genderScore = Math.max(0, 1 - genderDiff/3);
+      let artScore;
+      if (la.articles === lb.articles) artScore = 1.0;
+      else if (la.articles !== 'none' && lb.articles !== 'none') artScore = 0.5;
+      else artScore = 0.2;
+      const wordScore = this.wordOrderSim(la,lb);
+      const morphScore = this.morphSim(la,lb);
+      const vhScore = (la.vowel_harmony === lb.vowel_harmony) ? 1.0 : 0.0;
+      return (caseScore + genderScore + artScore + wordScore + morphScore + vhScore) / 6;
+    },
+
+    phonological(a,b) {
+      const pa = new Set(DATA.languages[a].phoneme_features);
+      const pb = new Set(DATA.languages[b].phoneme_features);
+      if (pa.size === 0 && pb.size === 0) return 1.0;
+      let inter = 0;
+      for (const x of pa) if (pb.has(x)) inter++;
+      const union = pa.size + pb.size - inter;
+      return union === 0 ? 0 : inter / union;
+    },
+
+    writingSystem(a,b) {
+      const sa = DATA.languages[a].writing_system, sb = DATA.languages[b].writing_system;
+      if (sa === sb) return 1.0;
+      if (sa.includes('Latin') && sb.includes('Latin')) return 1.0;
+      if (sa.includes('Cyrillic') && sb.includes('Cyrillic')) return 1.0;
+      if (sa.includes('Arabic') && sb.includes('Arabic')) return 1.0;
+      return 0.0;
+    },
+
+    contactBonus(h,t) {
+      const info = DATA.contact[h+'|'+t];
+      return info ? [info.bonus, info.note] : [0, null];
+    },
+
+    combinedScore(target) {
+      const dims = ['genealogical','lexical','grammatical','phonological','writing_system'];
+      const best = {}; const helpers = {};
+      for (const d of dims) { best[d] = 0; helpers[d] = null; }
+      const notes = [];
+      let totalBonus = 0;
+
+      for (const h of this.speakers) {
+        const sub = {
+          genealogical: this.genealogical(h, target),
+          lexical: this.lexicalSimilarity(h, target),
+          grammatical: this.grammatical(h, target),
+          phonological: this.phonological(h, target),
+          writing_system: this.writingSystem(h, target),
+        };
+        for (const d of dims) {
+          if (sub[d] > best[d]) { best[d] = sub[d]; helpers[d] = h; }
+        }
+        const [b, n] = this.contactBonus(h, target);
+        if (b) { totalBonus += b; notes.push({helper: h, note: n}); }
+      }
+
+      const lexWithBonus = Math.min(1.0, best.lexical + totalBonus);
+      const totalW = Object.values(this.weights).reduce((a,b)=>a+b, 0) || 1;
+      const w = {};
+      for (const k of Object.keys(this.weights)) w[k] = this.weights[k] / totalW;
+      const total =
+        best.genealogical * w.genealogical +
+        lexWithBonus * w.lexical +
+        best.grammatical * w.grammatical +
+        best.phonological * w.phonological +
+        best.writing_system * w.writing_system;
+
+      return {
+        target, total,
+        sub_scores: best,
+        helpers_per_dim: helpers,
+        lexical_with_contact_bonus: lexWithBonus,
+        contact_bonus: totalBonus,
+        contact_notes: notes,
+      };
+    },
+
+    get recommendations() {
+      if (this.speakers.length === 0) return [];
+      const candidates = Object.keys(DATA.languages).filter(c => !this.speakers.includes(c));
+      const scored = candidates.map(t => this.combinedScore(t));
+      scored.sort((a,b) => b.total - a.total);
+      return scored.slice(0, this.topN);
+    },
+
+    // ====== EXPLANATION GENERATOR ======
+
+    explain(rec) {
+      const targetName = DATA.languages[rec.target].name;
+      const hpd = rec.helpers_per_dim;
+      const helperName = h => h ? DATA.languages[h].name : '—';
+      const s = rec.sub_scores;
+      const parts = [];
+
+      const genH = helperName(hpd.genealogical);
+      if (s.genealogical === 1.0) parts.push(`${targetName} is in the same subbranch as ${genH}, so the core grammar will feel native.`);
+      else if (s.genealogical >= 0.7) parts.push(`${targetName} is a close cousin of ${genH} within the same branch.`);
+      else if (s.genealogical >= 0.4) {
+        const fam = DATA.languages[rec.target].family;
+        parts.push(`${targetName} shares deep ${fam} roots with ${genH} but in a different branch.`);
+      } else parts.push(`${targetName} is genealogically unrelated to anything you speak.`);
+
+      const lex = rec.lexical_with_contact_bonus;
+      const lexH = helperName(hpd.lexical);
+      const pct = Math.round(lex*100);
+      if (lex >= 0.7) parts.push(`Vocabulary overlap with ${lexH} is very high (~${pct}%) — you'll read it almost immediately.`);
+      else if (lex >= 0.4) parts.push(`Vocabulary overlap with ${lexH} is substantial (~${pct}%) — lots of recognizable words.`);
+      else if (lex >= 0.2) parts.push(`Vocabulary overlap is modest (~${pct}%), mostly via loans and learned words.`);
+      else parts.push(`Vocabulary will mostly need to be learned from scratch (~${pct}% overlap).`);
+
+      for (const n of rec.contact_notes) parts.push(n.note);
+
+      const g = s.grammatical;
+      const gH = helperName(hpd.grammatical);
+      if (g >= 0.75) parts.push(`Grammar feels very similar to ${gH}.`);
+      else if (g >= 0.55) parts.push(`Grammar overlaps with ${gH} in important ways (word order, morphology type).`);
+      else if (g >= 0.35) parts.push(`Grammar will feel noticeably different — expect some retraining.`);
+      else parts.push(`Grammar is structurally very different and will be the hardest part.`);
+
+      if (s.writing_system < 1.0) {
+        if (s.writing_system === 0.0) parts.push(`The script is different — you'll need to learn a new alphabet.`);
+        else parts.push(`The script overlaps but isn't identical.`);
+      }
+      if (s.phonological >= 0.5) parts.push(`Sound system shares many of the same distinctive sounds.`);
+      else if (s.phonological < 0.1) parts.push(`Sound inventory is quite different — pronunciation will need fresh work.`);
+
+      return parts.join(' ');
+    },
+
+    formatSub(rec, key) {
+      const v = key === 'lexical' ? rec.lexical_with_contact_bonus : rec.sub_scores[key];
+      return v.toFixed(2);
+    },
+
+    // ====== RADAR CHART (mini SVG) ======
+
+    radarSvg(rec) {
+      const dims = ['lexical','grammatical','phonological','writing_system','genealogical'];
+      const labels = ['Lex','Gram','Phon','Script','Family'];
+      const cx = 64, cy = 64, R = 48;
+      const points = dims.map((d, i) => {
+        const v = d === 'lexical' ? rec.lexical_with_contact_bonus : rec.sub_scores[d];
+        const angle = (Math.PI*2 * i / dims.length) - Math.PI/2;
+        const r = R * v;
+        return [cx + Math.cos(angle)*r, cy + Math.sin(angle)*r];
+      });
+      const polygon = points.map(p => p.join(',')).join(' ');
+      const axes = dims.map((_, i) => {
+        const angle = (Math.PI*2 * i / dims.length) - Math.PI/2;
+        const x = cx + Math.cos(angle)*R;
+        const y = cy + Math.sin(angle)*R;
+        return `<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#e7e5e4" stroke-width="0.5"/>`;
+      }).join('');
+      const labelEls = labels.map((label, i) => {
+        const angle = (Math.PI*2 * i / dims.length) - Math.PI/2;
+        const x = cx + Math.cos(angle)*(R+10);
+        const y = cy + Math.sin(angle)*(R+10);
+        return `<text x="${x}" y="${y}" font-size="8" fill="#78716c" text-anchor="middle" dominant-baseline="middle">${label}</text>`;
+      }).join('');
+      return `<svg viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#e7e5e4" stroke-width="0.5"/>
+        <circle cx="${cx}" cy="${cy}" r="${R*0.66}" fill="none" stroke="#e7e5e4" stroke-width="0.3"/>
+        <circle cx="${cx}" cy="${cy}" r="${R*0.33}" fill="none" stroke="#e7e5e4" stroke-width="0.3"/>
+        ${axes}
+        <polygon points="${polygon}" fill="#0F6E56" fill-opacity="0.2" stroke="#0F6E56" stroke-width="1"/>
+        ${labelEls}
+      </svg>`;
+    },
+  };
+}
+</script>
+</body>
+</html>
