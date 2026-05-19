@@ -60,7 +60,7 @@
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
       </svg>
     </button>
-
+	</header>
   <!-- Language selector -->
   <section class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6 mb-6">
     <div class="flex items-center justify-between mb-3">
@@ -181,7 +181,7 @@ function app() {
   return {
     DATA,
     search: '',
-    speakers: ['az','tr','de','en','ru'].filter(c => c in DATA.languages),
+    speakers: ['en'].filter(c => c in DATA.languages),
     weights: {...DEFAULT_WEIGHTS},
     topN: 15,
     isDark: document.documentElement.classList.contains('dark'),
