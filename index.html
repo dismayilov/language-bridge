@@ -6,10 +6,8 @@
 <title>Language Bridges — find your next language</title>
 <meta name="description" content="Tell us what you speak. We'll show which languages will feel easiest to learn next, broken down by lexicon, grammar, phonology, and writing system.">
 <script>
-  // Set theme BEFORE Tailwind/Alpine load to avoid a flash of light content.
   (function() {
     const saved = localStorage.getItem('lb-theme');
-    // Default to dark unless the user explicitly chose light
     const useDark = saved !== 'light';
     if (useDark) document.documentElement.classList.add('dark');
   })();
@@ -25,10 +23,8 @@
   .chip.selected { background: #0F6E56; color: white; }
   details > summary { list-style: none; cursor: pointer; }
   details > summary::-webkit-details-marker { display: none; }
-  /* CSS variables for inline SVG so radar charts adapt to theme */
   :root { --radar-grid: #e7e5e4; --radar-label: #78716c; --radar-fill: #0F6E56; }
   .dark { --radar-grid: #44403c; --radar-label: #a8a29e; --radar-fill: #34d399; }
-  /* The Tailwind Play CDN sets a default range thumb; nudge it for dark */
   .dark input[type=range] { accent-color: #34d399; }
 </style>
 </head>
@@ -40,44 +36,58 @@
   <header class="mb-8 flex items-start justify-between gap-4">
     <div>
       <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Language Bridges</h1>
-      <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl">
-        Tell us what you speak. We'll show which languages will feel easiest to learn next — and explain <em>why</em>, broken down across vocabulary, grammar, sounds, and writing system.
-      </p>
+      <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl" x-html="t('subtitle')"></p>
     </div>
-    <button
-      @click="toggleTheme()"
-      :title="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-      :aria-label="isDark ? 'Switch to light mode' : 'Switch to dark mode'"
-      class="flex-shrink-0 p-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
-    >
-      <!-- Sun icon when in dark mode (click to go light) -->
-      <svg x-show="isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <circle cx="12" cy="12" r="4"/>
-        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
-      </svg>
-      <!-- Moon icon when in light mode (click to go dark) -->
-      <svg x-show="!isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-      </svg>
-    </button>
-	</header>
-  <!-- Language selector -->
+    <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- UI language selector -->
+      <select
+        x-model="currentLang"
+        @change="saveLang()"
+        :title="t('langSelector')"
+        class="px-2 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 cursor-pointer"
+      >
+        <option value="en">English</option>
+        <option value="de">Deutsch</option>
+        <option value="fr">Fran&#231;ais</option>
+        <option value="es">Espa&#241;ol</option>
+        <option value="it">Italiano</option>
+        <option value="pl">Polski</option>
+        <option value="tr">T&#252;rk&#231;e</option>
+        <option value="ru">&#1056;&#1091;&#1089;&#1089;&#1082;&#1080;&#1081;</option>
+      </select>
+      <!-- Theme toggle -->
+      <button
+        @click="toggleTheme()"
+        :title="isDark ? t('lightMode') : t('darkMode')"
+        :aria-label="isDark ? t('lightMode') : t('darkMode')"
+        class="p-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 transition-colors"
+      >
+        <svg x-show="isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
+        </svg>
+        <svg x-show="!isDark" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Language selector (speakers) -->
   <section class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6 mb-6">
     <div class="flex items-center justify-between mb-3">
-      <h2 class="text-lg font-medium">Languages you speak</h2>
-      <span class="text-sm text-stone-500 dark:text-stone-400" x-text="speakers.length + ' selected'"></span>
+      <h2 class="text-lg font-medium" x-text="t('sectionSpeaks')"></h2>
+      <span class="text-sm text-stone-500 dark:text-stone-400" x-text="t('selected', {n: speakers.length})"></span>
     </div>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mb-4">Pick all the languages you know, even partially. Order doesn't matter.</p>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-4" x-text="t('hint')"></p>
 
-    <!-- Search box -->
     <input
       type="text"
-      placeholder="Search languages…"
+      :placeholder="t('searchPlaceholder')"
       x-model="search"
       class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 mb-3 text-sm"
     >
 
-    <!-- Chips grid -->
     <div class="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-1">
       <template x-for="code in filteredLanguages" :key="code">
         <button
@@ -85,7 +95,7 @@
           :class="speakers.includes(code) ? 'chip selected' : 'chip bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200'"
           class="px-3 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700"
         >
-          <span x-text="DATA.languages[code].name"></span>
+          <span x-text="langName(code)"></span>
         </button>
       </template>
     </div>
@@ -96,10 +106,10 @@
     <details>
       <summary class="flex items-center justify-between">
         <div>
-          <h2 class="text-lg font-medium">What matters most to you?</h2>
-          <p class="text-sm text-stone-500 dark:text-stone-400">Adjust how much each dimension counts in the score.</p>
+          <h2 class="text-lg font-medium" x-text="t('sectionWeights')"></h2>
+          <p class="text-sm text-stone-500 dark:text-stone-400" x-text="t('weightsHint')"></p>
         </div>
-        <span class="text-stone-400 dark:text-stone-500 text-sm">Tap to expand</span>
+        <span class="text-stone-400 dark:text-stone-500 text-sm" x-text="t('tapExpand')"></span>
       </summary>
       <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
         <template x-for="dim in weightDims" :key="dim.key">
@@ -109,9 +119,7 @@
             <span class="w-10 text-right text-sm text-stone-500 tabular-nums" x-text="weights[dim.key]"></span>
           </label>
         </template>
-        <button @click="resetWeights()" class="md:col-span-2 text-sm text-emerald-700 dark:text-emerald-400 hover:underline justify-self-start">
-          Reset to defaults
-        </button>
+        <button @click="resetWeights()" class="md:col-span-2 text-sm text-emerald-700 dark:text-emerald-400 hover:underline justify-self-start" x-text="t('resetWeights')"></button>
       </div>
     </details>
   </section>
@@ -119,28 +127,25 @@
   <!-- Results -->
   <section x-show="speakers.length > 0" class="space-y-3">
     <h2 class="text-lg font-medium mb-2">
-      Languages to consider learning next
-      <span class="text-sm font-normal text-stone-500 dark:text-stone-400">(top <span x-text="topN"></span>)</span>
+      <span x-text="t('sectionResults')"></span>
+      <span class="text-sm font-normal text-stone-500 dark:text-stone-400">(<span x-text="t('topN', {n: topN})"></span>)</span>
     </h2>
 
     <template x-for="(rec, idx) in recommendations" :key="rec.target">
       <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-4 md:p-5">
         <div class="flex flex-col md:flex-row md:items-start md:gap-5">
 
-          <!-- Rank + Name + Score -->
           <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
             <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
             <div>
               <div class="font-medium text-stone-900 dark:text-stone-100" x-text="DATA.languages[rec.target].name"></div>
-              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
+              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' \xb7 ' + DATA.languages[rec.target].family"></div>
             </div>
             <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
           </div>
 
-          <!-- Radar -->
           <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
 
-          <!-- Explanation + sub-scores -->
           <div class="flex-1">
             <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
             <div class="flex flex-wrap gap-2 text-xs">
@@ -153,28 +158,325 @@
             </div>
           </div>
 
-          <!-- Score (desktop) -->
           <div class="hidden md:flex flex-col items-end ml-3">
             <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-            <div class="text-xs text-stone-500 dark:text-stone-400">score</div>
+            <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
           </div>
         </div>
       </div>
     </template>
   </section>
 
-  <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center">
-    Pick at least one language above to see recommendations.
-  </p>
+  <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center" x-text="t('noSelection')"></p>
 
-  <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400">
-    Curated dataset of 96 languages across 17 language families. Scoring combines genealogical kinship, lexical overlap, typological grammar, phonology, writing system, and documented contact effects. Built as a research-preview prototype.
-  </footer>
+  <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400" x-text="t('footer')"></footer>
 </div>
 
 <script>
+const TRANSLATIONS = {
+  en: {
+    subtitle: "Tell us what you speak. We’ll show which languages will feel easiest to learn next — and explain <em>why</em>, broken down across vocabulary, grammar, sounds, and writing system.",
+    sectionSpeaks: "Languages you speak",
+    selected: "{n} selected",
+    hint: "Pick all the languages you know, even partially. Order doesn’t matter.",
+    searchPlaceholder: "Search languages…",
+    sectionWeights: "What matters most to you?",
+    weightsHint: "Adjust how much each dimension counts in the score.",
+    tapExpand: "Tap to expand",
+    dimLexicon: "Lexicon", dimGrammar: "Grammar", dimPhonology: "Phonology",
+    dimWriting: "Writing system", dimFamily: "Family",
+    resetWeights: "Reset to defaults",
+    sectionResults: "Languages to consider learning next",
+    topN: "top {n}", scorelabel: "score",
+    subLex: "Lex", subGram: "Gram", subPhon: "Phon", subScript: "Script", subFamily: "Family",
+    noSelection: "Pick at least one language above to see recommendations.",
+    footer: "Curated dataset of 96 languages across 17 language families. Scoring combines genealogical kinship, lexical overlap, typological grammar, phonology, writing system, and documented contact effects. Built as a research-preview prototype.",
+    lightMode: "Switch to light mode", darkMode: "Switch to dark mode",
+    langSelector: "Select interface language",
+    expSameSubbranch: "{target} is in the same subbranch as {helper}, so the core grammar will feel native.",
+    expSameBranch: "{target} is a close cousin of {helper} within the same branch.",
+    expSameFamily: "{target} shares deep {family} roots with {helper} but in a different branch.",
+    expUnrelated: "{target} is genealogically unrelated to anything you speak.",
+    expLexVeryHigh: "Vocabulary overlap with {helper} is very high (~{pct}%) — you’ll read it almost immediately.",
+    expLexHigh: "Vocabulary overlap with {helper} is substantial (~{pct}%) — lots of recognizable words.",
+    expLexModest: "Vocabulary overlap is modest (~{pct}%), mostly via loans and learned words.",
+    expLexLow: "Vocabulary will mostly need to be learned from scratch (~{pct}% overlap).",
+    expGramSimilar: "Grammar feels very similar to {helper}.",
+    expGramOverlap: "Grammar overlaps with {helper} in important ways (word order, morphology type).",
+    expGramDiff: "Grammar will feel noticeably different — expect some retraining.",
+    expGramVeryDiff: "Grammar is structurally very different and will be the hardest part.",
+    expScriptNew: "The script is different — you’ll need to learn a new alphabet.",
+    expScriptPartial: "The script overlaps but isn’t identical.",
+    expPhonSimilar: "Sound system shares many of the same distinctive sounds.",
+    expPhonDiff: "Sound inventory is quite different — pronunciation will need fresh work.",
+  },
+  de: {
+    subtitle: "Sag uns, welche Sprachen du sprichst. Wir zeigen dir, welche du am leichtesten lernen könntest — und warum, aufgeschlüsselt nach Wortschatz, Grammatik, Aussprache und Schrift.",
+    sectionSpeaks: "Sprachen, die du sprichst",
+    selected: "{n} ausgewählt",
+    hint: "Wähle alle Sprachen aus, die du kennst, auch teilweise. Die Reihenfolge spielt keine Rolle.",
+    searchPlaceholder: "Sprachen suchen…",
+    sectionWeights: "Was ist dir am wichtigsten?",
+    weightsHint: "Passe an, wie stark jede Dimension in die Bewertung einfliesst.",
+    tapExpand: "Zum Erweitern tippen",
+    dimLexicon: "Wortschatz", dimGrammar: "Grammatik", dimPhonology: "Phonologie",
+    dimWriting: "Schriftsystem", dimFamily: "Sprachfamilie",
+    resetWeights: "Auf Standard zurücksetzen",
+    sectionResults: "Sprachen, die du als nächstes lernen könntest",
+    topN: "Top {n}", scorelabel: "Punkte",
+    subLex: "Wort.", subGram: "Gram.", subPhon: "Phon.", subScript: "Schrift", subFamily: "Familie",
+    noSelection: "Wähle mindestens eine Sprache oben aus, um Empfehlungen zu sehen.",
+    footer: "Kuratierter Datensatz mit 96 Sprachen aus 17 Sprachfamilien. Die Bewertung kombiniert genealogische Verwandtschaft, lexikalische Überschneidung, typologische Grammatik, Phonologie, Schriftsystem und dokumentierte Kontakteffekte. Als Forschungsprototyp entwickelt.",
+    lightMode: "Zum hellen Modus wechseln", darkMode: "Zum dunklen Modus wechseln",
+    langSelector: "Sprache der Benutzeroberfläche wählen",
+    expSameSubbranch: "{target} gehört zum gleichen Unterzweig wie {helper} — die Kerngrammatik wird sich sofort vertraut anfühlen.",
+    expSameBranch: "{target} ist ein naher Verwandter von {helper} im gleichen Zweig.",
+    expSameFamily: "{target} teilt tiefe {family}-Wurzeln mit {helper}, gehört aber einem anderen Zweig an.",
+    expUnrelated: "{target} ist mit keiner Sprache, die du sprichst, genealogisch verwandt.",
+    expLexVeryHigh: "Die Wortschatzüberschneidung mit {helper} ist sehr hoch (~{pct}%) — du wirst sie fast sofort lesen können.",
+    expLexHigh: "Die Wortschatzüberschneidung mit {helper} ist erheblich (~{pct}%) — viele erkennbare Wörter.",
+    expLexModest: "Die Wortschatzüberschneidung ist mäßig (~{pct}%), hauptsächlich durch Lehn- und Lernwörter.",
+    expLexLow: "Der Wortschatz muss größtenteils von Grund auf gelernt werden (~{pct}% Überschneidung).",
+    expGramSimilar: "Die Grammatik fühlt sich der von {helper} sehr ähnlich an.",
+    expGramOverlap: "Die Grammatik überschneidet sich mit {helper} in wichtigen Punkten (Wortstellung, Morphologietyp).",
+    expGramDiff: "Die Grammatik wird sich merklich anders anfühlen — erwarte einige Umgewöhnung.",
+    expGramVeryDiff: "Die Grammatik ist strukturell sehr verschieden und wird der schwierigste Teil sein.",
+    expScriptNew: "Die Schrift ist anders — du musst ein neues Alphabet lernen.",
+    expScriptPartial: "Die Schrift überschneidet sich, ist aber nicht identisch.",
+    expPhonSimilar: "Das Lautsystem teilt viele der gleichen charakteristischen Laute.",
+    expPhonDiff: "Der Lautinventar ist recht verschieden — die Aussprache wird neue Arbeit erfordern.",
+  },
+  fr: {
+    subtitle: "Dites-nous quelles langues vous parlez. Nous vous montrerons lesquelles seront les plus faciles à apprendre — et pourquoi, en détaillant le vocabulaire, la grammaire, les sons et le système d’écriture.",
+    sectionSpeaks: "Langues que vous parlez",
+    selected: "{n} sélectionnée(s)",
+    hint: "Cochez toutes les langues que vous connaissez, même partiellement. L’ordre n’a pas d’importance.",
+    searchPlaceholder: "Rechercher des langues…",
+    sectionWeights: "Qu’est-ce qui compte le plus pour vous ?",
+    weightsHint: "Ajustez l’importance de chaque dimension dans le score.",
+    tapExpand: "Touchez pour développer",
+    dimLexicon: "Lexique", dimGrammar: "Grammaire", dimPhonology: "Phonologie",
+    dimWriting: "Système d’écriture", dimFamily: "Famille",
+    resetWeights: "Réinitialiser",
+    sectionResults: "Langues à envisager d’apprendre",
+    topN: "top {n}", scorelabel: "score",
+    subLex: "Lex.", subGram: "Gram.", subPhon: "Phon.", subScript: "Écriture", subFamily: "Famille",
+    noSelection: "Sélectionnez au moins une langue ci-dessus pour voir des recommandations.",
+    footer: "Ensemble de données de 96 langues réparties dans 17 familles linguistiques. Le score combine la parenté généalogique, le chevauchement lexical, la grammaire typologique, la phonologie, le système d’écriture et les effets de contact documentés. Développé comme prototype de recherche.",
+    lightMode: "Passer en mode clair", darkMode: "Passer en mode sombre",
+    langSelector: "Choisir la langue de l’interface",
+    expSameSubbranch: "{target} appartient au même sous-groupe que {helper} — la grammaire de base semblera naturelle.",
+    expSameBranch: "{target} est un proche cousin de {helper} dans la même branche.",
+    expSameFamily: "{target} partage de profondes racines {family} avec {helper} mais dans une branche différente.",
+    expUnrelated: "{target} n’a aucun lien généalogique avec les langues que vous parlez.",
+    expLexVeryHigh: "Le chevauchement lexical avec {helper} est très élevé (~{pct}%) — vous pourrez lire presque immédiatement.",
+    expLexHigh: "Le chevauchement lexical avec {helper} est substantiel (~{pct}%) — beaucoup de mots reconnaissables.",
+    expLexModest: "Le chevauchement lexical est modeste (~{pct}%), principalement via des emprunts.",
+    expLexLow: "Le vocabulaire devra être appris presque de zéro (~{pct}% de chevauchement).",
+    expGramSimilar: "La grammaire est très similaire à celle de {helper}.",
+    expGramOverlap: "La grammaire coïncide avec {helper} sur des points importants (ordre des mots, type morphologique).",
+    expGramDiff: "La grammaire semblera notablement différente — attendez-vous à quelques ajustements.",
+    expGramVeryDiff: "La grammaire est structurellement très différente et sera la partie la plus difficile.",
+    expScriptNew: "Le système d’écriture est différent — vous devrez apprendre un nouvel alphabet.",
+    expScriptPartial: "Le système d’écriture se chevauche mais n’est pas identique.",
+    expPhonSimilar: "Le système sonore partage beaucoup des mêmes sons distinctifs.",
+    expPhonDiff: "L’inventaire sonore est assez différent — la prononciation nécessitera un travail spécifique.",
+  },
+  es: {
+    subtitle: "Dínos qué idiomas hablas. Te mostraremos cuáles serán más fáciles de aprender — y por qué, desglosado en vocabulario, gramática, pronunciación y sistema de escritura.",
+    sectionSpeaks: "Idiomas que hablas",
+    selected: "{n} seleccionados",
+    hint: "Marca todos los idiomas que conoces, aunque sea parcialmente. El orden no importa.",
+    searchPlaceholder: "Buscar idiomas…",
+    sectionWeights: "¿Qué es lo más importante para ti?",
+    weightsHint: "Ajusta cuánto cuenta cada dimensión en la puntuación.",
+    tapExpand: "Toca para ampliar",
+    dimLexicon: "Léxico", dimGrammar: "Gramática", dimPhonology: "Fonología",
+    dimWriting: "Sistema de escritura", dimFamily: "Familia",
+    resetWeights: "Restablecer valores",
+    sectionResults: "Idiomas a considerar aprender",
+    topN: "top {n}", scorelabel: "puntuación",
+    subLex: "Léx.", subGram: "Gram.", subPhon: "Fon.", subScript: "Escritura", subFamily: "Familia",
+    noSelection: "Selecciona al menos un idioma arriba para ver recomendaciones.",
+    footer: "Conjunto de datos de 96 idiomas de 17 familias lingüísticas. La puntuación combina parentesco genealógico, solapamiento léxico, gramática tipológica, fonología, sistema de escritura y efectos de contacto documentados. Desarrollado como prototipo de investigación.",
+    lightMode: "Cambiar al modo claro", darkMode: "Cambiar al modo oscuro",
+    langSelector: "Seleccionar idioma de la interfaz",
+    expSameSubbranch: "{target} está en la misma subrama que {helper} — la gramática central te resultará nativa.",
+    expSameBranch: "{target} es un primo cercano de {helper} dentro de la misma rama.",
+    expSameFamily: "{target} comparte raíces {family} profundas con {helper} pero en una rama diferente.",
+    expUnrelated: "{target} no tiene relación genealógica con ninguno de los idiomas que hablas.",
+    expLexVeryHigh: "El solapamiento de vocabulario con {helper} es muy alto (~{pct}%) — podrás leerlo casi de inmediato.",
+    expLexHigh: "El solapamiento de vocabulario con {helper} es sustancial (~{pct}%) — muchas palabras reconocibles.",
+    expLexModest: "El solapamiento de vocabulario es moderado (~{pct}%), principalmente a través de préstamos.",
+    expLexLow: "El vocabulario deberá aprenderse casi de cero (~{pct}% de solapamiento).",
+    expGramSimilar: "La gramática se siente muy similar a la de {helper}.",
+    expGramOverlap: "La gramática coincide con {helper} en aspectos importantes (orden de palabras, tipo morfológico).",
+    expGramDiff: "La gramática se sentirá notablemente diferente — espera cierta readaptación.",
+    expGramVeryDiff: "La gramática es estructuralmente muy diferente y será la parte más difícil.",
+    expScriptNew: "El sistema de escritura es diferente — tendrás que aprender un nuevo alfabeto.",
+    expScriptPartial: "El sistema de escritura se superpone pero no es idéntico.",
+    expPhonSimilar: "El sistema de sonidos comparte muchos de los mismos sonidos distintivos.",
+    expPhonDiff: "El inventario de sonidos es bastante diferente — la pronunciación requerirá trabajo nuevo.",
+  },
+  it: {
+    subtitle: "Dicci quali lingue parli. Ti mostreremo quali saranno più facili da imparare — e perché, suddivise in vocabolario, grammatica, suoni e sistema di scrittura.",
+    sectionSpeaks: "Lingue che parli",
+    selected: "{n} selezionate",
+    hint: "Seleziona tutte le lingue che conosci, anche parzialmente. L’ordine non importa.",
+    searchPlaceholder: "Cerca lingue…",
+    sectionWeights: "Cosa conta di più per te?",
+    weightsHint: "Regola quanto ogni dimensione incide nel punteggio.",
+    tapExpand: "Tocca per espandere",
+    dimLexicon: "Lessico", dimGrammar: "Grammatica", dimPhonology: "Fonologia",
+    dimWriting: "Sistema di scrittura", dimFamily: "Famiglia",
+    resetWeights: "Ripristina impostazioni",
+    sectionResults: "Lingue da considerare di imparare",
+    topN: "top {n}", scorelabel: "punteggio",
+    subLex: "Less.", subGram: "Gram.", subPhon: "Fon.", subScript: "Scrittura", subFamily: "Famiglia",
+    noSelection: "Seleziona almeno una lingua sopra per vedere i suggerimenti.",
+    footer: "Dataset curato di 96 lingue appartenenti a 17 famiglie linguistiche. Il punteggio combina parentela genealogica, sovrapposizione lessicale, grammatica tipologica, fonologia, sistema di scrittura ed effetti di contatto documentati. Sviluppato come prototipo di ricerca.",
+    lightMode: "Passa alla modalità chiara", darkMode: "Passa alla modalità scura",
+    langSelector: "Seleziona la lingua dell’interfaccia",
+    expSameSubbranch: "{target} appartiene allo stesso sottoramo di {helper} — la grammatica di base sembrerà naturale.",
+    expSameBranch: "{target} è un cugino stretto di {helper} nello stesso ramo.",
+    expSameFamily: "{target} condivide radici {family} profonde con {helper} ma in un ramo diverso.",
+    expUnrelated: "{target} non ha legami genealogici con nessuna delle lingue che parli.",
+    expLexVeryHigh: "La sovrapposizione di vocabolario con {helper} è molto alta (~{pct}%) — riuscirai a leggerla quasi subito.",
+    expLexHigh: "La sovrapposizione di vocabolario con {helper} è sostanziale (~{pct}%) — molte parole riconoscibili.",
+    expLexModest: "La sovrapposizione di vocabolario è modesta (~{pct}%), principalmente tramite prestiti.",
+    expLexLow: "Il vocabolario dovrà essere appreso quasi da zero (~{pct}% di sovrapposizione).",
+    expGramSimilar: "La grammatica è molto simile a quella di {helper}.",
+    expGramOverlap: "La grammatica coincide con {helper} in aspetti importanti (ordine delle parole, tipo morfologico).",
+    expGramDiff: "La grammatica sembrerà notevolmente diversa — aspettati qualche riadattamento.",
+    expGramVeryDiff: "La grammatica è strutturalmente molto diversa e sarà la parte più difficile.",
+    expScriptNew: "Il sistema di scrittura è diverso — dovrai imparare un nuovo alfabeto.",
+    expScriptPartial: "Il sistema di scrittura si sovrappone ma non è identico.",
+    expPhonSimilar: "Il sistema dei suoni condivide molti degli stessi suoni distintivi.",
+    expPhonDiff: "L’inventario dei suoni è abbastanza diverso — la pronuncia richiederà lavoro aggiuntivo.",
+  },
+  pl: {
+    subtitle: "Powiedz nam, jakie języki znasz. Pokażemy, które będą najłatwiejsze do nauczenia — i wyjaśnimy dlaczego, analizując słownictwo, gramatykę, wymowę i pismo.",
+    sectionSpeaks: "Języki, którymi mówisz",
+    selected: "wybrano: {n}",
+    hint: "Zaznacz wszystkie języki, które znasz, choćby częściowo. Kolejność nie ma znaczenia.",
+    searchPlaceholder: "Szukaj języków…",
+    sectionWeights: "Co jest dla Ciebie najważniejsze?",
+    weightsHint: "Dostosuj, jak bardzo każdy wymiar wpływa na wynik.",
+    tapExpand: "Kliknij, aby rozwinąć",
+    dimLexicon: "Słownictwo", dimGrammar: "Gramatyka", dimPhonology: "Fonologia",
+    dimWriting: "System pisma", dimFamily: "Rodzina",
+    resetWeights: "Przywróć domyślne",
+    sectionResults: "Języki do nauki jako następne",
+    topN: "top {n}", scorelabel: "wynik",
+    subLex: "Słow.", subGram: "Gram.", subPhon: "Fon.", subScript: "Pismo", subFamily: "Rodzina",
+    noSelection: "Wybierz co najmniej jeden język powyżej, aby zobaczyć rekomendacje.",
+    footer: "Wyselekcjonowany zbiór 96 języków z 17 rodzin językowych. Ocenianie łączy pokrewieństwo genealogiczne, podobieństwo leksykalne, gramatykę typologiczną, fonologię, system pisma i udokumentowane efekty kontaktu. Prototyp badawczy.",
+    lightMode: "Przełącz na tryb jasny", darkMode: "Przełącz na tryb ciemny",
+    langSelector: "Wybierz język interfejsu",
+    expSameSubbranch: "{target} należy do tej samej podgałęzi co {helper} — gramatyka będzie od razu znajoma.",
+    expSameBranch: "{target} jest bliskim krewnym {helper} w tej samej gałęzi.",
+    expSameFamily: "{target} ma wspólne korzenie {family} z {helper}, ale należy do innej gałęzi.",
+    expUnrelated: "{target} nie jest genealogicznie spokrewniony z żadnym językiem, który znasz.",
+    expLexVeryHigh: "Podobieństwo słownikowe z {helper} jest bardzo wysokie (~{pct}%) — będziesz czytać niemal od razu.",
+    expLexHigh: "Podobieństwo słownikowe z {helper} jest znaczne (~{pct}%) — wiele rozpoznawalnych słów.",
+    expLexModest: "Podobieństwo słownikowe jest umiarkowane (~{pct}%), głównie przez zapożyczenia.",
+    expLexLow: "Słownictwo trzeba będzie nauczyć się niemal od zera (~{pct}% pokrycia).",
+    expGramSimilar: "Gramatyka jest bardzo podobna do {helper}.",
+    expGramOverlap: "Gramatyka pokrywa się z {helper} w ważnych aspektach (szyk zdania, typ morfologii).",
+    expGramDiff: "Gramatyka będzie odczuwalnie różna — spodziewaj się pewnego przestawienia.",
+    expGramVeryDiff: "Gramatyka jest strukturalnie bardzo różna i będzie najtrudniejszą częścią.",
+    expScriptNew: "Pismo jest inne — trzeba będzie nauczyć się nowego alfabetu.",
+    expScriptPartial: "Pismo pokrywa się częściowo, ale nie jest identyczne.",
+    expPhonSimilar: "System dźwiękowy podziela wiele tych samych charakterystycznych dźwięków.",
+    expPhonDiff: "Zasoby dźwiękowe są dość różne — wymowa będzie wymagała nowej pracy.",
+  },
+  tr: {
+    subtitle: "Hangi dilleri konuştuğunuzu söyleyin. Hangi dillerin öğrenilmesi en kolay olacağını — ve neden, sözcük dağarcığı, dilbilgisi, sesler ve yazı sistemi bazında — gösterelim.",
+    sectionSpeaks: "Konuştuğunuz diller",
+    selected: "{n} seçildi",
+    hint: "Kısmen bilseniz bile, bildiğiniz tüm dilleri seçin. Sıra önemli değil.",
+    searchPlaceholder: "Dil ara…",
+    sectionWeights: "Sizin için en önemli olan nedir?",
+    weightsHint: "Her boyutun puana ne kadar etki ettiğini ayarlayın.",
+    tapExpand: "Genişletmek için tıklayın",
+    dimLexicon: "Sözcük Dağarcığı", dimGrammar: "Dilbilgisi", dimPhonology: "Sesbilim",
+    dimWriting: "Yazı Sistemi", dimFamily: "Dil Ailesi",
+    resetWeights: "Varsayılanlara sıfırla",
+    sectionResults: "Öğrenmeyi düşünebileceğiniz diller",
+    topN: "ilk {n}", scorelabel: "puan",
+    subLex: "Söz.", subGram: "Dilb.", subPhon: "Ses", subScript: "Yazı", subFamily: "Aile",
+    noSelection: "Öneri görmek için yukarıdan en az bir dil seçin.",
+    footer: "17 dil ailesinden 96 dili kapsayan özenle hazırlanmış bir veri seti. Puanlama; soysal akrabalık, sözcüksel benzerlik, tipik dilbilgisi, sesbilim, yazı sistemi ve belgelenmiş temas etkilerini birleştirir. Araştırma prototipi olarak geliştirilmiştir.",
+    lightMode: "Açık moda geç", darkMode: "Koyu moda geç",
+    langSelector: "Arayüz dilini seçin",
+    expSameSubbranch: "{target}, {helper} ile aynı alt dalda — temel dilbilgisi hemen tanıdık gelecek.",
+    expSameBranch: "{target}, aynı dal içinde {helper}’in yakın akrabasıdır.",
+    expSameFamily: "{target}, farklı bir dalda olsa da {helper} ile derin {family} köklerini paylaşır.",
+    expUnrelated: "{target}, konuştuğunuz hiçbir dille soysal olarak ilişkili değildir.",
+    expLexVeryHigh: "{helper} ile sözcük örtüşmesi çok yüksek (~%{pct}) — neredeyse aninda okuyabilirsiniz.",
+    expLexHigh: "{helper} ile sözcük örtüşmesi önemli (~%{pct}) — pek çok tanıdık kelime.",
+    expLexModest: "Sözcük örtüşmesi orta düzeyde (~%{pct}), çoğunlukla ödünç kelimeler aracılığıyla.",
+    expLexLow: "Sözcük dağarcığının büyük bölümü sıfırdan öğrenilmesi gerekecek (~%{pct} örtüşme).",
+    expGramSimilar: "Dilbilgisi, {helper}’e çok benzer.",
+    expGramOverlap: "Dilbilgisi, {helper} ile önemli noktalarda (sözdizimi, morfoloji türü) örtüşmektedir.",
+    expGramDiff: "Dilbilgisi belirgin biçimde farklı olacak — uyum sağlamak zaman alabilir.",
+    expGramVeryDiff: "Dilbilgisi yapısal olarak çok farklı ve en zor kısım bu olacak.",
+    expScriptNew: "Yazı sistemi farklı — yeni bir alfabe öğrenmeniz gerekecek.",
+    expScriptPartial: "Yazı sistemi kısmen örtüşüyor, ancak aynı değil.",
+    expPhonSimilar: "Ses sistemi aynı karakteristik seslerin çoğunu paylaşıyor.",
+    expPhonDiff: "Ses envanteri oldukça farklı — telaffuz yeni bir çalışma gerektirecek.",
+  },
+  ru: {
+    subtitle: "Расскажите нам, какими языками вы владеете. Мы покажем, какие языки будет проще всего выучить — и объясним почему, анализируя словарный запас, грамматику, произношение и систему письма.",
+    sectionSpeaks: "Языки, которыми вы владеете",
+    selected: "выбрано: {n}",
+    hint: "Отметьте все языки, которые вы знаете, хотя бы частично. Порядок не важен.",
+    searchPlaceholder: "Поиск языков…",
+    sectionWeights: "Что для вас важнее всего?",
+    weightsHint: "Настройте, насколько каждый параметр влияет на оценку.",
+    tapExpand: "Нажмите для раскрытия",
+    dimLexicon: "Лексика", dimGrammar: "Грамматика", dimPhonology: "Фонология",
+    dimWriting: "Система письма", dimFamily: "Языковая семья",
+    resetWeights: "Сбросить настройки",
+    sectionResults: "Языки для изучения",
+    topN: "топ {n}", scorelabel: "оценка",
+    subLex: "Лекс.", subGram: "Грам.", subPhon: "Фон.", subScript: "Письмо", subFamily: "Семья",
+    noSelection: "Выберите хотя бы один язык выше, чтобы увидеть рекомендации.",
+    footer: "Тщательно подобранный набор данных из 96 языков 17 языковых семей. Оценка объединяет генеалогическое родство, лексическое сходство, типологическую грамматику, фонологию, систему письма и задокументированные контактные эффекты. Создан как исследовательский прототип.",
+    lightMode: "Переключить на светлую тему",
+    darkMode: "Переключить на тёмную тему",
+    langSelector: "Выбрать язык интерфейса",
+    expSameSubbranch: "{target} принадлежит той же подветви, что и {helper} — основная грамматика покажется родной.",
+    expSameBranch: "{target} — близкий родственник {helper} в той же ветви.",
+    expSameFamily: "{target} разделяет глубокие корни {family} с {helper}, но относится к другой ветви.",
+    expUnrelated: "{target} не имеет генеалогического родства ни с одним из языков, которыми вы владеете.",
+    expLexVeryHigh: "Лексическое сходство с {helper} очень высокое (~{pct}%) — вы сможете читать почти сразу.",
+    expLexHigh: "Лексическое сходство с {helper} значительное (~{pct}%) — много узнаваемых слов.",
+    expLexModest: "Лексическое сходство умеренное (~{pct}%), в основном через заимствования.",
+    expLexLow: "Словарный запас в основном придётся учить с нуля (~{pct}% сходства).",
+    expGramSimilar: "Грамматика очень похожа на {helper}.",
+    expGramOverlap: "Грамматика совпадает с {helper} в важных аспектах (порядок слов, тип морфологии).",
+    expGramDiff: "Грамматика будет заметно отличаться — ожидайте некоторой перестройки.",
+    expGramVeryDiff: "Грамматика структурно очень отличается и будет самой трудной частью.",
+    expScriptNew: "Система письма другая — нужно будет выучить новый алфавит.",
+    expScriptPartial: "Системы письма частично совпадают, но не идентичны.",
+    expPhonSimilar: "Звуковая система разделяет многие характерные звуки.",
+    expPhonDiff: "Звуковой инвентарь существенно отличается — произношение потребует отдельной работы.",
+  },
+};
+
 const DATA = {"languages": {"de": {"name": "German", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pf", "umlaut", "x", "ç", "ʁ"], "speakers_m": 95}, "nl": {"name": "Dutch", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["diphthongs", "long_short_vowels", "x", "ɣ"], "speakers_m": 25}, "en": {"name": "English", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["diphthongs", "ð", "ɹ", "θ"], "speakers_m": 1500}, "af": {"name": "Afrikaans", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "V2", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["diphthongs", "long_short_vowels", "x", "ɣ"], "speakers_m": 17}, "yi": {"name": "Yiddish", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Hebrew", "case_count": 3, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["diphthongs", "x", "ʁ"], "speakers_m": 1.5}, "lb": {"name": "Luxembourgish", "family": "Indo-European", "branch": "Germanic", "subbranch": "West Germanic", "writing_system": "Latin", "case_count": 3, "gender_count": 3, "articles": "def+indef", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["umlaut", "x", "ç", "ʁ"], "speakers_m": 0.6}, "sv": {"name": "Swedish", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent", "ɧ"], "speakers_m": 13}, "no": {"name": "Norwegian", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent"], "speakers_m": 5}, "da": {"name": "Danish", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "V2", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "stød"], "speakers_m": 6}, "is": {"name": "Icelandic", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def(suffix)", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "ð", "θ"], "speakers_m": 0.4}, "fo": {"name": "Faroese", "family": "Indo-European", "branch": "Germanic", "subbranch": "North Germanic", "writing_system": "Latin", "case_count": 4, "gender_count": 3, "articles": "def(suffix)", "word_order": "V2", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels"], "speakers_m": 0.07}, "es": {"name": "Spanish", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "x", "ɲ"], "speakers_m": 590}, "pt": {"name": "Portuguese", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ɲ", "ʎ"], "speakers_m": 270}, "gl": {"name": "Galician", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ɲ", "ʎ"], "speakers_m": 2.4}, "fr": {"name": "French", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["front_rounded_y", "nasal_vowels", "ʁ"], "speakers_m": 310}, "it": {"name": "Italian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "ɲ", "ʎ"], "speakers_m": 68}, "ro": {"name": "Romanian", "family": "Indo-European", "branch": "Romance", "subbranch": "Eastern Romance", "writing_system": "Latin", "case_count": 3, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["central_vowels", "ə", "ɨ"], "speakers_m": 25}, "ca": {"name": "Catalan", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ə", "ʎ"], "speakers_m": 9}, "oc": {"name": "Occitan", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ɲ", "ʎ"], "speakers_m": 0.8}, "sc": {"name": "Sicilian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "retroflex", "trill_r"], "speakers_m": 4.7}, "srd": {"name": "Sardinian", "family": "Indo-European", "branch": "Romance", "subbranch": "Western Romance", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "trill_r"], "speakers_m": 1.0}, "ht": {"name": "Haitian Creole", "family": "Indo-European", "branch": "Romance", "subbranch": "French Creole", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def+indef", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ʁ"], "speakers_m": 12}, "ru": {"name": "Russian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r", "x"], "speakers_m": 260}, "uk": {"name": "Ukrainian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["h", "palatalized_consonants", "trill_r"], "speakers_m": 40}, "be": {"name": "Belarusian", "family": "Indo-European", "branch": "Slavic", "subbranch": "East Slavic", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r"], "speakers_m": 5}, "pl": {"name": "Polish", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 7, "gender_count": 5, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "palatalized_consonants", "trill_r", "ɕ", "ʑ"], "speakers_m": 45}, "cs": {"name": "Czech", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "trill_r", "ř"], "speakers_m": 11}, "sk": {"name": "Slovak", "family": "Indo-European", "branch": "Slavic", "subbranch": "West Slavic", "writing_system": "Latin", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "trill_r"], "speakers_m": 5}, "bg": {"name": "Bulgarian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 3, "articles": "def(suffix)", "word_order": "SVO", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r", "ə"], "speakers_m": 8}, "mk": {"name": "Macedonian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 3, "articles": "def(suffix)", "word_order": "SVO", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "trill_r"], "speakers_m": 2}, "hr": {"name": "Croatian/Serbian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Latin/Cyrillic", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["palatalized_consonants", "pitch_accent", "trill_r"], "speakers_m": 17}, "sl": {"name": "Slovenian", "family": "Indo-European", "branch": "Slavic", "subbranch": "South Slavic", "writing_system": "Latin", "case_count": 6, "gender_count": 3, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["dual_number", "pitch_accent", "trill_r", "ə"], "speakers_m": 2.5}, "el": {"name": "Greek", "family": "Indo-European", "branch": "Hellenic", "subbranch": "Hellenic", "writing_system": "Greek", "case_count": 4, "gender_count": 3, "articles": "def+indef", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ð", "ɣ", "θ"], "speakers_m": 13}, "sq": {"name": "Albanian", "family": "Indo-European", "branch": "Albanian", "subbranch": "Albanian", "writing_system": "Latin", "case_count": 5, "gender_count": 3, "articles": "def(suffix)+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ð", "ɫ", "θ"], "speakers_m": 7.5}, "hy": {"name": "Armenian", "family": "Indo-European", "branch": "Armenian", "subbranch": "Armenian", "writing_system": "Armenian", "case_count": 7, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "ejectives", "trill_r"], "speakers_m": 6.7}, "lv": {"name": "Latvian", "family": "Indo-European", "branch": "Baltic", "subbranch": "East Baltic", "writing_system": "Latin", "case_count": 7, "gender_count": 2, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "pitch_accent", "trill_r"], "speakers_m": 1.5}, "lt": {"name": "Lithuanian", "family": "Indo-European", "branch": "Baltic", "subbranch": "East Baltic", "writing_system": "Latin", "case_count": 7, "gender_count": 2, "articles": "none", "word_order": "SVO(free)", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "palatalized_consonants", "pitch_accent", "trill_r"], "speakers_m": 3}, "ga": {"name": "Irish", "family": "Indo-European", "branch": "Celtic", "subbranch": "Goidelic", "writing_system": "Latin", "case_count": 4, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["broad_slender", "lenition", "palatalized_consonants"], "speakers_m": 1.2}, "cy": {"name": "Welsh", "family": "Indo-European", "branch": "Celtic", "subbranch": "Brythonic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["mutations", "trill_r", "ɬ"], "speakers_m": 0.9}, "fa": {"name": "Persian (Farsi)", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Arabic", "case_count": 0, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x", "ɣ", "ʔ"], "speakers_m": 110}, "tg": {"name": "Tajik", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Cyrillic", "case_count": 0, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "analytic-fusional", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x", "ɣ"], "speakers_m": 8}, "ku": {"name": "Kurdish", "family": "Indo-European", "branch": "Iranian", "subbranch": "Western Iranian", "writing_system": "Latin/Arabic", "case_count": 2, "gender_count": 2, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["pharyngeal", "q", "trill_r", "x", "ɣ"], "speakers_m": 30}, "ps": {"name": "Pashto", "family": "Indo-European", "branch": "Iranian", "subbranch": "Eastern Iranian", "writing_system": "Arabic", "case_count": 4, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["q", "retroflex", "trill_r", "x"], "speakers_m": 60}, "hi": {"name": "Hindi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Central", "writing_system": "Devanagari", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "nasal_vowels", "retroflex", "trill_r"], "speakers_m": 600}, "ur": {"name": "Urdu", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Central", "writing_system": "Arabic", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "nasal_vowels", "retroflex", "trill_r"], "speakers_m": 230}, "bn": {"name": "Bengali", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Eastern", "writing_system": "Bengali", "case_count": 4, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 270}, "pa": {"name": "Punjabi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Northwestern", "writing_system": "Gurmukhi/Arabic", "case_count": 2, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "tones", "trill_r"], "speakers_m": 125}, "mr": {"name": "Marathi", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Southern", "writing_system": "Devanagari", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 99}, "gu": {"name": "Gujarati", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Western", "writing_system": "Gujarati", "case_count": 2, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 60}, "ne": {"name": "Nepali", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Northern", "writing_system": "Devanagari", "case_count": 6, "gender_count": 2, "articles": "none", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "trill_r"], "speakers_m": 25}, "si": {"name": "Sinhala", "family": "Indo-European", "branch": "Indo-Aryan", "subbranch": "Insular", "writing_system": "Sinhala", "case_count": 5, "gender_count": 2, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "prenasalized", "retroflex"], "speakers_m": 17}, "fi": {"name": "Finnish", "family": "Uralic", "branch": "Finnic", "subbranch": "Finnic", "writing_system": "Latin", "case_count": 15, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["geminates", "long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 5.5}, "et": {"name": "Estonian", "family": "Uralic", "branch": "Finnic", "subbranch": "Finnic", "writing_system": "Latin", "case_count": 14, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["three_length_grades", "ɤ"], "speakers_m": 1.1}, "hu": {"name": "Hungarian", "family": "Uralic", "branch": "Ugric", "subbranch": "Ugric", "writing_system": "Latin", "case_count": 18, "gender_count": 0, "articles": "def+indef", "word_order": "topic-focus(free)", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 13}, "se": {"name": "Northern Sami", "family": "Uralic", "branch": "Sami", "subbranch": "Western Sami", "writing_system": "Latin", "case_count": 8, "gender_count": 0, "articles": "none", "word_order": "SVO(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["consonant_gradation", "long_short_vowels"], "speakers_m": 0.025}, "tr": {"name": "Turkish", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɯ"], "speakers_m": 90}, "az": {"name": "Azerbaijani", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɯ"], "speakers_m": 30}, "tk": {"name": "Turkmen", "family": "Turkic", "branch": "Oghuz", "subbranch": "Oghuz", "writing_system": "Latin", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "long_short_vowels", "vowel_harmony_front_back", "vowel_harmony_rounding"], "speakers_m": 7}, "kk": {"name": "Kazakh", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Nogai", "writing_system": "Cyrillic/Latin", "case_count": 7, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɣ"], "speakers_m": 13}, "ky": {"name": "Kyrgyz", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Nogai", "writing_system": "Cyrillic", "case_count": 7, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "vowel_harmony_rounding", "ɣ"], "speakers_m": 5}, "tt": {"name": "Tatar", "family": "Turkic", "branch": "Kipchak", "subbranch": "Kipchak-Bulgar", "writing_system": "Cyrillic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["front_rounded_y", "vowel_harmony_front_back", "ɯ"], "speakers_m": 5.2}, "uz": {"name": "Uzbek", "family": "Turkic", "branch": "Karluk", "subbranch": "Karluk", "writing_system": "Latin/Cyrillic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["q", "trill_r", "x"], "speakers_m": 35}, "ug": {"name": "Uyghur", "family": "Turkic", "branch": "Karluk", "subbranch": "Karluk", "writing_system": "Arabic", "case_count": 6, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["q", "vowel_harmony_front_back", "x", "ɣ"], "speakers_m": 11}, "mn": {"name": "Mongolian", "family": "Mongolic", "branch": "Mongolic", "subbranch": "Central", "writing_system": "Cyrillic", "case_count": 8, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": true, "phoneme_features": ["long_short_vowels", "vowel_harmony_front_back"], "speakers_m": 5.7}, "ar": {"name": "Arabic (MSA)", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Central Semitic", "writing_system": "Arabic", "case_count": 3, "gender_count": 2, "articles": "def", "word_order": "VSO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["emphatic_consonants", "pharyngeal", "q", "trill_r", "ħ", "ʔ"], "speakers_m": 420}, "he": {"name": "Hebrew", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Northwest Semitic", "writing_system": "Hebrew", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["trill_r", "ħ", "ʔ"], "speakers_m": 9}, "mt": {"name": "Maltese", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "Central Semitic", "writing_system": "Latin", "case_count": 0, "gender_count": 2, "articles": "def+indef", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["geminates", "pharyngeal", "ħ", "ʔ"], "speakers_m": 0.5}, "am": {"name": "Amharic", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "South Semitic", "writing_system": "Ge'ez", "case_count": 2, "gender_count": 2, "articles": "def(suffix)", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "palatalized_consonants", "ʔ"], "speakers_m": 57}, "ti": {"name": "Tigrinya", "family": "Afro-Asiatic", "branch": "Semitic", "subbranch": "South Semitic", "writing_system": "Ge'ez", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "pharyngeal", "ʔ"], "speakers_m": 9}, "ha": {"name": "Hausa", "family": "Afro-Asiatic", "branch": "Chadic", "subbranch": "West Chadic", "writing_system": "Latin/Arabic", "case_count": 0, "gender_count": 2, "articles": "def", "word_order": "SVO", "morphology": "fusional", "vowel_harmony": false, "phoneme_features": ["ejectives", "implosives", "tones"], "speakers_m": 80}, "so": {"name": "Somali", "family": "Afro-Asiatic", "branch": "Cushitic", "subbranch": "East Cushitic", "writing_system": "Latin", "case_count": 4, "gender_count": 2, "articles": "def", "word_order": "SOV", "morphology": "fusional", "vowel_harmony": true, "phoneme_features": ["pharyngeal", "retroflex", "tones", "ʔ"], "speakers_m": 22}, "ka": {"name": "Georgian", "family": "Kartvelian", "branch": "Kartvelian", "subbranch": "Karto-Zan", "writing_system": "Georgian", "case_count": 7, "gender_count": 0, "articles": "none", "word_order": "SOV(free)", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["consonant_clusters", "ejectives", "ergative"], "speakers_m": 4}, "ta": {"name": "Tamil", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Tamil", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "retroflex"], "speakers_m": 85}, "te": {"name": "Telugu", "family": "Dravidian", "branch": "South-Central Dravidian", "subbranch": "Telugu", "writing_system": "Telugu", "case_count": 8, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex"], "speakers_m": 96}, "kn": {"name": "Kannada", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Kannada", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex"], "speakers_m": 56}, "ml": {"name": "Malayalam", "family": "Dravidian", "branch": "Southern Dravidian", "subbranch": "Tamil-Kannada", "writing_system": "Malayalam", "case_count": 7, "gender_count": 3, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["long_short_vowels", "retroflex"], "speakers_m": 38}, "zh": {"name": "Mandarin Chinese", "family": "Sino-Tibetan", "branch": "Sinitic", "subbranch": "Mandarin", "writing_system": "Chinese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "retroflex", "tones"], "speakers_m": 1100}, "yue": {"name": "Cantonese", "family": "Sino-Tibetan", "branch": "Sinitic", "subbranch": "Yue", "writing_system": "Chinese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 85}, "my": {"name": "Burmese", "family": "Sino-Tibetan", "branch": "Tibeto-Burman", "subbranch": "Lolo-Burmese", "writing_system": "Burmese", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "analytic-agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "creaky_voice", "tones"], "speakers_m": 33}, "bo": {"name": "Tibetan", "family": "Sino-Tibetan", "branch": "Tibeto-Burman", "subbranch": "Bodish", "writing_system": "Tibetan", "case_count": 5, "gender_count": 0, "articles": "indef(only)", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 6}, "ja": {"name": "Japanese", "family": "Japonic", "branch": "Japonic", "subbranch": "Japanese", "writing_system": "Japanese", "case_count": 9, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["geminates", "long_short_vowels", "pitch_accent"], "speakers_m": 125}, "ko": {"name": "Korean", "family": "Koreanic", "branch": "Koreanic", "subbranch": "Korean", "writing_system": "Hangul", "case_count": 7, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tense_stops", "three_way_stop_contrast"], "speakers_m": 80}, "vi": {"name": "Vietnamese", "family": "Austroasiatic", "branch": "Vietic", "subbranch": "Viet-Muong", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["creaky_voice", "tones", "ʔ"], "speakers_m": 85}, "km": {"name": "Khmer", "family": "Austroasiatic", "branch": "Khmeric", "subbranch": "Khmer", "writing_system": "Khmer", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "register_voice"], "speakers_m": 17}, "th": {"name": "Thai", "family": "Tai-Kadai", "branch": "Tai", "subbranch": "Southwestern Tai", "writing_system": "Thai", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "long_short_vowels", "tones"], "speakers_m": 60}, "lo": {"name": "Lao", "family": "Tai-Kadai", "branch": "Tai", "subbranch": "Southwestern Tai", "writing_system": "Lao", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "tones"], "speakers_m": 30}, "id": {"name": "Indonesian", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Malayic", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 200}, "ms": {"name": "Malay", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Malayic", "writing_system": "Latin/Arabic", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 80}, "tl": {"name": "Tagalog", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Philippine", "writing_system": "Latin", "case_count": 3, "gender_count": 0, "articles": "def+indef", "word_order": "VSO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["trill_r", "ʔ"], "speakers_m": 80}, "jv": {"name": "Javanese", "family": "Austronesian", "branch": "Malayo-Polynesian", "subbranch": "Javanese", "writing_system": "Latin/Javanese", "case_count": 0, "gender_count": 0, "articles": "def(only)", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["retroflex", "ʔ"], "speakers_m": 82}, "sw": {"name": "Swahili", "family": "Niger-Congo", "branch": "Bantu", "subbranch": "Sabaki", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["prenasalized", "trill_r"], "speakers_m": 200}, "zu": {"name": "Zulu", "family": "Niger-Congo", "branch": "Bantu", "subbranch": "Nguni", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "click_consonants", "tones"], "speakers_m": 28}, "yo": {"name": "Yoruba", "family": "Niger-Congo", "branch": "Volta-Niger", "subbranch": "Yoruboid", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "analytic", "vowel_harmony": true, "phoneme_features": ["nasal_vowels", "tones"], "speakers_m": 47}, "qu": {"name": "Quechua", "family": "Quechuan", "branch": "Quechuan", "subbranch": "Quechua II", "writing_system": "Latin", "case_count": 11, "gender_count": 0, "articles": "none", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["aspirated_stops", "ejectives", "trill_r"], "speakers_m": 8}, "gn": {"name": "Guarani", "family": "Tupian", "branch": "Tupi-Guarani", "subbranch": "Guarani", "writing_system": "Latin", "case_count": 0, "gender_count": 0, "articles": "none", "word_order": "SVO", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["nasal_vowels", "ʔ"], "speakers_m": 6}, "eu": {"name": "Basque", "family": "Isolate", "branch": "Isolate", "subbranch": "Isolate", "writing_system": "Latin", "case_count": 12, "gender_count": 0, "articles": "def(suffix)+indef", "word_order": "SOV", "morphology": "agglutinative", "vowel_harmony": false, "phoneme_features": ["ergative", "palatalized_consonants", "trill_r"], "speakers_m": 0.75}}, "lexical": {"de|nl": 0.8, "de|en": 0.6, "de|sv": 0.55, "de|no": 0.55, "da|de": 0.55, "de|is": 0.45, "de|fo": 0.4, "en|nl": 0.63, "nl|sv": 0.48, "nl|no": 0.48, "da|nl": 0.48, "en|sv": 0.45, "en|no": 0.45, "da|en": 0.45, "en|is": 0.35, "no|sv": 0.89, "da|sv": 0.85, "da|no": 0.88, "is|sv": 0.55, "is|no": 0.55, "da|is": 0.5, "fo|is": 0.75, "fo|no": 0.55, "fo|sv": 0.5, "da|fo": 0.65, "de|yi": 0.75, "de|lb": 0.85, "lb|nl": 0.55, "af|nl": 0.85, "af|de": 0.55, "af|en": 0.5, "he|yi": 0.2, "es|pt": 0.89, "es|it": 0.82, "es|fr": 0.75, "ca|es": 0.85, "es|ro": 0.71, "es|gl": 0.85, "es|oc": 0.75, "it|pt": 0.8, "fr|pt": 0.75, "ca|pt": 0.82, "pt|ro": 0.72, "gl|pt": 0.85, "fr|it": 0.85, "ca|it": 0.8, "it|ro": 0.77, "it|sc": 0.75, "it|srd": 0.7, "it|oc": 0.75, "ca|fr": 0.8, "fr|ro": 0.75, "fr|oc": 0.78, "fr|ht": 0.55, "ca|ro": 0.73, "ca|oc": 0.85, "en|ht": 0.15, "es|ht": 0.2, "ru|uk": 0.62, "be|ru": 0.8, "be|uk": 0.85, "pl|ru": 0.38, "cs|ru": 0.4, "ru|sk": 0.41, "bg|ru": 0.56, "hr|ru": 0.55, "ru|sl": 0.5, "mk|ru": 0.55, "pl|uk": 0.4, "cs|uk": 0.4, "sk|uk": 0.43, "bg|uk": 0.55, "be|pl": 0.55, "cs|pl": 0.78, "pl|sk": 0.8, "cs|sk": 0.91, "hr|sl": 0.78, "bg|hr": 0.65, "hr|mk": 0.65, "bg|mk": 0.95, "bg|sl": 0.65, "hr|pl": 0.55, "cs|hr": 0.55, "lt|lv": 0.65, "cy|ga": 0.3, "en|fr": 0.27, "en|es": 0.18, "en|it": 0.18, "en|pt": 0.18, "de|fr": 0.18, "fr|nl": 0.2, "de|pl": 0.15, "cs|de": 0.18, "de|sk": 0.15, "de|hr": 0.12, "de|sl": 0.15, "de|hu": 0.18, "lv|ru": 0.2, "lt|ru": 0.18, "hu|ru": 0.1, "et|ru": 0.07, "fi|ru": 0.05, "az|ru": 0.18, "ru|tr": 0.06, "kk|ru": 0.15, "ru|tt": 0.2, "ru|uz": 0.15, "ky|ru": 0.15, "ru|tg": 0.18, "ru|tk": 0.12, "mn|ru": 0.15, "hy|ru": 0.18, "ka|ru": 0.1, "el|en": 0.18, "el|es": 0.15, "el|it": 0.16, "el|fr": 0.17, "et|fi": 0.45, "fi|hu": 0.18, "et|hu": 0.18, "fi|se": 0.2, "no|se": 0.1, "az|tr": 0.85, "az|tk": 0.8, "tk|tr": 0.75, "az|uz": 0.6, "tr|uz": 0.6, "tk|uz": 0.55, "az|kk": 0.55, "kk|tr": 0.5, "kk|tk": 0.55, "kk|ky": 0.85, "kk|tt": 0.55, "ky|tt": 0.55, "kk|uz": 0.6, "ky|uz": 0.55, "ug|uz": 0.75, "tr|ug": 0.5, "az|ug": 0.5, "tr|tt": 0.45, "az|tt": 0.5, "ky|tr": 0.5, "az|ky": 0.5, "fa|tr": 0.22, "az|fa": 0.28, "fa|tk": 0.22, "fa|uz": 0.3, "fa|tg": 0.85, "fa|ku": 0.32, "fa|ps": 0.3, "ar|fa": 0.18, "fa|ug": 0.25, "fa|kk": 0.15, "fa|ky": 0.15, "ar|tr": 0.12, "ar|az": 0.14, "ar|ur": 0.2, "ar|ku": 0.15, "ar|sw": 0.15, "ar|es": 0.08, "ar|he": 0.3, "ar|mt": 0.55, "am|ar": 0.2, "ar|ti": 0.22, "ar|id": 0.06, "ar|ms": 0.06, "ar|ha": 0.1, "ar|so": 0.1, "hi|ur": 0.95, "bn|hi": 0.5, "hi|pa": 0.55, "hi|mr": 0.55, "gu|hi": 0.55, "hi|ne": 0.6, "bn|ur": 0.5, "pa|ur": 0.55, "fa|ur": 0.35, "bn|ne": 0.45, "bn|si": 0.2, "fa|hi": 0.2, "ku|tr": 0.1, "ta|te": 0.4, "kn|ta": 0.45, "ml|ta": 0.7, "kn|te": 0.55, "ml|te": 0.4, "kn|ml": 0.5, "yue|zh": 0.65, "ja|zh": 0.3, "ko|zh": 0.3, "vi|zh": 0.3, "ja|ko": 0.15, "ja|yue": 0.2, "ko|yue": 0.2, "th|vi": 0.1, "km|vi": 0.1, "lo|th": 0.75, "km|th": 0.15, "id|ms": 0.9, "id|jv": 0.5, "id|tl": 0.3, "jv|ms": 0.45, "ms|tl": 0.3, "jv|tl": 0.3, "am|he": 0.15, "am|ti": 0.5, "he|mt": 0.15, "sw|zu": 0.2, "yo|zu": 0.05, "sw|yo": 0.05, "hy|tr": 0.1, "fa|hy": 0.15, "ar|hy": 0.1, "hy|ka": 0.1, "ka|tr": 0.05, "ro|ru": 0.18, "hr|ro": 0.18, "bg|ro": 0.2, "ro|uk": 0.18, "hr|hu": 0.12, "hu|sk": 0.1, "hu|tr": 0.06, "bg|tr": 0.1, "hr|tr": 0.08, "it|mt": 0.35, "en|mt": 0.2, "es|mt": 0.18, "it|sq": 0.2, "el|sq": 0.15, "sq|tr": 0.1, "hr|sq": 0.12, "kk|mn": 0.15, "mn|tr": 0.06, "az|mn": 0.06, "en|ja": 0.1, "en|ko": 0.1, "en|zh": 0.04, "en|hi": 0.12, "en|ur": 0.12, "en|id": 0.1, "en|ms": 0.1, "en|tl": 0.2, "ar|en": 0.05, "en|th": 0.06, "en|tr": 0.06, "en|ru": 0.04, "en|sw": 0.1, "en|he": 0.06, "en|yi": 0.1, "en|vi": 0.06}, "contact": {"de|pl": {"bonus": 0.15, "note": "Polish has hundreds of German loanwords (industry, household, military)."}, "de|cs": {"bonus": 0.18, "note": "Czech absorbed extensive German vocabulary during the Austro-Hungarian period."}, "de|hu": {"bonus": 0.18, "note": "Hungarian has thousands of German loanwords from centuries of Habsburg contact."}, "de|hr": {"bonus": 0.12, "note": "Croatian (esp. Zagreb dialect) has substantial German loan vocabulary."}, "de|sl": {"bonus": 0.15, "note": "Slovenian shares many German loanwords from centuries of contact."}, "de|sk": {"bonus": 0.12, "note": "Slovak shares German loan vocabulary from the Habsburg era."}, "de|yi": {"bonus": 0.2, "note": "Yiddish IS a Germanic language at its core — vocabulary directly recognizable from German."}, "de|lb": {"bonus": 0.1, "note": "Luxembourgish is a standardized Moselle Franconian dialect of German."}, "ru|pl": {"bonus": 0.1, "note": "Cognate roots and shared Slavic grammar make Polish much easier from Russian."}, "ru|uk": {"bonus": 0.2, "note": "Russian and Ukrainian share extensive vocabulary and identical Cyrillic basics."}, "ru|be": {"bonus": 0.22, "note": "Belarusian is the closest Slavic language to Russian — high mutual intelligibility."}, "ru|bg": {"bonus": 0.15, "note": "Bulgarian shares Slavic roots; vocabulary highly recognizable to Russian speakers."}, "ru|mk": {"bonus": 0.15, "note": "Macedonian, like Bulgarian, shares Slavic roots transparent to Russian speakers."}, "ru|hr": {"bonus": 0.1, "note": "Croatian/Serbian shares Slavic core vocabulary; cases work similarly."}, "ru|cs": {"bonus": 0.08, "note": "Czech shares Slavic vocabulary core, though false friends are common."}, "ru|sk": {"bonus": 0.08, "note": "Slovak shares Slavic vocabulary core with Russian."}, "ru|lv": {"bonus": 0.1, "note": "Latvian has many Russian loanwords and shares Baltic-Slavic patterns."}, "ru|lt": {"bonus": 0.08, "note": "Lithuanian shares Baltic-Slavic grammatical patterns; some Russian loans."}, "ru|az": {"bonus": 0.1, "note": "Azerbaijani has many Russian loanwords from the Soviet era."}, "ru|kk": {"bonus": 0.12, "note": "Kazakh absorbed extensive Russian vocabulary in the Soviet period; uses Cyrillic."}, "ru|ky": {"bonus": 0.12, "note": "Kyrgyz has extensive Russian loanwords and uses Cyrillic script."}, "ru|tt": {"bonus": 0.12, "note": "Tatar has extensive Russian vocabulary and uses Cyrillic script."}, "ru|uz": {"bonus": 0.08, "note": "Uzbek has many Russian loanwords from the Soviet period."}, "ru|tk": {"bonus": 0.08, "note": "Turkmen carries a Soviet-era Russian vocabulary layer."}, "ru|mn": {"bonus": 0.1, "note": "Mongolian uses Cyrillic and carries Soviet-era Russian loanwords."}, "ru|hy": {"bonus": 0.08, "note": "Armenian has many Russian loanwords from imperial and Soviet periods."}, "ru|ka": {"bonus": 0.06, "note": "Georgian has Soviet-era Russian loanwords."}, "ru|tg": {"bonus": 0.12, "note": "Tajik uses Cyrillic and carries an extensive Soviet-era Russian vocabulary layer."}, "en|fr": {"bonus": 0.1, "note": "English vocabulary is ~30% French/Norman in origin — huge reading-comprehension boost."}, "fr|en": {"bonus": 0.1, "note": "Norman vocabulary in English means French speakers recognize a huge share of English words."}, "tr|az": {"bonus": 0.1, "note": "Near-mutual intelligibility — same agglutinative grammar, same vowel harmony, ~85% shared vocabulary."}, "az|tr": {"bonus": 0.1, "note": "Near-mutual intelligibility — same agglutinative grammar, same vowel harmony, ~85% shared vocabulary."}, "tr|tk": {"bonus": 0.08, "note": "Turkmen is in the same Oghuz subbranch as Turkish — closely related grammar and core vocabulary."}, "az|tk": {"bonus": 0.1, "note": "Turkmen is in the same Oghuz subbranch as Azerbaijani — very close grammar and core vocabulary."}, "tr|uz": {"bonus": 0.06, "note": "Uzbek shares Turkic grammar and many Persian/Arabic loanwords with Turkish."}, "az|uz": {"bonus": 0.06, "note": "Uzbek shares Turkic grammar and many Persian/Arabic loanwords with Azerbaijani."}, "tr|kk": {"bonus": 0.06, "note": "Kazakh shares Turkic agglutinative grammar and vowel harmony — different lexical core."}, "az|kk": {"bonus": 0.06, "note": "Kazakh shares Turkic agglutinative grammar and vowel harmony with Azerbaijani."}, "tr|ug": {"bonus": 0.05, "note": "Uyghur shares Turkic structure and Persian/Arabic loan vocabulary."}, "az|ug": {"bonus": 0.05, "note": "Uyghur shares Turkic structure and Persian/Arabic loan vocabulary."}, "tr|tt": {"bonus": 0.05, "note": "Tatar shares Turkic structure but with a different Kipchak vocabulary core."}, "az|tt": {"bonus": 0.05, "note": "Tatar shares Turkic structure but with a different Kipchak vocabulary core."}, "tr|ky": {"bonus": 0.05, "note": "Kyrgyz shares Turkic agglutinative grammar and vowel harmony."}, "az|ky": {"bonus": 0.05, "note": "Kyrgyz shares Turkic agglutinative grammar and vowel harmony."}, "tr|hu": {"bonus": 0.05, "note": "Vowel harmony and agglutinative grammar feel familiar; some old Turkic loan layer in Hungarian."}, "az|hu": {"bonus": 0.05, "note": "Vowel harmony and agglutinative grammar feel familiar; some old Turkic loan layer in Hungarian."}, "tr|fi": {"bonus": 0.04, "note": "Vowel harmony and agglutinative grammar will feel familiar, though vocabulary is foreign."}, "az|fi": {"bonus": 0.04, "note": "Vowel harmony and agglutinative grammar will feel familiar, though vocabulary is foreign."}, "tr|et": {"bonus": 0.03, "note": "Agglutinative grammar feels familiar (no vowel harmony in Estonian, though)."}, "tr|mn": {"bonus": 0.05, "note": "Agglutinative grammar and vowel harmony feel familiar; some shared old loans."}, "az|mn": {"bonus": 0.05, "note": "Agglutinative grammar and vowel harmony feel familiar; some shared old loans."}, "kk|mn": {"bonus": 0.1, "note": "Centuries of contact have produced significant shared vocabulary alongside structural similarity."}, "fa|tr": {"bonus": 0.1, "note": "Persian was a high-prestige loan source for Ottoman Turkish — much abstract/literary vocabulary."}, "fa|az": {"bonus": 0.15, "note": "Azerbaijani has an especially heavy Persian vocabulary layer (geography, religion, literature)."}, "fa|uz": {"bonus": 0.15, "note": "Uzbek has a heavy Persian vocabulary layer from centuries of Persianate cultural dominance."}, "fa|tg": {"bonus": 0.2, "note": "Tajik is essentially a Cyrillic-written variant of Persian — near-mutual intelligibility."}, "fa|ku": {"bonus": 0.15, "note": "Kurdish is an Iranian language closely related to Persian, with much shared vocabulary."}, "fa|ur": {"bonus": 0.2, "note": "Urdu absorbed extensive Persian vocabulary — Persian was the literary language of Mughal India."}, "fa|hi": {"bonus": 0.08, "note": "Hindi shares a Persian loan layer with Urdu, though less prominent in formal Hindi."}, "ar|fa": {"bonus": 0.15, "note": "Persian absorbed enormous Arabic vocabulary after the Islamic conquests."}, "ar|tr": {"bonus": 0.1, "note": "Ottoman Turkish was full of Arabic religious and abstract vocabulary; many words survive."}, "ar|az": {"bonus": 0.12, "note": "Azerbaijani inherited a substantial Arabic loan layer through Persian and Islamic learning."}, "ar|ur": {"bonus": 0.15, "note": "Urdu has extensive Arabic vocabulary through Persian and Islamic religious texts."}, "ar|sw": {"bonus": 0.15, "note": "Swahili absorbed extensive Arabic vocabulary through Indian Ocean trade."}, "ar|id": {"bonus": 0.05, "note": "Indonesian has Arabic loans (mostly religious) but a small share of total vocabulary."}, "ar|ms": {"bonus": 0.05, "note": "Malay has Arabic loans (mostly religious) but a small share of total vocabulary."}, "ar|es": {"bonus": 0.05, "note": "Spanish has thousands of Arabic loanwords from the Moorish period in Iberia."}, "ar|mt": {"bonus": 0.1, "note": "Maltese descends directly from Sicilian Arabic — core vocabulary IS Arabic."}, "ar|ha": {"bonus": 0.08, "note": "Hausa absorbed Arabic religious and abstract vocabulary through centuries of Islamic contact."}, "it|mt": {"bonus": 0.15, "note": "Maltese has a huge Italian/Sicilian loan layer in everyday vocabulary."}, "el|en": {"bonus": 0.05, "note": "Greek roots permeate English scientific/academic vocabulary."}, "es|ca": {"bonus": 0.05, "note": "Catalan and Spanish share extensive everyday vocabulary on top of close Romance kinship."}, "es|gl": {"bonus": 0.05, "note": "Galician and Spanish share extensive vocabulary on top of close Romance kinship."}, "hi|ur": {"bonus": 0.1, "note": "Hindi and Urdu are essentially the same colloquial language, differing mainly in formal vocabulary and script."}, "ur|hi": {"bonus": 0.1, "note": "Urdu and Hindi are essentially the same colloquial language."}, "hi|id": {"bonus": 0.05, "note": "Indonesian retains a Sanskrit-derived loan layer (state, law, religion) from the Indianized kingdoms."}, "hi|ms": {"bonus": 0.05, "note": "Malay retains a Sanskrit-derived loan layer from the Indianized kingdoms."}, "hi|km": {"bonus": 0.05, "note": "Khmer retains an extensive Sanskrit/Pali vocabulary layer from Indianized Khmer civilization."}, "hi|th": {"bonus": 0.05, "note": "Thai retains an extensive Sanskrit/Pali vocabulary layer in religion, government, literature."}, "hi|si": {"bonus": 0.15, "note": "Sinhala is Indo-Aryan, sharing core vocabulary and Pali/Sanskrit religious terms with Hindi."}, "zh|ja": {"bonus": 0.2, "note": "Japanese kanji and ~60% of formal/written Japanese vocabulary comes from Chinese (Sino-Japanese)."}, "zh|ko": {"bonus": 0.2, "note": "Korean Sino-Korean vocabulary (~60% of the formal lexicon) is recognizable to Mandarin speakers."}, "zh|vi": {"bonus": 0.2, "note": "Vietnamese has an enormous Sino-Vietnamese vocabulary layer from ~1000 years of Chinese rule."}, "yue|ja": {"bonus": 0.1, "note": "Cantonese shares Sino vocabulary with Japanese (often closer to historical pronunciations than Mandarin)."}, "yue|ko": {"bonus": 0.1, "note": "Cantonese shares Sino vocabulary with Korean."}, "yue|vi": {"bonus": 0.15, "note": "Cantonese and Vietnamese share many Sino-derived words."}, "ja|ko": {"bonus": 0.05, "note": "Almost identical grammar (SOV, agglutinative, particles, honorifics) — vocabulary unrelated but structure feels native."}, "ko|ja": {"bonus": 0.05, "note": "Almost identical grammar (SOV, agglutinative, particles, honorifics) — vocabulary unrelated but structure feels native."}, "id|ms": {"bonus": 0.1, "note": "Indonesian and Malay are essentially the same language — mostly differ in spelling and a few loan sources."}, "ms|id": {"bonus": 0.1, "note": "Indonesian and Malay are essentially the same language."}, "th|lo": {"bonus": 0.15, "note": "Thai and Lao are largely mutually intelligible — same Tai branch, parallel scripts."}, "lo|th": {"bonus": 0.15, "note": "Lao and Thai are largely mutually intelligible — same Tai branch, parallel scripts."}, "bg|mk": {"bonus": 0.15, "note": "Macedonian and Bulgarian are linguistically extremely close — same South Slavic dialect continuum."}, "mk|bg": {"bonus": 0.15, "note": "Macedonian and Bulgarian are linguistically extremely close — same South Slavic dialect continuum."}, "nl|af": {"bonus": 0.1, "note": "Afrikaans descended directly from 17th-century Dutch — vocabulary core almost identical."}, "af|nl": {"bonus": 0.1, "note": "Afrikaans descended directly from 17th-century Dutch — vocabulary core almost identical."}, "he|yi": {"bonus": 0.15, "note": "Yiddish has an extensive Hebrew/Aramaic vocabulary layer — religious, abstract, idiomatic."}, "yi|he": {"bonus": 0.1, "note": "Knowing Yiddish gives you a head start on Hebrew religious/abstract vocabulary."}, "hy|tr": {"bonus": 0.06, "note": "Armenian has Turkish/Ottoman vocabulary from centuries of coexistence."}, "hy|fa": {"bonus": 0.08, "note": "Armenian has significant Persian loan vocabulary going back to the Achaemenid period."}}};
 
+const LANG_NAMES = {
+  en: {"de": "German", "nl": "Dutch", "en": "English", "af": "Afrikaans", "yi": "Yiddish", "lb": "Luxembourgish", "sv": "Swedish", "no": "Norwegian", "da": "Danish", "is": "Icelandic", "fo": "Faroese", "es": "Spanish", "pt": "Portuguese", "gl": "Galician", "fr": "French", "it": "Italian", "ro": "Romanian", "ca": "Catalan", "oc": "Occitan", "sc": "Sicilian", "srd": "Sardinian", "ht": "Haitian Creole", "ru": "Russian", "uk": "Ukrainian", "be": "Belarusian", "pl": "Polish", "cs": "Czech", "sk": "Slovak", "bg": "Bulgarian", "mk": "Macedonian", "hr": "Croatian/Serbian", "sl": "Slovenian", "el": "Greek", "sq": "Albanian", "hy": "Armenian", "lv": "Latvian", "lt": "Lithuanian", "ga": "Irish", "cy": "Welsh", "fa": "Persian (Farsi)", "tg": "Tajik", "ku": "Kurdish", "ps": "Pashto", "hi": "Hindi", "ur": "Urdu", "bn": "Bengali", "pa": "Punjabi", "mr": "Marathi", "gu": "Gujarati", "ne": "Nepali", "si": "Sinhala", "fi": "Finnish", "et": "Estonian", "hu": "Hungarian", "se": "Northern Sami", "tr": "Turkish", "az": "Azerbaijani", "tk": "Turkmen", "kk": "Kazakh", "ky": "Kyrgyz", "tt": "Tatar", "uz": "Uzbek", "ug": "Uyghur", "mn": "Mongolian", "ar": "Arabic (MSA)", "he": "Hebrew", "mt": "Maltese", "am": "Amharic", "ti": "Tigrinya", "ha": "Hausa", "so": "Somali", "ka": "Georgian", "ta": "Tamil", "te": "Telugu", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin Chinese", "yue": "Cantonese", "my": "Burmese", "bo": "Tibetan", "ja": "Japanese", "ko": "Korean", "vi": "Vietnamese", "km": "Khmer", "th": "Thai", "lo": "Lao", "id": "Indonesian", "ms": "Malay", "tl": "Tagalog", "jv": "Javanese", "sw": "Swahili", "zu": "Zulu", "yo": "Yoruba", "qu": "Quechua", "gn": "Guarani", "eu": "Basque"},
+  de: {"de": "Deutsch", "nl": "Niederländisch", "en": "Englisch", "af": "Afrikaans", "yi": "Jiddisch", "lb": "Luxemburgisch", "sv": "Schwedisch", "no": "Norwegisch", "da": "Dänisch", "is": "Isländisch", "fo": "Färöisch", "es": "Spanisch", "pt": "Portugiesisch", "gl": "Galizisch", "fr": "Französisch", "it": "Italienisch", "ro": "Rumänisch", "ca": "Katalanisch", "oc": "Okzitanisch", "sc": "Sizilianisch", "srd": "Sardisch", "ht": "Haitianisches Kreol", "ru": "Russisch", "uk": "Ukrainisch", "be": "Weißrussisch", "pl": "Polnisch", "cs": "Tschechisch", "sk": "Slowakisch", "bg": "Bulgarisch", "mk": "Mazedonisch", "hr": "Kroatisch/Serbisch", "sl": "Slowenisch", "el": "Griechisch", "sq": "Albanisch", "hy": "Armenisch", "lv": "Lettisch", "lt": "Litauisch", "ga": "Irisch", "cy": "Walisisch", "fa": "Persisch (Farsi)", "tg": "Tadschikisch", "ku": "Kurdisch", "ps": "Paschtu", "hi": "Hindi", "ur": "Urdu", "bn": "Bengalisch", "pa": "Punjabi", "mr": "Marathi", "gu": "Gujarati", "ne": "Nepalesisch", "si": "Singhalesisch", "fi": "Finnisch", "et": "Estnisch", "hu": "Ungarisch", "se": "Nordsamisch", "tr": "Türkisch", "az": "Aserbaidschanisch", "tk": "Turkmenisch", "kk": "Kasachisch", "ky": "Kirgisisch", "tt": "Tatarisch", "uz": "Usbekisch", "ug": "Uigurisch", "mn": "Mongolisch", "ar": "Arabisch (Hochsprache)", "he": "Hebräisch", "mt": "Maltesisch", "am": "Amharisch", "ti": "Tigrinya", "ha": "Haussa", "so": "Somali", "ka": "Georgisch", "ta": "Tamilisch", "te": "Telugu", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin-Chinesisch", "yue": "Kantonesisch", "my": "Birmanisch", "bo": "Tibetisch", "ja": "Japanisch", "ko": "Koreanisch", "vi": "Vietnamesisch", "km": "Khmer", "th": "Thailändisch", "lo": "Laotisch", "id": "Indonesisch", "ms": "Malaiisch", "tl": "Tagalog", "jv": "Javanisch", "sw": "Suaheli", "zu": "Zulu", "yo": "Yoruba", "qu": "Quechua", "gn": "Guaraní", "eu": "Baskisch"},
+  fr: {"de": "Allemand", "nl": "Néerlandais", "en": "Anglais", "af": "Afrikaans", "yi": "Yiddish", "lb": "Luxembourgeois", "sv": "Suédois", "no": "Norvégien", "da": "Danois", "is": "Islandais", "fo": "Féroïen", "es": "Espagnol", "pt": "Portugais", "gl": "Galicien", "fr": "Français", "it": "Italien", "ro": "Roumain", "ca": "Catalan", "oc": "Occitan", "sc": "Sicilien", "srd": "Sarde", "ht": "Créole haïtien", "ru": "Russe", "uk": "Ukrainien", "be": "Biélorusse", "pl": "Polonais", "cs": "Tchèque", "sk": "Slovaque", "bg": "Bulgare", "mk": "Macédonien", "hr": "Croate/Serbe", "sl": "Slovène", "el": "Grec", "sq": "Albanais", "hy": "Arménien", "lv": "Letton", "lt": "Lituanien", "ga": "Irlandais", "cy": "Gallois", "fa": "Persan (Farsi)", "tg": "Tadjik", "ku": "Kurde", "ps": "Pachtou", "hi": "Hindi", "ur": "Ourdou", "bn": "Bengali", "pa": "Pendjabi", "mr": "Marathi", "gu": "Gujarati", "ne": "Népalais", "si": "Cingalais", "fi": "Finnois", "et": "Estonien", "hu": "Hongrois", "se": "Same du Nord", "tr": "Turc", "az": "Azerbaïdjanais", "tk": "Turkmène", "kk": "Kazakh", "ky": "Kirghiz", "tt": "Tatar", "uz": "Ouzbek", "ug": "Ouïghour", "mn": "Mongol", "ar": "Arabe (littéraire)", "he": "Hébreu", "mt": "Maltais", "am": "Amharique", "ti": "Tigrigna", "ha": "Haoussa", "so": "Somali", "ka": "Géorgien", "ta": "Tamoul", "te": "Télougou", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin", "yue": "Cantonais", "my": "Birman", "bo": "Tibétain", "ja": "Japonais", "ko": "Coréen", "vi": "Vietnamien", "km": "Khmer", "th": "Thaï", "lo": "Laotien", "id": "Indonésien", "ms": "Malais", "tl": "Tagalog", "jv": "Javanais", "sw": "Swahili", "zu": "Zoulou", "yo": "Yoruba", "qu": "Quechua", "gn": "Guarani", "eu": "Basque"},
+  es: {"de": "Alemán", "nl": "Neerlandés", "en": "Inglés", "af": "Afrikáans", "yi": "Yidis", "lb": "Luxemburgués", "sv": "Sueco", "no": "Noruego", "da": "Danés", "is": "Islandés", "fo": "Feroés", "es": "Español", "pt": "Portugués", "gl": "Gallego", "fr": "Francés", "it": "Italiano", "ro": "Rumano", "ca": "Catalán", "oc": "Occitano", "sc": "Siciliano", "srd": "Sardo", "ht": "Criollo haitiano", "ru": "Ruso", "uk": "Ucraniano", "be": "Bielorruso", "pl": "Polaco", "cs": "Checo", "sk": "Eslovaco", "bg": "Búlgaro", "mk": "Macedonio", "hr": "Croata/Serbio", "sl": "Esloveno", "el": "Griego", "sq": "Albanés", "hy": "Armenio", "lv": "Letón", "lt": "Lituano", "ga": "Irlandés", "cy": "Galés", "fa": "Persa (Farsi)", "tg": "Tayiko", "ku": "Kurdo", "ps": "Pastún", "hi": "Hindi", "ur": "Urdu", "bn": "Bengalí", "pa": "Punjabi", "mr": "Maratí", "gu": "Guyaratí", "ne": "Nepalés", "si": "Cingalés", "fi": "Finlandés", "et": "Estonio", "hu": "Húngaro", "se": "Sami del Norte", "tr": "Turco", "az": "Azerbaiyano", "tk": "Turcomano", "kk": "Kazajo", "ky": "Kirguís", "tt": "Tártaro", "uz": "Uzbeko", "ug": "Uigur", "mn": "Mongol", "ar": "Árabe (estándar)", "he": "Hebreo", "mt": "Maltés", "am": "Amhárico", "ti": "Tigriña", "ha": "Hausa", "so": "Somalí", "ka": "Georgiano", "ta": "Tamil", "te": "Telugu", "kn": "Canarés", "ml": "Malayalam", "zh": "Chino mandarín", "yue": "Cantonés", "my": "Birmano", "bo": "Tibetano", "ja": "Japonés", "ko": "Coreano", "vi": "Vietnamita", "km": "Jemer", "th": "Tailandés", "lo": "Laosiano", "id": "Indonesio", "ms": "Malayo", "tl": "Tagalo", "jv": "Javanés", "sw": "Suajili", "zu": "Zulú", "yo": "Yoruba", "qu": "Quechua", "gn": "Guaraní", "eu": "Vasco"},
+  it: {"de": "Tedesco", "nl": "Olandese", "en": "Inglese", "af": "Afrikaans", "yi": "Yiddish", "lb": "Lussemburghese", "sv": "Svedese", "no": "Norvegese", "da": "Danese", "is": "Islandese", "fo": "Faroese", "es": "Spagnolo", "pt": "Portoghese", "gl": "Galiziano", "fr": "Francese", "it": "Italiano", "ro": "Rumeno", "ca": "Catalano", "oc": "Occitano", "sc": "Siciliano", "srd": "Sardo", "ht": "Creolo haitiano", "ru": "Russo", "uk": "Ucraino", "be": "Bielorusso", "pl": "Polacco", "cs": "Ceco", "sk": "Slovacco", "bg": "Bulgaro", "mk": "Macedone", "hr": "Croato/Serbo", "sl": "Sloveno", "el": "Greco", "sq": "Albanese", "hy": "Armeno", "lv": "Lettone", "lt": "Lituano", "ga": "Irlandese", "cy": "Gallese", "fa": "Persiano (Farsi)", "tg": "Tagico", "ku": "Curdo", "ps": "Pashto", "hi": "Hindi", "ur": "Urdu", "bn": "Bengalese", "pa": "Punjabi", "mr": "Marathi", "gu": "Gujarati", "ne": "Nepalese", "si": "Singalese", "fi": "Finlandese", "et": "Estone", "hu": "Ungherese", "se": "Sami settentrionale", "tr": "Turco", "az": "Azerbaigiano", "tk": "Turkmeno", "kk": "Kazako", "ky": "Kirghiso", "tt": "Tataro", "uz": "Uzbeco", "ug": "Uiguro", "mn": "Mongolo", "ar": "Arabo (letterario)", "he": "Ebraico", "mt": "Maltese", "am": "Amarico", "ti": "Tigrino", "ha": "Hausa", "so": "Somalo", "ka": "Georgiano", "ta": "Tamil", "te": "Telugu", "kn": "Kannada", "ml": "Malayalam", "zh": "Cinese mandarino", "yue": "Cantonese", "my": "Birmano", "bo": "Tibetano", "ja": "Giapponese", "ko": "Coreano", "vi": "Vietnamita", "km": "Khmer", "th": "Tailandese", "lo": "Laotiano", "id": "Indonesiano", "ms": "Malese", "tl": "Tagalog", "jv": "Giavanese", "sw": "Swahili", "zu": "Zulu", "yo": "Yoruba", "qu": "Quechua", "gn": "Guaraní", "eu": "Basco"},
+  pl: {"de": "Niemiecki", "nl": "Niderlandzki", "en": "Angielski", "af": "Afrikaans", "yi": "Jidysz", "lb": "Luksemburski", "sv": "Szwedzki", "no": "Norweski", "da": "Duński", "is": "Islandzki", "fo": "Farerski", "es": "Hiszpański", "pt": "Portugalski", "gl": "Galicyjski", "fr": "Francuski", "it": "Włoski", "ro": "Rumuński", "ca": "Kataloński", "oc": "Oksytański", "sc": "Sycylijski", "srd": "Sardyński", "ht": "Kreolski haitański", "ru": "Rosyjski", "uk": "Ukraiński", "be": "Białoruski", "pl": "Polski", "cs": "Czeski", "sk": "Słowacki", "bg": "Bułgarski", "mk": "Macedoński", "hr": "Chorwacki/Serbski", "sl": "Słoweński", "el": "Grecki", "sq": "Albański", "hy": "Ormiański", "lv": "Łotewski", "lt": "Litewski", "ga": "Irlandzki", "cy": "Walijski", "fa": "Perski (Farsi)", "tg": "Tadżycki", "ku": "Kurdyjski", "ps": "Paszto", "hi": "Hindi", "ur": "Urdu", "bn": "Bengalski", "pa": "Pendżabski", "mr": "Marathi", "gu": "Gudżarati", "ne": "Nepalski", "si": "Syngaleski", "fi": "Fiński", "et": "Estoński", "hu": "Węgierski", "se": "Lapońsk. północny", "tr": "Turecki", "az": "Azerski", "tk": "Turkmeński", "kk": "Kazachski", "ky": "Kirgiski", "tt": "Tatarski", "uz": "Uzbecki", "ug": "Ujgurski", "mn": "Mongolski", "ar": "Arabski (literacki)", "he": "Hebrajski", "mt": "Maltański", "am": "Amharski", "ti": "Tigrinia", "ha": "Hausa", "so": "Somalijski", "ka": "Gruziński", "ta": "Tamilski", "te": "Telugu", "kn": "Kannada", "ml": "Malayalam", "zh": "Chiński mandaryński", "yue": "Kantońskie", "my": "Birmański", "bo": "Tybetański", "ja": "Japoński", "ko": "Koreański", "vi": "Wietnamski", "km": "Khmerski", "th": "Tajski", "lo": "Laotański", "id": "Indonezyjski", "ms": "Malajski", "tl": "Tagalski", "jv": "Jawajski", "sw": "Suahili", "zu": "Zulu", "yo": "Joruba", "qu": "Keczua", "gn": "Guaraní", "eu": "Baskijski"},
+  tr: {"de": "Almanca", "nl": "Flemenkçe", "en": "İngilizce", "af": "Afrikaanca", "yi": "Yidiş", "lb": "Lüksemburgca", "sv": "İsveççe", "no": "Norveççe", "da": "Danimarkaca", "is": "İzlandaca", "fo": "Faroece", "es": "İspanyolca", "pt": "Portekizce", "gl": "Galiçyaca", "fr": "Fransızca", "it": "İtalyanca", "ro": "Rumence", "ca": "Katalanca", "oc": "Oksitanca", "sc": "Sicilyaca", "srd": "Sarduca", "ht": "Haiti Kreolü", "ru": "Rusça", "uk": "Ukraynaca", "be": "Belarusça", "pl": "Lehçe", "cs": "Çekçe", "sk": "Slovakça", "bg": "Bulgarca", "mk": "Makedonyaca", "hr": "Hırvatça/Sırpça", "sl": "Slovence", "el": "Yunanca", "sq": "Arnavutça", "hy": "Ermenice", "lv": "Letonca", "lt": "Litvanca", "ga": "İrlandaca", "cy": "Galce", "fa": "Farsça", "tg": "Tacikçe", "ku": "Kürtçe", "ps": "Peştuca", "hi": "Hintçe", "ur": "Urduca", "bn": "Bengalce", "pa": "Pencapça", "mr": "Marathice", "gu": "Gujaratice", "ne": "Nepalce", "si": "Sinhalaca", "fi": "Fince", "et": "Estonca", "hu": "Macarca", "se": "Kuzey Laponcası", "tr": "Türkçe", "az": "Azerbaycanca", "tk": "Türkmence", "kk": "Kazakça", "ky": "Kırgızca", "tt": "Tatarca", "uz": "Özbekçe", "ug": "Uygurca", "mn": "Moğolca", "ar": "Arapça (Standart)", "he": "İbranice", "mt": "Maltaca", "am": "Amharca", "ti": "Tigrinya", "ha": "Hausaca", "so": "Somalice", "ka": "Gürcüce", "ta": "Tamilce", "te": "Teluguca", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin Çincesi", "yue": "Kantonca", "my": "Birmanca", "bo": "Tibetçe", "ja": "Japonca", "ko": "Korece", "vi": "Vietnamca", "km": "Kmerce", "th": "Tayca", "lo": "Laosça", "id": "Endonezce", "ms": "Malayca", "tl": "Tagalogca", "jv": "Cava Dili", "sw": "Swahilice", "zu": "Zuluca", "yo": "Yorubaca", "qu": "Keçuvaca", "gn": "Guaranice", "eu": "Baskça"},
+  ru: {"de": "Немецкий", "nl": "Нидерландский", "en": "Английский", "af": "Африкаанс", "yi": "Идиш", "lb": "Люксембургский", "sv": "Шведский", "no": "Норвежский", "da": "Датский", "is": "Исландский", "fo": "Фарерский", "es": "Испанский", "pt": "Португальский", "gl": "Галисийский", "fr": "Французский", "it": "Итальянский", "ro": "Румынский", "ca": "Каталанский", "oc": "Окситанский", "sc": "Сицилийский", "srd": "Сардинский", "ht": "Гаитянский креольский", "ru": "Русский", "uk": "Украинский", "be": "Белорусский", "pl": "Польский", "cs": "Чешский", "sk": "Словацкий", "bg": "Болгарский", "mk": "Македонский", "hr": "Хорватский/Сербский", "sl": "Словенский", "el": "Греческий", "sq": "Албанский", "hy": "Армянский", "lv": "Латышский", "lt": "Литовский", "ga": "Ирландский", "cy": "Валлийский", "fa": "Персидский (фарси)", "tg": "Таджикский", "ku": "Курдский", "ps": "Пушту", "hi": "Хинди", "ur": "Урду", "bn": "Бенгальский", "pa": "Панджабский", "mr": "Маратхи", "gu": "Гуджарати", "ne": "Непальский", "si": "Сингальский", "fi": "Финский", "et": "Эстонский", "hu": "Венгерский", "se": "Северносаамский", "tr": "Турецкий", "az": "Азербайджанский", "tk": "Туркменский", "kk": "Казахский", "ky": "Киргизский", "tt": "Татарский", "uz": "Узбекский", "ug": "Уйгурский", "mn": "Монгольский", "ar": "Арабский (литературный)", "he": "Иврит", "mt": "Мальтийский", "am": "Амхарский", "ti": "Тигринья", "ha": "Хауса", "so": "Сомалийский", "ka": "Грузинский", "ta": "Тамильский", "te": "Телугу", "kn": "Каннада", "ml": "Малаялам", "zh": "Мандаринский китайский", "yue": "Кантонский", "my": "Бирманский", "bo": "Тибетский", "ja": "Японский", "ko": "Корейский", "vi": "Вьетнамский", "km": "Кхмерский", "th": "Тайский", "lo": "Лаосский", "id": "Индонезийский", "ms": "Малайский", "tl": "Тагальский", "jv": "Яванский", "sw": "Суахили", "zu": "Зулу", "yo": "Йоруба", "qu": "Кечуа", "gn": "Гуарани", "eu": "Баскский"},
+};
 const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
 
 function app() {
@@ -185,6 +487,29 @@ function app() {
     weights: {...DEFAULT_WEIGHTS},
     topN: 15,
     isDark: document.documentElement.classList.contains('dark'),
+    currentLang: (function() {
+      const s = localStorage.getItem('lb-lang');
+      return (s && TRANSLATIONS[s]) ? s : 'en';
+    })(),
+
+    t(key, vars = {}) {
+      const lang = TRANSLATIONS[this.currentLang] || TRANSLATIONS['en'];
+      let str = lang[key] !== undefined ? lang[key] : (TRANSLATIONS['en'][key] || key);
+      for (const [k, v] of Object.entries(vars)) {
+        str = str.replaceAll('{' + k + '}', v);
+      }
+      return str;
+    },
+
+    saveLang() {
+      localStorage.setItem('lb-lang', this.currentLang);
+      document.documentElement.lang = this.currentLang;
+    },
+
+    langName(code) {
+      const names = LANG_NAMES[this.currentLang];
+      return (names && names[code]) ? names[code] : DATA.languages[code].name;
+    },
 
     toggleTheme() {
       this.isDark = !this.isDark;
@@ -196,28 +521,36 @@ function app() {
         localStorage.setItem('lb-theme', 'light');
       }
     },
-    weightDims: [
-      {key:'lexical',label:'Lexicon'},
-      {key:'grammatical',label:'Grammar'},
-      {key:'phonological',label:'Phonology'},
-      {key:'writing_system',label:'Writing system'},
-      {key:'genealogical',label:'Family'},
-    ],
-    subscoreDims: [
-      {key:'lexical',label:'Lex'},
-      {key:'grammatical',label:'Gram'},
-      {key:'phonological',label:'Phon'},
-      {key:'writing_system',label:'Script'},
-      {key:'genealogical',label:'Family'},
-    ],
 
-    init() {},
+    get weightDims() {
+      return [
+        {key:'lexical',      label: this.t('dimLexicon')},
+        {key:'grammatical',  label: this.t('dimGrammar')},
+        {key:'phonological', label: this.t('dimPhonology')},
+        {key:'writing_system', label: this.t('dimWriting')},
+        {key:'genealogical', label: this.t('dimFamily')},
+      ];
+    },
+
+    get subscoreDims() {
+      return [
+        {key:'lexical',      label: this.t('subLex')},
+        {key:'grammatical',  label: this.t('subGram')},
+        {key:'phonological', label: this.t('subPhon')},
+        {key:'writing_system', label: this.t('subScript')},
+        {key:'genealogical', label: this.t('subFamily')},
+      ];
+    },
+
+    init() {
+      document.documentElement.lang = this.currentLang;
+    },
 
     get filteredLanguages() {
       const codes = Object.keys(DATA.languages).sort((a,b)=> DATA.languages[a].name.localeCompare(DATA.languages[b].name));
       const q = this.search.toLowerCase().trim();
       if (!q) return codes;
-      return codes.filter(c => DATA.languages[c].name.toLowerCase().includes(q));
+      return codes.filter(c => this.langName(c).toLowerCase().includes(q) || DATA.languages[c].name.toLowerCase().includes(q));
     },
 
     toggleSpeaker(code) {
@@ -384,36 +717,36 @@ function app() {
       const parts = [];
 
       const genH = helperName(hpd.genealogical);
-      if (s.genealogical === 1.0) parts.push(`${targetName} is in the same subbranch as ${genH}, so the core grammar will feel native.`);
-      else if (s.genealogical >= 0.7) parts.push(`${targetName} is a close cousin of ${genH} within the same branch.`);
+      if (s.genealogical === 1.0) parts.push(this.t('expSameSubbranch', {target: targetName, helper: genH}));
+      else if (s.genealogical >= 0.7) parts.push(this.t('expSameBranch', {target: targetName, helper: genH}));
       else if (s.genealogical >= 0.4) {
         const fam = DATA.languages[rec.target].family;
-        parts.push(`${targetName} shares deep ${fam} roots with ${genH} but in a different branch.`);
-      } else parts.push(`${targetName} is genealogically unrelated to anything you speak.`);
+        parts.push(this.t('expSameFamily', {target: targetName, helper: genH, family: fam}));
+      } else parts.push(this.t('expUnrelated', {target: targetName}));
 
       const lex = rec.lexical_with_contact_bonus;
       const lexH = helperName(hpd.lexical);
       const pct = Math.round(lex*100);
-      if (lex >= 0.7) parts.push(`Vocabulary overlap with ${lexH} is very high (~${pct}%) — you'll read it almost immediately.`);
-      else if (lex >= 0.4) parts.push(`Vocabulary overlap with ${lexH} is substantial (~${pct}%) — lots of recognizable words.`);
-      else if (lex >= 0.2) parts.push(`Vocabulary overlap is modest (~${pct}%), mostly via loans and learned words.`);
-      else parts.push(`Vocabulary will mostly need to be learned from scratch (~${pct}% overlap).`);
+      if (lex >= 0.7) parts.push(this.t('expLexVeryHigh', {helper: lexH, pct}));
+      else if (lex >= 0.4) parts.push(this.t('expLexHigh', {helper: lexH, pct}));
+      else if (lex >= 0.2) parts.push(this.t('expLexModest', {pct}));
+      else parts.push(this.t('expLexLow', {pct}));
 
       for (const n of rec.contact_notes) parts.push(n.note);
 
       const g = s.grammatical;
       const gH = helperName(hpd.grammatical);
-      if (g >= 0.75) parts.push(`Grammar feels very similar to ${gH}.`);
-      else if (g >= 0.55) parts.push(`Grammar overlaps with ${gH} in important ways (word order, morphology type).`);
-      else if (g >= 0.35) parts.push(`Grammar will feel noticeably different — expect some retraining.`);
-      else parts.push(`Grammar is structurally very different and will be the hardest part.`);
+      if (g >= 0.75) parts.push(this.t('expGramSimilar', {helper: gH}));
+      else if (g >= 0.55) parts.push(this.t('expGramOverlap', {helper: gH}));
+      else if (g >= 0.35) parts.push(this.t('expGramDiff'));
+      else parts.push(this.t('expGramVeryDiff'));
 
       if (s.writing_system < 1.0) {
-     if (s.writing_system === 0.0) parts.push(`The script is different — you'll need to learn a new alphabet.`);
-        else parts.push(`The script overlaps but isn't identical.`);
+        if (s.writing_system === 0.0) parts.push(this.t('expScriptNew'));
+        else parts.push(this.t('expScriptPartial'));
       }
-      if (s.phonological >= 0.5) parts.push(`Sound system shares many of the same distinctive sounds.`);
-      else if (s.phonological < 0.1) parts.push(`Sound inventory is quite different — pronunciation will need fresh work.`);
+      if (s.phonological >= 0.5) parts.push(this.t('expPhonSimilar'));
+      else if (s.phonological < 0.1) parts.push(this.t('expPhonDiff'));
 
       return parts.join(' ');
     },
