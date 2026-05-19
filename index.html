@@ -90,13 +90,41 @@
 
     <div class="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-1">
       <template x-for="code in filteredLanguages" :key="code">
-        <button
-          @click="toggleSpeaker(code)"
-          :class="speakers.includes(code) ? 'chip selected' : 'chip bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200'"
-          class="px-3 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700"
-        >
-          <span x-text="langName(code)"></span>
-        </button>
+        <div style="display:contents">
+          <template x-if="!speakers.includes(code)">
+            <button
+              @click="toggleSpeaker(code)"
+              class="chip bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 px-3 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700"
+            >
+              <span x-text="langName(code)"></span>
+            </button>
+          </template>
+          <template x-if="speakers.includes(code)">
+            <div class="chip selected inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700">
+              <span x-text="langName(code)"></span>
+              <span class="opacity-50 select-none text-xs">·</span>
+              <select
+                x-model="proficiency[code]"
+                @click.stop
+                @change.stop
+                class="bg-transparent text-xs font-semibold outline-none cursor-pointer"
+                :title="t('cefrTitle')"
+              >
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+              </select>
+              <button
+                @click.stop="toggleSpeaker(code)"
+                class="opacity-60 hover:opacity-100 transition-opacity leading-none ml-0.5"
+                :title="t('removeLanguage')"
+              >&#xd7;</button>
+            </div>
+          </template>
+        </div>
       </template>
     </div>
   </section>
@@ -193,6 +221,8 @@ const TRANSLATIONS = {
     footer: "Curated dataset of 96 languages across 17 language families. Scoring combines genealogical kinship, lexical overlap, typological grammar, phonology, writing system, and documented contact effects. Built as a research-preview prototype.",
     lightMode: "Switch to light mode", darkMode: "Switch to dark mode",
     langSelector: "Select interface language",
+    cefrTitle: "CEFR proficiency level",
+    removeLanguage: "Remove",
     expSameSubbranch: "{target} is in the same subbranch as {helper}, so the core grammar will feel native.",
     expSameBranch: "{target} is a close cousin of {helper} within the same branch.",
     expSameFamily: "{target} shares deep {family} roots with {helper} but in a different branch.",
@@ -229,6 +259,8 @@ const TRANSLATIONS = {
     footer: "Kuratierter Datensatz mit 96 Sprachen aus 17 Sprachfamilien. Die Bewertung kombiniert genealogische Verwandtschaft, lexikalische Überschneidung, typologische Grammatik, Phonologie, Schriftsystem und dokumentierte Kontakteffekte. Als Forschungsprototyp entwickelt.",
     lightMode: "Zum hellen Modus wechseln", darkMode: "Zum dunklen Modus wechseln",
     langSelector: "Sprache der Benutzeroberfläche wählen",
+    cefrTitle: "CEFR-Sprachniveau",
+    removeLanguage: "Entfernen",
     expSameSubbranch: "{target} gehört zum gleichen Unterzweig wie {helper} — die Kerngrammatik wird sich sofort vertraut anfühlen.",
     expSameBranch: "{target} ist ein naher Verwandter von {helper} im gleichen Zweig.",
     expSameFamily: "{target} teilt tiefe {family}-Wurzeln mit {helper}, gehört aber einem anderen Zweig an.",
@@ -265,6 +297,8 @@ const TRANSLATIONS = {
     footer: "Ensemble de données de 96 langues réparties dans 17 familles linguistiques. Le score combine la parenté généalogique, le chevauchement lexical, la grammaire typologique, la phonologie, le système d’écriture et les effets de contact documentés. Développé comme prototype de recherche.",
     lightMode: "Passer en mode clair", darkMode: "Passer en mode sombre",
     langSelector: "Choisir la langue de l’interface",
+    cefrTitle: "Niveau CECRL",
+    removeLanguage: "Supprimer",
     expSameSubbranch: "{target} appartient au même sous-groupe que {helper} — la grammaire de base semblera naturelle.",
     expSameBranch: "{target} est un proche cousin de {helper} dans la même branche.",
     expSameFamily: "{target} partage de profondes racines {family} avec {helper} mais dans une branche différente.",
@@ -301,6 +335,8 @@ const TRANSLATIONS = {
     footer: "Conjunto de datos de 96 idiomas de 17 familias lingüísticas. La puntuación combina parentesco genealógico, solapamiento léxico, gramática tipológica, fonología, sistema de escritura y efectos de contacto documentados. Desarrollado como prototipo de investigación.",
     lightMode: "Cambiar al modo claro", darkMode: "Cambiar al modo oscuro",
     langSelector: "Seleccionar idioma de la interfaz",
+    cefrTitle: "Nivel MCER",
+    removeLanguage: "Eliminar",
     expSameSubbranch: "{target} está en la misma subrama que {helper} — la gramática central te resultará nativa.",
     expSameBranch: "{target} es un primo cercano de {helper} dentro de la misma rama.",
     expSameFamily: "{target} comparte raíces {family} profundas con {helper} pero en una rama diferente.",
@@ -337,6 +373,8 @@ const TRANSLATIONS = {
     footer: "Dataset curato di 96 lingue appartenenti a 17 famiglie linguistiche. Il punteggio combina parentela genealogica, sovrapposizione lessicale, grammatica tipologica, fonologia, sistema di scrittura ed effetti di contatto documentati. Sviluppato come prototipo di ricerca.",
     lightMode: "Passa alla modalità chiara", darkMode: "Passa alla modalità scura",
     langSelector: "Seleziona la lingua dell’interfaccia",
+    cefrTitle: "Livello QCER",
+    removeLanguage: "Rimuovi",
     expSameSubbranch: "{target} appartiene allo stesso sottoramo di {helper} — la grammatica di base sembrerà naturale.",
     expSameBranch: "{target} è un cugino stretto di {helper} nello stesso ramo.",
     expSameFamily: "{target} condivide radici {family} profonde con {helper} ma in un ramo diverso.",
@@ -373,6 +411,8 @@ const TRANSLATIONS = {
     footer: "Wyselekcjonowany zbiór 96 języków z 17 rodzin językowych. Ocenianie łączy pokrewieństwo genealogiczne, podobieństwo leksykalne, gramatykę typologiczną, fonologię, system pisma i udokumentowane efekty kontaktu. Prototyp badawczy.",
     lightMode: "Przełącz na tryb jasny", darkMode: "Przełącz na tryb ciemny",
     langSelector: "Wybierz język interfejsu",
+    cefrTitle: "Poziom CEFR",
+    removeLanguage: "Usuń",
     expSameSubbranch: "{target} należy do tej samej podgałęzi co {helper} — gramatyka będzie od razu znajoma.",
     expSameBranch: "{target} jest bliskim krewnym {helper} w tej samej gałęzi.",
     expSameFamily: "{target} ma wspólne korzenie {family} z {helper}, ale należy do innej gałęzi.",
@@ -409,6 +449,8 @@ const TRANSLATIONS = {
     footer: "17 dil ailesinden 96 dili kapsayan özenle hazırlanmış bir veri seti. Puanlama; soysal akrabalık, sözcüksel benzerlik, tipik dilbilgisi, sesbilim, yazı sistemi ve belgelenmiş temas etkilerini birleştirir. Araştırma prototipi olarak geliştirilmiştir.",
     lightMode: "Açık moda geç", darkMode: "Koyu moda geç",
     langSelector: "Arayüz dilini seçin",
+    cefrTitle: "CEFR yeterlilik düzeyi",
+    removeLanguage: "Kaldır",
     expSameSubbranch: "{target}, {helper} ile aynı alt dalda — temel dilbilgisi hemen tanıdık gelecek.",
     expSameBranch: "{target}, aynı dal içinde {helper}’in yakın akrabasıdır.",
     expSameFamily: "{target}, farklı bir dalda olsa da {helper} ile derin {family} köklerini paylaşır.",
@@ -446,6 +488,8 @@ const TRANSLATIONS = {
     lightMode: "Переключить на светлую тему",
     darkMode: "Переключить на тёмную тему",
     langSelector: "Выбрать язык интерфейса",
+    cefrTitle: "Уровень CEFR",
+    removeLanguage: "Удалить",
     expSameSubbranch: "{target} принадлежит той же подветви, что и {helper} — основная грамматика покажется родной.",
     expSameBranch: "{target} — близкий родственник {helper} в той же ветви.",
     expSameFamily: "{target} разделяет глубокие корни {family} с {helper}, но относится к другой ветви.",
@@ -477,6 +521,8 @@ const LANG_NAMES = {
   tr: {"de": "Almanca", "nl": "Flemenkçe", "en": "İngilizce", "af": "Afrikaanca", "yi": "Yidiş", "lb": "Lüksemburgca", "sv": "İsveççe", "no": "Norveççe", "da": "Danimarkaca", "is": "İzlandaca", "fo": "Faroece", "es": "İspanyolca", "pt": "Portekizce", "gl": "Galiçyaca", "fr": "Fransızca", "it": "İtalyanca", "ro": "Rumence", "ca": "Katalanca", "oc": "Oksitanca", "sc": "Sicilyaca", "srd": "Sarduca", "ht": "Haiti Kreolü", "ru": "Rusça", "uk": "Ukraynaca", "be": "Belarusça", "pl": "Lehçe", "cs": "Çekçe", "sk": "Slovakça", "bg": "Bulgarca", "mk": "Makedonyaca", "hr": "Hırvatça/Sırpça", "sl": "Slovence", "el": "Yunanca", "sq": "Arnavutça", "hy": "Ermenice", "lv": "Letonca", "lt": "Litvanca", "ga": "İrlandaca", "cy": "Galce", "fa": "Farsça", "tg": "Tacikçe", "ku": "Kürtçe", "ps": "Peştuca", "hi": "Hintçe", "ur": "Urduca", "bn": "Bengalce", "pa": "Pencapça", "mr": "Marathice", "gu": "Gujaratice", "ne": "Nepalce", "si": "Sinhalaca", "fi": "Fince", "et": "Estonca", "hu": "Macarca", "se": "Kuzey Laponcası", "tr": "Türkçe", "az": "Azerbaycanca", "tk": "Türkmence", "kk": "Kazakça", "ky": "Kırgızca", "tt": "Tatarca", "uz": "Özbekçe", "ug": "Uygurca", "mn": "Moğolca", "ar": "Arapça (Standart)", "he": "İbranice", "mt": "Maltaca", "am": "Amharca", "ti": "Tigrinya", "ha": "Hausaca", "so": "Somalice", "ka": "Gürcüce", "ta": "Tamilce", "te": "Teluguca", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin Çincesi", "yue": "Kantonca", "my": "Birmanca", "bo": "Tibetçe", "ja": "Japonca", "ko": "Korece", "vi": "Vietnamca", "km": "Kmerce", "th": "Tayca", "lo": "Laosça", "id": "Endonezce", "ms": "Malayca", "tl": "Tagalogca", "jv": "Cava Dili", "sw": "Swahilice", "zu": "Zuluca", "yo": "Yorubaca", "qu": "Keçuvaca", "gn": "Guaranice", "eu": "Baskça"},
   ru: {"de": "Немецкий", "nl": "Нидерландский", "en": "Английский", "af": "Африкаанс", "yi": "Идиш", "lb": "Люксембургский", "sv": "Шведский", "no": "Норвежский", "da": "Датский", "is": "Исландский", "fo": "Фарерский", "es": "Испанский", "pt": "Португальский", "gl": "Галисийский", "fr": "Французский", "it": "Итальянский", "ro": "Румынский", "ca": "Каталанский", "oc": "Окситанский", "sc": "Сицилийский", "srd": "Сардинский", "ht": "Гаитянский креольский", "ru": "Русский", "uk": "Украинский", "be": "Белорусский", "pl": "Польский", "cs": "Чешский", "sk": "Словацкий", "bg": "Болгарский", "mk": "Македонский", "hr": "Хорватский/Сербский", "sl": "Словенский", "el": "Греческий", "sq": "Албанский", "hy": "Армянский", "lv": "Латышский", "lt": "Литовский", "ga": "Ирландский", "cy": "Валлийский", "fa": "Персидский (фарси)", "tg": "Таджикский", "ku": "Курдский", "ps": "Пушту", "hi": "Хинди", "ur": "Урду", "bn": "Бенгальский", "pa": "Панджабский", "mr": "Маратхи", "gu": "Гуджарати", "ne": "Непальский", "si": "Сингальский", "fi": "Финский", "et": "Эстонский", "hu": "Венгерский", "se": "Северносаамский", "tr": "Турецкий", "az": "Азербайджанский", "tk": "Туркменский", "kk": "Казахский", "ky": "Киргизский", "tt": "Татарский", "uz": "Узбекский", "ug": "Уйгурский", "mn": "Монгольский", "ar": "Арабский (литературный)", "he": "Иврит", "mt": "Мальтийский", "am": "Амхарский", "ti": "Тигринья", "ha": "Хауса", "so": "Сомалийский", "ka": "Грузинский", "ta": "Тамильский", "te": "Телугу", "kn": "Каннада", "ml": "Малаялам", "zh": "Мандаринский китайский", "yue": "Кантонский", "my": "Бирманский", "bo": "Тибетский", "ja": "Японский", "ko": "Корейский", "vi": "Вьетнамский", "km": "Кхмерский", "th": "Тайский", "lo": "Лаосский", "id": "Индонезийский", "ms": "Малайский", "tl": "Тагальский", "jv": "Яванский", "sw": "Суахили", "zu": "Зулу", "yo": "Йоруба", "qu": "Кечуа", "gn": "Гуарани", "eu": "Баскский"},
 };
+const CEFR_WEIGHTS = { A1: 0.10, A2: 0.30, B1: 0.50, B2: 0.70, C1: 0.85, C2: 1.00 };
+
 const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
 
 function app() {
@@ -486,6 +532,7 @@ function app() {
     speakers: ['en'].filter(c => c in DATA.languages),
     weights: {...DEFAULT_WEIGHTS},
     topN: 15,
+    proficiency: {},
     isDark: document.documentElement.classList.contains('dark'),
     currentLang: (function() {
       const s = localStorage.getItem('lb-lang');
@@ -555,8 +602,14 @@ function app() {
 
     toggleSpeaker(code) {
       const i = this.speakers.indexOf(code);
-      if (i >= 0) this.speakers.splice(i, 1);
-      else this.speakers.push(code);
+      if (i >= 0) {
+        this.speakers.splice(i, 1);
+      } else {
+        if (!this.proficiency[code]) {
+          this.proficiency = { ...this.proficiency, [code]: 'C2' };
+        }
+        this.speakers.push(code);
+      }
     },
 
     resetWeights() { this.weights = {...DEFAULT_WEIGHTS}; },
@@ -664,18 +717,19 @@ function app() {
       let totalBonus = 0;
 
       for (const h of this.speakers) {
+        const m = CEFR_WEIGHTS[this.proficiency[h]] ?? 1.0;
         const sub = {
-          genealogical: this.genealogical(h, target),
-          lexical: this.lexicalSimilarity(h, target),
-          grammatical: this.grammatical(h, target),
-          phonological: this.phonological(h, target),
-          writing_system: this.writingSystem(h, target),
+          genealogical: this.genealogical(h, target) * m,
+          lexical: this.lexicalSimilarity(h, target) * m,
+          grammatical: this.grammatical(h, target) * m,
+          phonological: this.phonological(h, target) * m,
+          writing_system: this.writingSystem(h, target) * m,
         };
         for (const d of dims) {
           if (sub[d] > best[d]) { best[d] = sub[d]; helpers[d] = h; }
         }
         const [b, n] = this.contactBonus(h, target);
-        if (b) { totalBonus += b; notes.push({helper: h, note: n}); }
+        if (b) { totalBonus += b * m; notes.push({helper: h, note: n}); }
       }
 
       const lexWithBonus = Math.min(1.0, best.lexical + totalBonus);
