@@ -49,6 +49,9 @@
   .dark .lang-map-svg .ocean { fill: #1e3a5f; }
   /* tooltip */
   [x-cloak] { display: none !important; }
+  /* cognate highlight */
+  .cognate-hl { color: #059669; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; }
+  .dark .cognate-hl { color: #34d399; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -314,6 +317,32 @@
                 </div>
               </div>
 
+              <!-- Linguistic Bridge in Action -->
+              <template x-if="parallelSentencesFor(rec.target)">
+                <div x-data="{ ps: parallelSentencesFor(rec.target) }" class="mb-4 p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700">
+                  <div class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-1" x-text="t('bridgeTitle')"></div>
+                  <p class="text-xs text-stone-500 dark:text-stone-400 mb-3 leading-relaxed"
+                     x-text="t('bridgeSubtitle').replace('{bridge}', langName(ps.bridge)).replace('{level}', proficiency[ps.bridge] || 'C2').replace('{target}', langName(rec.target))"></p>
+                  <div class="space-y-3">
+                    <template x-for="(sent, si) in ps.sentences" :key="si">
+                      <div class="grid grid-cols-2 gap-2">
+                        <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
+                          <div class="text-xs font-semibold text-blue-500 dark:text-blue-400 mb-1" x-text="langName(ps.bridge)"></div>
+                          <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
+                                x-html="markCognates(ps.reversed ? sent.t : sent.b, (ps.reversed ? sent.c.map(p=>p[1]) : sent.c.map(p=>p[0])))"></span>
+                        </div>
+                        <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
+                          <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1" x-text="langName(rec.target)"></div>
+                          <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
+                                x-html="markCognates(ps.reversed ? sent.b : sent.t, (ps.reversed ? sent.c.map(p=>p[0]) : sent.c.map(p=>p[1])))"></span>
+                        </div>
+                      </div>
+                    </template>
+                  </div>
+                  <p class="text-xs text-stone-400 dark:text-stone-500 mt-2 italic" x-text="t('bridgeLegend')"></p>
+                </div>
+              </template>
+
               <!-- World map -->
               <div class="relative rounded-lg overflow-hidden border border-stone-200 dark:border-stone-700"
                    @mousemove="mapHover($event, rec.target)"
@@ -573,6 +602,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Add languages you know first.",
     reverseTotal: "Total",
     reverseContrib: "Contribution to {target}",
+    bridgeTitle: "The Linguistic Bridge in Action",
+    bridgeSubtitle: "Because you speak {bridge} (at {level}), you can already spot the patterns in {target}",
+    bridgeLegend: "Highlighted words share roots or strong similarities across both languages.",
   },
   de: {
     subtitle: "Sag uns, welche Sprachen du sprichst. Wir zeigen dir, welche du am leichtesten lernen könntest — und warum, aufgeschlüsselt nach Wortschatz, Grammatik, Aussprache und Schrift.",
@@ -623,6 +655,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Füge zuerst Sprachen hinzu, die du sprichst.",
     reverseTotal: "Gesamt",
     reverseContrib: "Beitrag zu {target}",
+    bridgeTitle: "Die sprachliche Brücke in Aktion",
+    bridgeSubtitle: "Da du {bridge} sprichst (Niveau {level}), kannst du die Muster in {target} bereits erkennen",
+    bridgeLegend: "Hervorgehobene Wörter haben gemeinsame Wurzeln oder starke Ähnlichkeiten.",
   },
   fr: {
     subtitle: "Dites-nous quelles langues vous parlez. Nous vous montrerons lesquelles seront les plus faciles à apprendre — et pourquoi, en détaillant le vocabulaire, la grammaire, les sons et le système d’écriture.",
@@ -674,6 +709,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Ajoutez d’abord des langues que vous parlez.",
     reverseTotal: "Total",
     reverseContrib: "Contribution à {target}",
+    bridgeTitle: "Le pont linguistique en action",
+    bridgeSubtitle: "Comme vous parlez {bridge} (niveau {level}), vous pouvez déjà repérer les structures en {target}",
+    bridgeLegend: "Les mots surlignés partagent des racines ou de fortes similitudes entre les deux langues.",
   },
   es: {
     subtitle: "Dínos qué idiomas hablas. Te mostraremos cuáles serán más fáciles de aprender — y por qué, desglosado en vocabulario, gramática, pronunciación y sistema de escritura.",
@@ -724,6 +762,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Primero añade idiomas que hablas.",
     reverseTotal: "Total",
     reverseContrib: "Contribución a {target}",
+    bridgeTitle: "El puente lingüístico en acción",
+    bridgeSubtitle: "Como hablas {bridge} (nivel {level}), ya puedes reconocer los patrones en {target}",
+    bridgeLegend: "Las palabras resaltadas comparten raíces o similitudes entre ambas lenguas.",
   },
   it: {
     subtitle: "Dicci quali lingue parli. Ti mostreremo quali saranno più facili da imparare — e perché, suddivise in vocabolario, grammatica, suoni e sistema di scrittura.",
@@ -775,6 +816,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Aggiungi prima le lingue che parli.",
     reverseTotal: "Totale",
     reverseContrib: "Contributo a {target}",
+    bridgeTitle: "Il ponte linguistico in azione",
+    bridgeSubtitle: "Poiché parli {bridge} (livello {level}), puoi già riconoscere i modelli in {target}",
+    bridgeLegend: "Le parole evidenziate condividono radici o forti somiglianze tra le due lingue.",
   },
   pl: {
     subtitle: "Powiedz nam, jakie języki znasz. Pokażemy, które będą najłatwiejsze do nauczenia — i wyjaśnimy dlaczego, analizując słownictwo, gramatykę, wymowę i pismo.",
@@ -825,6 +869,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Najpierw dodaj języki, które znasz.",
     reverseTotal: "Łącznie",
     reverseContrib: "Twój wkład w {target}",
+    bridgeTitle: "Lingwistyczny most w działaniu",
+    bridgeSubtitle: "Ponieważ znasz {bridge} (poziom {level}), możesz już dostrzec wzorce w {target}",
+    bridgeLegend: "Podświetlone słowa mają wspólne korzenie lub silne podobieństwa między oboma językami.",
   },
   tr: {
     subtitle: "Hangi dilleri konuştuğunuzu söyleyin. Hangi dillerin öğrenilmesi en kolay olacağını — ve neden, sözcük dağarcığı, dilbilgisi, sesler ve yazı sistemi bazında — gösterelim.",
@@ -875,6 +922,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Önce bildiğiniz dilleri ekleyin.",
     reverseTotal: "Toplam",
     reverseContrib: "{target} diline katkınız",
+    bridgeTitle: "Dilsel Köprü Eylemdeyken",
+    bridgeSubtitle: "{bridge} bildiğiniz için ({level} seviyesinde), {target} dilindeki kalıpları zaten fark edebilirsiniz",
+    bridgeLegend: "Vurgulanan kelimeler her iki dilde ortak kökler veya güçlü benzerlikler taşır.",
   },
   ru: {
     subtitle: "Расскажите нам, какими языками вы владеете. Мы покажем, какие языки будет проще всего выучить — и объясним почему, анализируя словарный запас, грамматику, произношение и систему письма.",
@@ -926,6 +976,9 @@ const TRANSLATIONS = {
     reverseNoSpeakers: "Сначала добавьте языки, которыми вы владеете.",
     reverseTotal: "Итого",
     reverseContrib: "Вклад в {target}",
+    bridgeTitle: "Мовний міст у дії",
+    bridgeSubtitle: "Оскільки ви знаєте {bridge} (рівень {level}), ви вже можете помітити закономірності в {target}",
+    bridgeLegend: "Виділені слова мають спільне коріння або сильну схожість між обома мовами.",
   },
 };
 
@@ -1075,6 +1128,154 @@ function countryDisplayName(a2, lang) {
 function flagEmoji(a2) {
   return [...a2.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
 }
+
+
+const PARALLEL_SENTENCES = {
+  'en|de': [
+    { b: "My brother and sister live in the old house near the water.", t: "Mein Bruder und meine Schwester leben in dem alten Haus nahe dem Wasser.", c: [["brother","Bruder"],["sister","Schwester"],["old","alten"],["house","Haus"],["water","Wasser"]] },
+    { b: "The winter wind is cold and the night is long and dark.", t: "Der Winterwind ist kalt und die Nacht ist lang und dunkel.", c: [["winter","Winter"],["wind","Wind"],["cold","kalt"],["night","Nacht"],["long","lang"],["dark","dunkel"]] },
+  ],
+  'en|nl': [
+    { b: "The book is open on the table next to the lamp.", t: "Het boek ligt open op de tafel naast de lamp.", c: [["book","boek"],["open","open"],["table","tafel"],["lamp","lamp"]] },
+    { b: "My father works in the city and comes home late in the winter.", t: "Mijn vader werkt in de stad en komt laat thuis in de winter.", c: [["father","vader"],["works","werkt"],["city","stad"],["winter","winter"],["late","laat"]] },
+  ],
+  'en|af': [
+    { b: "The water is cold in the winter and warm in the summer.", t: "Die water is koud in die winter en warm in die somer.", c: [["water","water"],["cold","koud"],["winter","winter"],["warm","warm"],["summer","somer"]] },
+    { b: "She loves her brother and her sister very much.", t: "Sy is baie lief vir haar broer en haar suster.", c: [["brother","broer"],["sister","suster"]] },
+  ],
+  'en|sv': [
+    { b: "The summer night is short and the light lasts until midnight.", t: "Sommarnatten är kort och ljuset varar till midnatt.", c: [["summer","Sommar"],["night","natten"],["short","kort"],["light","ljuset"],["midnight","midnatt"]] },
+    { b: "My mother reads books and my father writes letters.", t: "Min mor läser böcker och min far skriver brev.", c: [["mother","mor"],["reads","läser"],["father","far"],["writes","skriver"]] },
+  ],
+  'en|no': [
+    { b: "The winter is long and cold but the spring is beautiful.", t: "Vinteren er lang og kald, men våren er vakker.", c: [["winter","Vinteren"],["long","lang"],["cold","kald"],["spring","våren"],["beautiful","vakker"]] },
+    { b: "She lives in a small house near the river.", t: "Hun bor i et lite hus nær elven.", c: [["lives","bor"],["small","lite"],["house","hus"],["river","elven"]] },
+  ],
+  'en|da': [
+    { b: "The dog and the cat sleep in the warm house.", t: "Hunden og katten sover i det varme hus.", c: [["dog","Hunden"],["cat","katten"],["warm","varme"],["house","hus"]] },
+    { b: "He works in the garden every morning in summer.", t: "Han arbejder i haven hver morgen om sommeren.", c: [["works","arbejder"],["garden","haven"],["morning","morgen"],["summer","sommeren"]] },
+  ],
+  'en|fr': [
+    { b: "The museum is open every day except Monday.", t: "Le musée est ouvert tous les jours sauf le lundi.", c: [["museum","musée"],["open","ouvert"],["Monday","lundi"]] },
+    { b: "The natural sciences and the arts are important for education.", t: "Les sciences naturelles et les arts sont importants pour l'éducation.", c: [["natural","naturelles"],["sciences","sciences"],["arts","arts"],["important","importants"],["education","éducation"]] },
+  ],
+  'en|es': [
+    { b: "The central hospital has a modern laboratory and excellent doctors.", t: "El hospital central tiene un laboratorio moderno y doctores excelentes.", c: [["central","central"],["hospital","hospital"],["modern","moderno"],["laboratory","laboratorio"],["doctors","doctores"],["excellent","excelentes"]] },
+    { b: "Music, art, and literature are fundamental to human culture.", t: "La música, el arte y la literatura son fundamentales para la cultura humana.", c: [["music","música"],["art","arte"],["literature","literatura"],["fundamental","fundamentales"],["culture","cultura"],["human","humana"]] },
+  ],
+  'en|it': [
+    { b: "The professor teaches philosophy and history at the university.", t: "Il professore insegna filosofia e storia all'università.", c: [["professor","professore"],["philosophy","filosofia"],["history","storia"],["university","università"]] },
+    { b: "The festival of music and art attracts visitors from all regions.", t: "Il festival di musica e arte attira visitatori da tutte le regioni.", c: [["festival","festival"],["music","musica"],["art","arte"],["visitors","visitatori"],["regions","regioni"]] },
+  ],
+  'en|pt': [
+    { b: "The climate of the tropical region is humid and very hot.", t: "O clima da região tropical é úmido e muito quente.", c: [["climate","clima"],["region","região"],["tropical","tropical"],["humid","úmido"]] },
+    { b: "The national park protects animals and plants that are in danger.", t: "O parque nacional protege animais e plantas que estão em perigo.", c: [["national","nacional"],["park","parque"],["animals","animais"],["plants","plantas"],["danger","perigo"]] },
+  ],
+  'en|ro': [
+    { b: "The nation celebrates its independence with music and tradition.", t: "Națiunea sărbătorește independența sa cu muzică și tradiție.", c: [["nation","Națiunea"],["independence","independența"],["music","muzică"],["tradition","tradiție"]] },
+    { b: "The natural history museum has an important collection of art.", t: "Muzeul de istorie naturală are o colecție importantă de artă.", c: [["museum","Muzeul"],["natural","naturală"],["history","istorie"],["important","importantă"],["collection","colecție"],["art","artă"]] },
+  ],
+  'en|ca': [
+    { b: "The cultural center organizes concerts and literary exhibitions.", t: "El centre cultural organitza concerts i exposicions literàries.", c: [["cultural","cultural"],["center","centre"],["concerts","concerts"],["literary","literàries"],["exhibitions","exposicions"]] },
+    { b: "Science and technology transform the modern economy rapidly.", t: "La ciència i la tecnologia transformen l'economia moderna ràpidament.", c: [["science","ciència"],["technology","tecnologia"],["modern","moderna"],["economy","economia"]] },
+  ],
+  'nl|de': [
+    { b: "Het kind speelt in de tuin met zijn hond.", t: "Das Kind spielt im Garten mit seinem Hund.", c: [["kind","Kind"],["speelt","spielt"],["tuin","Garten"],["hond","Hund"]] },
+    { b: "De winter is lang maar de zomer is warm en mooi.", t: "Der Winter ist lang aber der Sommer ist warm und schön.", c: [["winter","Winter"],["lang","lang"],["zomer","Sommer"],["warm","warm"],["mooi","schön"]] },
+  ],
+  'nl|af': [
+    { b: "Het huis staat naast de rivier en heeft een grote tuin.", t: "Die huis staan langs die rivier en het 'n groot tuin.", c: [["huis","huis"],["rivier","rivier"],["groot","groot"],["tuin","tuin"]] },
+    { b: "De boeken liggen op de tafel in de kamer.", t: "Die boeke lê op die tafel in die kamer.", c: [["boeken","boeke"],["tafel","tafel"],["kamer","kamer"]] },
+  ],
+  'de|af': [
+    { b: "Der Mann arbeitet auf dem Bauernhof und lebt in einem kleinen Haus.", t: "Die man werk op die plaas en woon in 'n klein huis.", c: [["Mann","man"],["Haus","huis"],["klein","klein"]] },
+    { b: "Das Wasser und das Brot sind auf dem Tisch.", t: "Die water en die brood is op die tafel.", c: [["Wasser","water"],["Brot","brood"],["Tisch","tafel"]] },
+  ],
+  'de|sv': [
+    { b: "Der Winter ist kalt und der Sommer ist warm und hell.", t: "Vintern är kall och sommaren är varm och ljus.", c: [["Winter","Vintern"],["kalt","kall"],["Sommer","sommaren"],["warm","varm"]] },
+    { b: "Das Haus steht neben dem Fluss und hat einen großen Garten.", t: "Huset står bredvid floden och har en stor trädgård.", c: [["Haus","Huset"],["Fluss","floden"],["großen","stor"],["Garten","trädgård"]] },
+  ],
+  'sv|no': [
+    { b: "Sommaren är kort men ljus och varm uppe i norr.", t: "Sommeren er kort men lys og varm oppe i nord.", c: [["Sommaren","Sommeren"],["kort","kort"],["ljus","lys"],["varm","varm"],["norr","nord"]] },
+    { b: "Han bor i ett litet hus nära havet.", t: "Han bor i et lite hus nær havet.", c: [["bor","bor"],["litet","lite"],["hus","hus"],["havet","havet"]] },
+  ],
+  'sv|da': [
+    { b: "Barnet leker i trädgården med sin hund varje dag.", t: "Barnet leger i haven med sin hund hver dag.", c: [["Barnet","Barnet"],["trädgården","haven"],["hund","hund"],["dag","dag"]] },
+    { b: "Hon läser böcker och skriver brev på kvällen.", t: "Hun læser bøger og skriver breve om aftenen.", c: [["läser","læser"],["böcker","bøger"],["skriver","skriver"],["brev","breve"]] },
+  ],
+  'no|da': [
+    { b: "Vinteren er lang og mørk men våren bringer lys og varme.", t: "Vinteren er lang og mørk, men foråret bringer lys og varme.", c: [["Vinteren","Vinteren"],["lang","lang"],["mørk","mørk"],["lys","lys"],["varme","varme"]] },
+    { b: "Han jobber i byen og bor i et stort hus.", t: "Han arbejder i byen og bor i et stort hus.", c: [["bor","bor"],["stort","stort"],["hus","hus"],["byen","byen"]] },
+  ],
+  'es|pt': [
+    { b: "El gobierno nacional apoya la educación y la cultura en todo el país.", t: "O governo nacional apoia a educação e a cultura em todo o país.", c: [["gobierno","governo"],["nacional","nacional"],["educación","educação"],["cultura","cultura"],["país","país"]] },
+    { b: "La música popular refleja la historia y la identidad del pueblo.", t: "A música popular reflete a história e a identidade do povo.", c: [["música","música"],["popular","popular"],["historia","história"],["identidad","identidade"],["pueblo","povo"]] },
+  ],
+  'es|it': [
+    { b: "El arte y la cultura son fundamentales para la sociedad moderna.", t: "L'arte e la cultura sono fondamentali per la società moderna.", c: [["arte","arte"],["cultura","cultura"],["fundamentales","fondamentali"],["sociedad","società"],["moderna","moderna"]] },
+    { b: "La universidad tiene una biblioteca con miles de libros importantes.", t: "L'università ha una biblioteca con migliaia di libri importanti.", c: [["universidad","università"],["biblioteca","biblioteca"],["libros","libri"],["importantes","importanti"]] },
+  ],
+  'es|fr': [
+    { b: "La capital del país tiene muchos museos y monumentos históricos.", t: "La capitale du pays a beaucoup de musées et de monuments historiques.", c: [["capital","capitale"],["museos","musées"],["monumentos","monuments"],["históricos","historiques"]] },
+    { b: "La ciencia moderna transforma la medicina y la tecnología cada año.", t: "La science moderne transforme la médecine et la technologie chaque année.", c: [["ciencia","science"],["moderna","moderne"],["medicina","médecine"],["tecnología","technologie"]] },
+  ],
+  'es|ro': [
+    { b: "La música nacional es una parte importante de la tradición cultural.", t: "Muzica națională este o parte importantă a tradiției culturale.", c: [["música","Muzica"],["nacional","națională"],["importante","importantă"],["tradición","tradiției"],["cultural","culturale"]] },
+    { b: "El festival de arte atrae a turistas de todas las regiones.", t: "Festivalul de artă atrage turiști din toate regiunile.", c: [["festival","Festivalul"],["arte","artă"],["turistas","turiști"],["regiones","regiunile"]] },
+  ],
+  'es|ca': [
+    { b: "El mercado central vende frutas, verduras y productos locales.", t: "El mercat central ven fruites, verdures i productes locals.", c: [["mercado","mercat"],["central","central"],["frutas","fruites"],["verduras","verdures"],["productos","productes"],["locales","locals"]] },
+    { b: "La lengua es la expresión más directa de la cultura de un pueblo.", t: "La llengua és l'expressió més directa de la cultura d'un poble.", c: [["lengua","llengua"],["expresión","expressió"],["cultura","cultura"],["pueblo","poble"]] },
+  ],
+  'fr|it': [
+    { b: "Le musée national présente une collection d'art extraordinaire.", t: "Il museo nazionale presenta una collezione d'arte straordinaria.", c: [["musée","museo"],["national","nazionale"],["collection","collezione"],["extraordinaire","straordinaria"]] },
+    { b: "La région produit du vin excellent et des fromages de qualité.", t: "La regione produce vino eccellente e formaggi di qualità.", c: [["région","regione"],["produit","produce"],["excellent","eccellente"],["qualité","qualità"]] },
+  ],
+  'fr|pt': [
+    { b: "La culture et la littérature sont essentielles pour la société.", t: "A cultura e a literatura são essenciais para a sociedade.", c: [["culture","cultura"],["littérature","literatura"],["essentielles","essenciais"],["société","sociedade"]] },
+    { b: "Le festival international de musique attire des artistes du monde entier.", t: "O festival internacional de música atrai artistas do mundo inteiro.", c: [["festival","festival"],["international","internacional"],["musique","música"],["artistes","artistas"]] },
+  ],
+  'it|pt': [
+    { b: "Il governo investe molto nell'educazione e nella ricerca scientifica.", t: "O governo investe muito na educação e na pesquisa científica.", c: [["governo","governo"],["educazione","educação"],["ricerca","pesquisa"],["scientifica","científica"]] },
+    { b: "La storia antica dell'Italia affascina turisti da tutto il mondo.", t: "A história antiga da Itália fascina turistas de todo o mundo.", c: [["storia","história"],["antica","antiga"],["affascina","fascina"],["turisti","turistas"],["mondo","mundo"]] },
+  ],
+  'it|ro': [
+    { b: "La musica classica italiana è famosa in tutto il mondo.", t: "Muzica clasică italiană este faimoasă în toată lumea.", c: [["musica","Muzica"],["classica","clasică"],["famosa","faimoasă"],["mondo","lumea"]] },
+    { b: "Il festival nazionale celebra la cultura e la tradizione del paese.", t: "Festivalul național celebrează cultura și tradiția țării.", c: [["festival","Festivalul"],["nazionale","național"],["cultura","cultura"],["tradizione","tradiția"]] },
+  ],
+  'ru|pl': [
+    { b: "Зима холодная и длинная, но весна приносит тепло и свет.", t: "Zima jest zimna i długa, ale wiosna przynosi ciepło i światło.", c: [["Зима","Zima"],["холодная","zimna"],["длинная","długa"],["весна","wiosna"],["тепло","ciepło"]] },
+    { b: "Студент читает книги в библиотеке каждый день.", t: "Student czyta książki w bibliotece każdego dnia.", c: [["Студент","Student"],["читает","czyta"],["книги","książki"],["библиотеке","bibliotece"]] },
+  ],
+  'ru|cs': [
+    { b: "Новый закон поддерживает развитие науки и культуры.", t: "Nový zákon podporuje rozvoj vědy a kultury.", c: [["Новый","Nový"],["закон","zákon"],["науки","vědy"],["культуры","kultury"]] },
+    { b: "Город находится в центре страны и имеет старый университет.", t: "Město se nachází ve středu země a má starou univerzitu.", c: [["Город","Město"],["центре","středu"],["страны","země"],["университет","univerzitu"]] },
+  ],
+  'ru|uk': [
+    { b: "Весной природа просыпается и всё становится зелёным и красивым.", t: "Навесні природа прокидається і все стає зеленим і красивим.", c: [["Весной","Навесні"],["природа","природа"],["зелёным","зеленим"],["красивым","красивим"]] },
+    { b: "Семья живёт в большом доме рядом с рекой и лесом.", t: "Сім'я живе у великому будинку поруч з річкою та лісом.", c: [["Семья","Сім'я"],["живёт","живе"],["рекой","річкою"],["лесом","лісом"]] },
+  ],
+  'ru|bg': [
+    { b: "Молодой студент учит историю и философию в университете.", t: "Младият студент учи история и философия в университета.", c: [["Молодой","Младият"],["студент","студент"],["историю","история"],["философию","философия"],["университете","университета"]] },
+    { b: "Народная музыка отражает культуру и традиции страны.", t: "Народната музика отразява културата и традициите на страната.", c: [["Народная","Народната"],["музыка","музика"],["культуру","културата"],["традиции","традициите"]] },
+  ],
+  'pl|cs': [
+    { b: "Miasto ma stary rynek i wiele zabytkowych budynków.", t: "Město má starý náměstí a mnoho historických budov.", c: [["Miasto","Město"],["stary","starý"],["rynek","náměstí"],["budynków","budov"]] },
+    { b: "Student uczy się języka i czyta wiele książek każdego dnia.", t: "Student se učí jazyk a čte mnoho knih každý den.", c: [["Student","Student"],["uczy","učí"],["języka","jazyk"],["czyta","čte"],["książek","knih"]] },
+  ],
+  'pl|uk': [
+    { b: "Wiosna przynosi ciepło i deszcz do pól i lasów.", t: "Весна приносить тепло і дощ до полів і лісів.", c: [["Wiosna","Весна"],["ciepło","тепло"],["deszcz","дощ"],["lasów","лісів"]] },
+    { b: "Rodzina mieszka w małym domu przy rzece.", t: "Родина живе у маленькому будинку біля річки.", c: [["Rodzina","Родина"],["domu","будинку"],["rzece","річки"]] },
+  ],
+  'tr|az': [
+    { b: "Bu kitap çok ilginç ve öğrenciler onu severek okuyor.", t: "Bu kitab çox maraqlıdır və tələbələr onu həvəslə oxuyur.", c: [["kitap","kitab"],["öğrenciler","tələbələr"],["okuyor","oxuyur"]] },
+    { b: "Yaz mevsiminde hava sıcak ve güzel olur.", t: "Yay fəslində hava isti və gözəl olur.", c: [["Yaz","Yay"],["hava","hava"],["sıcak","isti"],["güzel","gözəl"]] },
+  ],
+  'tr|uz': [
+    { b: "Bu dil çok eski ve zengin bir kültüre sahiptir.", t: "Bu til juda qadimiy va boy madaniyatga ega.", c: [["dil","til"],["kültüre","madaniyatga"]] },
+    { b: "Öğrenciler her gün okula gider ve ders çalışır.", t: "Talabalar har kuni maktabga boradi va dars o'qiydi.", c: [["Öğrenciler","Talabalar"],["gider","boradi"]] },
+  ],
+};
 
 
 const LANG_CONTEXT = {
@@ -1372,6 +1573,32 @@ function app() {
         { key: 'writing_system',  label: this.t('subScript') },
         { key: 'genealogical',    label: this.t('subFamily') },
       ];
+    },
+
+    // ── Linguistic bridge helpers ─────────────────────────────────
+    bridgeFor(code) {
+      let bestScore = -1, bestLang = null;
+      for (const spk of this.speakers) {
+        const score = (this.lexicalSimilarity(spk, code) + this.genealogical(spk, code) +
+          this.grammatical(spk, code) + this.phonological(spk, code) + this.writingSystem(spk, code)) / 5;
+        if (score > bestScore) { bestScore = score; bestLang = spk; }
+      }
+      return bestLang;
+    },
+    parallelSentencesFor(code) {
+      const bridge = this.bridgeFor(code);
+      if (!bridge) return null;
+      const key1 = bridge + '|' + code;
+      const key2 = code + '|' + bridge;
+      if (PARALLEL_SENTENCES[key1]) return { sentences: PARALLEL_SENTENCES[key1], bridge, reversed: false };
+      if (PARALLEL_SENTENCES[key2]) return { sentences: PARALLEL_SENTENCES[key2], bridge, reversed: true };
+      return null;
+    },
+    markCognates(text, words) {
+      if (!text || !words || !words.length) return text;
+      const patterns = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+      const regex = new RegExp('(' + patterns.join('|') + ')', 'gi');
+      return text.replace(regex, '<span class="cognate-hl">$1</span>');
     },
 
     // ── Detail panel ─────────────────────────────────────────────
