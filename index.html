@@ -52,6 +52,90 @@
   /* cognate highlight */
   .cognate-hl { color: #059669; font-weight: 600; text-decoration: underline; text-decoration-style: dotted; }
   .dark .cognate-hl { color: #34d399; }
+  /* regional language map: diagonal-hatch fill via SVG pattern, with semi-transparent fallback */
+  .lang-map-svg .country.regional { stroke: #059669; stroke-width: 1.0; fill-opacity: 0.38; }
+  .dark .lang-map-svg .country.regional { stroke: #34d399; stroke-width: 1.0; fill-opacity: 0.38; }
+  .lang-map-svg .country.regional.overlap { stroke: #a78bfa; stroke-width: 1.0; fill-opacity: 0.38; }
+  .dark .lang-map-svg .country.regional.overlap { stroke: #a78bfa; stroke-width: 1.0; fill-opacity: 0.38; }
+
+  /* ── Language Selector Cards ─────────────────────────────────── */
+  .lang-selector-scroll { max-height: 560px; overflow-y: auto; scrollbar-width: thin; }
+  .lang-selector-scroll::-webkit-scrollbar { width: 6px; }
+  .lang-selector-scroll::-webkit-scrollbar-track { background: transparent; }
+  .lang-selector-scroll::-webkit-scrollbar-thumb { background: #d6d3d1; border-radius: 3px; }
+  .dark .lang-selector-scroll::-webkit-scrollbar-thumb { background: #57534e; }
+
+  .family-header {
+    font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    color: #a8a29e; padding: 0.5rem 0 0.35rem; margin-top: 0.5rem;
+    border-bottom: 1px solid #e7e5e4;
+  }
+  .dark .family-header { color: #78716c; border-bottom-color: #292524; }
+  .family-header:first-child { margin-top: 0; }
+
+  .lang-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 6px; padding: 6px 0;
+  }
+
+  .lang-card {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 2px; padding: 8px 6px 7px;
+    border-radius: 8px; border: 1.5px solid #e7e5e4;
+    background: #ffffff; cursor: pointer; text-align: center;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    position: relative; min-height: 68px; user-select: none;
+  }
+  .dark .lang-card { background: #1c1917; border-color: #292524; }
+  .lang-card:hover { border-color: #a78bfa; box-shadow: 0 0 0 2px #a78bfa22; }
+  .dark .lang-card:hover { border-color: #a78bfa; }
+  .lang-card.is-selected {
+    border-color: #059669; background: #ecfdf5;
+    box-shadow: 0 0 0 2px #05966922;
+  }
+  .dark .lang-card.is-selected { border-color: #34d399; background: #052e16; box-shadow: 0 0 0 2px #34d39922; }
+
+  .lang-card-flag { font-size: 1.45rem; line-height: 1; }
+  .lang-card-en   { font-size: 0.72rem; font-weight: 600; color: #1c1917; line-height: 1.2; margin-top: 2px; }
+  .dark .lang-card-en { color: #e7e5e4; }
+  .lang-card-native { font-size: 0.62rem; color: #a8a29e; line-height: 1.1; }
+  .dark .lang-card-native { color: #78716c; }
+
+  .lang-card-check {
+    position: absolute; top: 4px; right: 5px;
+    width: 13px; height: 13px; color: #059669;
+  }
+  .dark .lang-card-check { color: #34d399; }
+
+  /* Selected pills strip */
+  .selected-pills-strip {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 4px;
+    min-height: 36px;
+  }
+  .selected-pill {
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 3px 4px 3px 8px; border-radius: 9999px;
+    background: #ecfdf5; border: 1.5px solid #059669;
+    font-size: 0.72rem; font-weight: 600; color: #065f46;
+    white-space: nowrap; line-height: 1;
+  }
+  .dark .selected-pill { background: #052e16; border-color: #34d399; color: #a7f3d0; }
+  .selected-pill-flag { font-size: 1rem; }
+  .selected-pill select {
+    font-size: 0.65rem; font-weight: 600; color: #059669;
+    background: transparent; border: none; outline: none; cursor: pointer;
+    padding: 0 2px; -webkit-appearance: none;
+  }
+  .dark .selected-pill select { color: #34d399; }
+  .selected-pill-remove {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 16px; height: 16px; border-radius: 9999px;
+    border: none; background: #059669; color: #fff;
+    font-size: 0.6rem; cursor: pointer; flex-shrink: 0;
+    line-height: 1; padding: 0;
+  }
+  .dark .selected-pill-remove { background: #34d399; color: #052e16; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -101,58 +185,93 @@
 
   <!-- Language selector (speakers) -->
   <section class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6 mb-6">
-    <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center justify-between mb-1">
       <h2 class="text-lg font-medium" x-text="t('sectionSpeaks')"></h2>
       <span class="text-sm text-stone-500 dark:text-stone-400" x-text="t('selected', {n: speakers.length})"></span>
     </div>
-    <p class="text-sm text-stone-500 dark:text-stone-400 mb-4" x-text="t('hint')"></p>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-3" x-text="t('hint')"></p>
 
+    <!-- Selected pills strip -->
+    <div class="selected-pills-strip" x-show="speakers.length > 0">
+      <template x-for="code in speakers" :key="'pill-' + code">
+        <div class="selected-pill">
+          <span class="selected-pill-flag" x-text="LANG_FLAG[code] || '🌐'"></span>
+          <span x-text="langName(code)"></span>
+          <select
+            x-model="proficiency[code]"
+            @click.stop
+            @change.stop
+            :title="t('cefrTitle')"
+          >
+            <option value="A1">A1</option>
+            <option value="A2">A2</option>
+            <option value="B1">B1</option>
+            <option value="B2">B2</option>
+            <option value="C1">C1</option>
+            <option value="C2">C2</option>
+          </select>
+          <button class="selected-pill-remove" @click.stop="toggleSpeaker(code)" :title="t('removeLanguage')">&#xd7;</button>
+        </div>
+      </template>
+    </div>
+
+    <!-- Search input -->
     <input
       type="text"
       :placeholder="t('searchPlaceholder')"
       x-model="search"
-      class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 mb-3 text-sm"
+      class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-stone-400 dark:focus:ring-stone-500 mb-2 text-sm"
     >
 
-    <div class="flex flex-wrap gap-2 max-h-64 overflow-y-auto p-1">
-      <template x-for="code in filteredLanguages" :key="code">
-        <div style="display:contents">
-          <template x-if="!speakers.includes(code)">
-            <button
-              @click="toggleSpeaker(code)"
-              class="chip bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-700 dark:text-stone-200 px-3 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700"
-            >
-              <span x-text="langName(code)"></span>
-            </button>
-          </template>
-          <template x-if="speakers.includes(code)">
-            <div class="chip selected inline-flex items-center gap-1.5 pl-3 pr-2 py-1.5 rounded-full text-sm border border-stone-300 dark:border-stone-700">
-              <span x-text="langName(code)"></span>
-              <span class="opacity-50 select-none text-xs">·</span>
-              <select
-                x-model="proficiency[code]"
-                @click.stop
-                @change.stop
-                class="bg-transparent text-xs font-semibold outline-none cursor-pointer"
-                :title="t('cefrTitle')"
-              >
-                <option value="A1">A1</option>
-                <option value="A2">A2</option>
-                <option value="B1">B1</option>
-                <option value="B2">B2</option>
-                <option value="C1">C1</option>
-                <option value="C2">C2</option>
-              </select>
-              <button
-                @click.stop="toggleSpeaker(code)"
-                class="opacity-60 hover:opacity-100 transition-opacity leading-none ml-0.5"
-                :title="t('removeLanguage')"
-              >&#xd7;</button>
+    <!-- Search results: flat grid -->
+    <template x-if="search.trim()">
+      <div class="lang-grid">
+        <template x-for="code in filteredLanguages" :key="'s-' + code">
+          <button
+            :class="speakers.includes(code) ? 'lang-card is-selected' : 'lang-card'"
+            @click="toggleSpeaker(code)"
+          >
+            <template x-if="speakers.includes(code)">
+              <svg class="lang-card-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+              </svg>
+            </template>
+            <span class="lang-card-flag" x-text="LANG_FLAG[code] || '🌐'"></span>
+            <span class="lang-card-en" x-text="langName(code)"></span>
+            <span class="lang-card-native" x-text="LANG_NATIVE[code] || ''"></span>
+          </button>
+        </template>
+      </div>
+    </template>
+
+    <!-- Browse: grouped by language family -->
+    <template x-if="!search.trim()">
+      <div class="lang-selector-scroll">
+        <template x-for="group in LANG_GROUPS" :key="group.id">
+          <div>
+            <div class="family-header" x-text="group.label"></div>
+            <div class="lang-grid">
+              <template x-for="code in group.codes" :key="'g-' + code">
+                <button
+                  :class="speakers.includes(code) ? 'lang-card is-selected' : 'lang-card'"
+                  @click="toggleSpeaker(code)"
+                >
+                  <template x-if="speakers.includes(code)">
+                    <svg class="lang-card-check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+                      <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                  </template>
+                  <span class="lang-card-flag" x-text="LANG_FLAG[code] || '🌐'"></span>
+                  <span class="lang-card-en" x-text="langName(code)"></span>
+                  <span class="lang-card-native" x-text="LANG_NATIVE[code] || ''"></span>
+                </button>
+              </template>
             </div>
-          </template>
-        </div>
-      </template>
-    </div>
+          </div>
+        </template>
+      </div>
+    </template>
+
   </section>
 
   <!-- Weights (collapsible) -->
@@ -368,6 +487,16 @@
                     <span class="inline-block w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-400 flex-shrink-0"></span>
                     <span x-text="langName(rec.target)"></span>
                   </span>
+                  <template x-if="SPEAKER_DATA[rec.target]?.regions?.length">
+                    <span class="flex items-center gap-1.5">
+                      <svg class="w-3 h-3 flex-shrink-0 text-emerald-500" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="12" height="12" rx="2" fill="currentColor" fill-opacity="0.3" stroke="currentColor" stroke-width="1.2"/>
+                        <line x1="0" y1="3" x2="12" y2="3" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.7"/>
+                        <line x1="0" y1="7" x2="12" y2="7" stroke="currentColor" stroke-width="1.2" stroke-opacity="0.7"/>
+                      </svg>
+                      <span x-text="t('legendRegional')"></span>
+                    </span>
+                  </template>
                   <span class="flex items-center gap-1.5">
                     <span class="inline-block w-3 h-3 rounded-sm bg-blue-500 flex-shrink-0"></span>
                     <span x-text="t('legendKnown')"></span>
@@ -385,9 +514,14 @@
                   <div class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-2" x-text="t('alsoSpokenIn')"></div>
                   <div class="flex flex-wrap gap-2">
                     <template x-for="c in smallCountries(rec.target)" :key="c.a2">
-                      <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                      <span :class="c.regional
+                        ? 'inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50/60 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border border-dashed border-emerald-300 dark:border-emerald-700'
+                        : 'inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700'">
                         <span x-text="c.flag"></span>
                         <span x-text="c.name"></span>
+                        <template x-if="c.regional">
+                          <span class="text-stone-400 dark:text-stone-500" x-text="'~' + c.coverage + '%'"></span>
+                        </template>
                       </span>
                     </template>
                   </div>
@@ -574,7 +708,7 @@ const TRANSLATIONS = {
     langSelector: "Select interface language",
     cefrTitle: "CEFR proficiency level",
     removeLanguage: "Remove",
-    nativeSpeakers: "Native speakers", totalSpeakers: "Total speakers", officialIn: "Official in", countries: "countries", noOfficialStatus: "No official status", mapLoading: "Loading map…", legendKnown: "Your languages", legendBoth: "Both", alsoSpokenIn: "Also official in",
+    nativeSpeakers: "Native speakers", totalSpeakers: "Total speakers", officialIn: "Official in", countries: "countries", noOfficialStatus: "No official status", mapLoading: "Loading map…", legendKnown: "Your languages", legendBoth: "Both", alsoSpokenIn: "Also official in", legendRegional: "Regional",
     expSameSubbranch: "{target} is in the same subbranch as {helper}, so the core grammar will feel native.",
     expSameBranch: "{target} is a close cousin of {helper} within the same branch.",
     expSameFamily: "{target} shares deep {family} roots with {helper} but in a different branch.",
@@ -627,7 +761,7 @@ const TRANSLATIONS = {
     langSelector: "Sprache der Benutzeroberfläche wählen",
     cefrTitle: "CEFR-Sprachniveau",
     removeLanguage: "Entfernen",
-    nativeSpeakers: "Muttersprachler", totalSpeakers: "Sprecher gesamt", officialIn: "Amtssprache in", countries: "Ländern", noOfficialStatus: "Kein offizieller Status", mapLoading: "Karte wird geladen…", legendKnown: "Deine Sprachen", legendBoth: "Beide", alsoSpokenIn: "Auch offiziell in",
+    nativeSpeakers: "Muttersprachler", totalSpeakers: "Sprecher gesamt", officialIn: "Amtssprache in", countries: "Ländern", noOfficialStatus: "Kein offizieller Status", mapLoading: "Karte wird geladen…", legendKnown: "Deine Sprachen", legendBoth: "Beide", alsoSpokenIn: "Auch offiziell in", legendRegional: "Regional",
     expSameSubbranch: "{target} gehört zum gleichen Unterzweig wie {helper} — die Kerngrammatik wird sich sofort vertraut anfühlen.",
     expSameBranch: "{target} ist ein naher Verwandter von {helper} im gleichen Zweig.",
     expSameFamily: "{target} teilt tiefe {family}-Wurzeln mit {helper}, gehört aber einem anderen Zweig an.",
@@ -680,7 +814,7 @@ const TRANSLATIONS = {
     langSelector: "Choisir la langue de l’interface",
     cefrTitle: "Niveau CECRL",
     removeLanguage: "Supprimer",
-    nativeSpeakers: "Locuteurs natifs", totalSpeakers: "Locuteurs totaux", officialIn: "Officielle en", countries: "pays", noOfficialStatus: "Pas de statut officiel", mapLoading: "Chargement de la carte…", legendKnown: "Vos langues", legendBoth: "Les deux", alsoSpokenIn: "Aussi officielle en",
+    nativeSpeakers: "Locuteurs natifs", totalSpeakers: "Locuteurs totaux", officialIn: "Officielle en", countries: "pays", noOfficialStatus: "Pas de statut officiel", mapLoading: "Chargement de la carte…", legendKnown: "Vos langues", legendBoth: "Les deux", alsoSpokenIn: "Aussi officielle en", legendRegional: "Régional",
     expSameSubbranch: "{target} appartient au même sous-groupe que {helper} — la grammaire de base semblera naturelle.",
     expSameBranch: "{target} est un proche cousin de {helper} dans la même branche.",
     expSameFamily: "{target} partage de profondes racines {family} avec {helper} mais dans une branche différente.",
@@ -734,7 +868,7 @@ const TRANSLATIONS = {
     langSelector: "Seleccionar idioma de la interfaz",
     cefrTitle: "Nivel MCER",
     removeLanguage: "Eliminar",
-    nativeSpeakers: "Hablantes nativos", totalSpeakers: "Hablantes totales", officialIn: "Oficial en", countries: "países", noOfficialStatus: "Sin estado oficial", mapLoading: "Cargando mapa…", legendKnown: "Tus idiomas", legendBoth: "Ambos", alsoSpokenIn: "También oficial en",
+    nativeSpeakers: "Hablantes nativos", totalSpeakers: "Hablantes totales", officialIn: "Oficial en", countries: "países", noOfficialStatus: "Sin estado oficial", mapLoading: "Cargando mapa…", legendKnown: "Tus idiomas", legendBoth: "Ambos", alsoSpokenIn: "También oficial en", legendRegional: "Regional",
     expSameSubbranch: "{target} está en la misma subrama que {helper} — la gramática central te resultará nativa.",
     expSameBranch: "{target} es un primo cercano de {helper} dentro de la misma rama.",
     expSameFamily: "{target} comparte raíces {family} profundas con {helper} pero en una rama diferente.",
@@ -787,7 +921,7 @@ const TRANSLATIONS = {
     langSelector: "Seleziona la lingua dell’interfaccia",
     cefrTitle: "Livello QCER",
     removeLanguage: "Rimuovi",
-    nativeSpeakers: "Madrelingua", totalSpeakers: "Parlanti totali", officialIn: "Ufficiale in", countries: "paesi", noOfficialStatus: "Nessuno stato ufficiale", mapLoading: "Caricamento mappa…", legendKnown: "Le tue lingue", legendBoth: "Entrambe", alsoSpokenIn: "Anche ufficiale in",
+    nativeSpeakers: "Madrelingua", totalSpeakers: "Parlanti totali", officialIn: "Ufficiale in", countries: "paesi", noOfficialStatus: "Nessuno stato ufficiale", mapLoading: "Caricamento mappa…", legendKnown: "Le tue lingue", legendBoth: "Entrambe", alsoSpokenIn: "Anche ufficiale in", legendRegional: "Regionale",
     expSameSubbranch: "{target} appartiene allo stesso sottoramo di {helper} — la grammatica di base sembrerà naturale.",
     expSameBranch: "{target} è un cugino stretto di {helper} nello stesso ramo.",
     expSameFamily: "{target} condivide radici {family} profonde con {helper} ma in un ramo diverso.",
@@ -841,7 +975,7 @@ const TRANSLATIONS = {
     langSelector: "Wybierz język interfejsu",
     cefrTitle: "Poziom CEFR",
     removeLanguage: "Usuń",
-    nativeSpeakers: "Rodzimi mówcy", totalSpeakers: "Wszyscy mówiący", officialIn: "Oficjalny w", countries: "krajach", noOfficialStatus: "Brak statusu oficjalnego", mapLoading: "Ładowanie mapy…", legendKnown: "Twoje języki", legendBoth: "Oba", alsoSpokenIn: "Także oficjalny w",
+    nativeSpeakers: "Rodzimi mówcy", totalSpeakers: "Wszyscy mówiący", officialIn: "Oficjalny w", countries: "krajach", noOfficialStatus: "Brak statusu oficjalnego", mapLoading: "Ładowanie mapy…", legendKnown: "Twoje języki", legendBoth: "Oba", alsoSpokenIn: "Także oficjalny w", legendRegional: "Regionalny",
     expSameSubbranch: "{target} należy do tej samej podgałęzi co {helper} — gramatyka będzie od razu znajoma.",
     expSameBranch: "{target} jest bliskim krewnym {helper} w tej samej gałęzi.",
     expSameFamily: "{target} ma wspólne korzenie {family} z {helper}, ale należy do innej gałęzi.",
@@ -894,7 +1028,7 @@ const TRANSLATIONS = {
     langSelector: "Arayüz dilini seçin",
     cefrTitle: "CEFR yeterlilik düzeyi",
     removeLanguage: "Kaldır",
-    nativeSpeakers: "Anadıl konuşanlar", totalSpeakers: "Toplam konuşanlar", officialIn: "Resmi dil", countries: "ülke", noOfficialStatus: "Resmi statüsü yok", mapLoading: "Harita yükleniyor…", legendKnown: "Bildiğin diller", legendBoth: "Her ikisi", alsoSpokenIn: "Ayrıca resmi",
+    nativeSpeakers: "Anadıl konuşanlar", totalSpeakers: "Toplam konuşanlar", officialIn: "Resmi dil", countries: "ülke", noOfficialStatus: "Resmi statüsü yok", mapLoading: "Harita yükleniyor…", legendKnown: "Bildiğin diller", legendBoth: "Her ikisi", alsoSpokenIn: "Ayrıca resmi", legendRegional: "Bölgesel",
     expSameSubbranch: "{target}, {helper} ile aynı alt dalda — temel dilbilgisi hemen tanıdık gelecek.",
     expSameBranch: "{target}, aynı dal içinde {helper}’in yakın akrabasıdır.",
     expSameFamily: "{target}, farklı bir dalda olsa da {helper} ile derin {family} köklerini paylaşır.",
@@ -948,7 +1082,7 @@ const TRANSLATIONS = {
     langSelector: "Выбрать язык интерфейса",
     cefrTitle: "Уровень CEFR",
     removeLanguage: "Удалить",
-    nativeSpeakers: "Носители", totalSpeakers: "Всего говорящих", officialIn: "Официальный в", countries: "странах", noOfficialStatus: "Нет официального статуса", mapLoading: "Загрузка карты…", legendKnown: "Ваши языки", legendBoth: "Оба", alsoSpokenIn: "Также официальный в",
+    nativeSpeakers: "Носители", totalSpeakers: "Всего говорящих", officialIn: "Официальный в", countries: "странах", noOfficialStatus: "Нет официального статуса", mapLoading: "Загрузка карты…", legendKnown: "Ваши языки", legendBoth: "Оба", alsoSpokenIn: "Также официальный в", legendRegional: "Региональный",
     expSameSubbranch: "{target} принадлежит той же подветви, что и {helper} — основная грамматика покажется родной.",
     expSameBranch: "{target} — близкий родственник {helper} в той же ветви.",
     expSameFamily: "{target} разделяет глубокие корни {family} с {helper}, но относится к другой ветви.",
@@ -995,26 +1129,75 @@ const LANG_NAMES = {
   ru: {"de": "Немецкий", "nl": "Нидерландский", "en": "Английский", "af": "Африкаанс", "yi": "Идиш", "lb": "Люксембургский", "sv": "Шведский", "no": "Норвежский", "da": "Датский", "is": "Исландский", "fo": "Фарерский", "es": "Испанский", "pt": "Португальский", "gl": "Галисийский", "fr": "Французский", "it": "Итальянский", "ro": "Румынский", "ca": "Каталанский", "oc": "Окситанский", "sc": "Сицилийский", "srd": "Сардинский", "ht": "Гаитянский креольский", "ru": "Русский", "uk": "Украинский", "be": "Белорусский", "pl": "Польский", "cs": "Чешский", "sk": "Словацкий", "bg": "Болгарский", "mk": "Македонский", "hr": "Хорватский/Сербский", "sl": "Словенский", "el": "Греческий", "sq": "Албанский", "hy": "Армянский", "lv": "Латышский", "lt": "Литовский", "ga": "Ирландский", "cy": "Валлийский", "fa": "Персидский (фарси)", "tg": "Таджикский", "ku": "Курдский", "ps": "Пушту", "hi": "Хинди", "ur": "Урду", "bn": "Бенгальский", "pa": "Панджабский", "mr": "Маратхи", "gu": "Гуджарати", "ne": "Непальский", "si": "Сингальский", "fi": "Финский", "et": "Эстонский", "hu": "Венгерский", "se": "Северносаамский", "tr": "Турецкий", "az": "Азербайджанский", "tk": "Туркменский", "kk": "Казахский", "ky": "Киргизский", "tt": "Татарский", "uz": "Узбекский", "ug": "Уйгурский", "mn": "Монгольский", "ar": "Арабский (литературный)", "he": "Иврит", "mt": "Мальтийский", "am": "Амхарский", "ti": "Тигринья", "ha": "Хауса", "so": "Сомалийский", "ka": "Грузинский", "ta": "Тамильский", "te": "Телугу", "kn": "Каннада", "ml": "Малаялам", "zh": "Мандаринский китайский", "yue": "Кантонский", "my": "Бирманский", "bo": "Тибетский", "ja": "Японский", "ko": "Корейский", "vi": "Вьетнамский", "km": "Кхмерский", "th": "Тайский", "lo": "Лаосский", "id": "Индонезийский", "ms": "Малайский", "tl": "Тагальский", "jv": "Яванский", "sw": "Суахили", "zu": "Зулу", "yo": "Йоруба", "qu": "Кечуа", "gn": "Гуарани", "eu": "Баскский"},
 };
 const SPEAKER_DATA = {
-  de:  { native: 76,   total: 134,  official: ['DE','AT','CH','LU','LI','BE'] },
+  de:  { native: 76,   total: 134,  official: ['DE','AT','CH','LU','LI','BE'],
+         regions: [
+           { countryCode: 'IT', status: 'regional', coverage: 0.005, notes: 'Co-official in South Tyrol / Trentino-Alto Adige' },
+           { countryCode: 'FR', status: 'regional', coverage: 0.018, notes: 'Widely spoken in Alsace-Moselle region' },
+           { countryCode: 'PL', status: 'regional', coverage: 0.003, notes: 'German-speaking communities in Silesia' },
+           { countryCode: 'RO', status: 'regional', coverage: 0.002, notes: 'Transylvanian Saxon communities' },
+           { countryCode: 'RU', status: 'regional', coverage: 0.001, notes: 'German-Russian diaspora communities' },
+         ] },
   nl:  { native: 24,   total: 30,   official: ['NL','BE','SR'] },
   en:  { native: 380,  total: 1500, official: ['US','GB','CA','AU','NZ','IE','ZA','IN','NG','PH','SG','KE','GH','PK','JM','TT','BB','BS','BZ','GY','MW','MT','NA','PG','RW','SB','SC','SL','SS','SZ','TZ','UG','ZM','ZW','FJ','KI','MH','FM','NR','PW','WS','TO','TV','VU','AG','DM','GD','KN','LC','VC','BW','LS','MU','CM','GM'] },
-  fr:  { native: 77,   total: 310,  official: ['FR','BE','CH','CA','LU','MC','SN','CI','CM','MG','CD','ML','BF','NE','TG','BJ','GA','CF','CG','DJ','KM','MU','SC','RW','BI','HT','VU'] },
-  es:  { native: 485,  total: 560,  official: ['MX','CO','ES','AR','PE','VE','CL','EC','GT','CU','BO','DO','HN','PY','SV','NI','CR','PA','UY','GQ','PR'] },
+  fr:  { native: 77,   total: 310,  official: ['FR','BE','CH','CA','LU','MC','SN','CI','CM','MG','CD','ML','BF','NE','TG','BJ','GA','CF','CG','DJ','KM','MU','SC','RW','BI','HT','VU'],
+         regions: [
+           { countryCode: 'IT', status: 'regional', coverage: 0.001, notes: 'Co-official in Aosta Valley / Valle d\u2019Aosta' },
+           { countryCode: 'US', status: 'regional', coverage: 0.005, notes: 'Spoken in Louisiana Cajun communities and New England Franco-Americans' },
+         ] },
+  es:  { native: 485,  total: 560,  official: ['MX','CO','ES','AR','PE','VE','CL','EC','GT','CU','BO','DO','HN','PY','SV','NI','CR','PA','UY','GQ','PR'],
+         regions: [
+           { countryCode: 'US', status: 'regional', coverage: 0.14, notes: 'Largest Spanish-speaking population outside official countries (~42M speakers)' },
+           { countryCode: 'PH', status: 'regional', coverage: 0.003, notes: 'Historical Spanish legacy, small communities remain' },
+         ] },
   pt:  { native: 236,  total: 280,  official: ['BR','PT','AO','MZ','GW','ST','CV','TL'] },
   it:  { native: 68,   total: 85,   official: ['IT','CH','SM','VA'] },
-  pl:  { native: 44,   total: 55,   official: ['PL'] },
-  ru:  { native: 150,  total: 260,  official: ['RU','BY','KZ','KG'] },
+  pl:  { native: 44,   total: 55,   official: ['PL'],
+         regions: [
+           { countryCode: 'LT', status: 'regional', coverage: 0.06, notes: 'Large Polish minority in Vilnius region' },
+           { countryCode: 'LV', status: 'regional', coverage: 0.03, notes: 'Polish-speaking communities in Latgale' },
+           { countryCode: 'BY', status: 'regional', coverage: 0.03, notes: 'Polish minority in Grodno and Brest regions' },
+           { countryCode: 'UA', status: 'regional', coverage: 0.005, notes: 'Polish communities in Lviv and Volyn regions' },
+         ] },
+  ru:  { native: 150,  total: 260,  official: ['RU','BY','KZ','KG'],
+         regions: [
+           { countryCode: 'UA', status: 'regional', coverage: 0.30, notes: 'Widely used in eastern and southern regions' },
+           { countryCode: 'LV', status: 'regional', coverage: 0.33, notes: 'Large Russian-speaking minority' },
+           { countryCode: 'EE', status: 'regional', coverage: 0.28, notes: 'Significant Russian-speaking minority' },
+           { countryCode: 'LT', status: 'regional', coverage: 0.08, notes: 'Russian-speaking minority' },
+           { countryCode: 'MD', status: 'regional', coverage: 0.10, notes: 'Widely spoken alongside Moldovan Romanian' },
+           { countryCode: 'GE', status: 'regional', coverage: 0.07, notes: 'Spoken as lingua franca and by diaspora' },
+         ] },
   uk:  { native: 33,   total: 45,   official: ['UA'] },
   cs:  { native: 11,   total: 13,   official: ['CZ'] },
   sk:  { native: 5,    total: 7,    official: ['SK'] },
   sl:  { native: 2.5,  total: 3,    official: ['SI'] },
-  hr:  { native: 5.5,  total: 7,    official: ['HR','BA'] },
+  hr:  { native: 5.5,  total: 7,    official: ['HR','BA'],
+         regions: [
+           { countryCode: 'RS', status: 'regional', coverage: 0.005, notes: 'Croatian minority in Vojvodina' },
+           { countryCode: 'AT', status: 'regional', coverage: 0.003, notes: 'Burgenland Croatian community (protected minority)' },
+         ] },
   bs:  { native: 3,    total: 3.5,  official: ['BA'] },
-  sr:  { native: 9,    total: 12,   official: ['RS','BA','ME'] },
+  sr:  { native: 9,    total: 12,   official: ['RS','BA','ME'],
+         regions: [
+           { countryCode: 'HR', status: 'regional', coverage: 0.04, notes: 'Serb minority in eastern Slavonia and other regions' },
+           { countryCode: 'MK', status: 'regional', coverage: 0.02, notes: 'Serbian-speaking communities' },
+         ] },
   mk:  { native: 2,    total: 2.5,  official: ['MK'] },
   bg:  { native: 8,    total: 9,    official: ['BG'] },
-  ro:  { native: 26,   total: 34,   official: ['RO','MD'] },
-  hu:  { native: 13,   total: 15,   official: ['HU','RS'] },
+  ro:  { native: 26,   total: 34,   official: ['RO','MD'],
+         regions: [
+           { countryCode: 'RS', status: 'regional', coverage: 0.01, notes: 'Romanian minority in Vojvodina (Vlach community)' },
+           { countryCode: 'UA', status: 'regional', coverage: 0.005, notes: 'Romanian/Moldovan-speaking community in Chernivtsi Oblast' },
+           { countryCode: 'HU', status: 'regional', coverage: 0.001, notes: 'Small Romanian-speaking community near border' },
+         ] },
+  hu:  { native: 13,   total: 15,   official: ['HU','RS'],
+         regions: [
+           { countryCode: 'RO', status: 'regional', coverage: 0.065, notes: 'Official in Székely Land, Transylvania (~1.2M speakers)' },
+           { countryCode: 'SK', status: 'regional', coverage: 0.085, notes: 'Co-official in southern Slovak municipalities' },
+           { countryCode: 'UA', status: 'regional', coverage: 0.012, notes: 'Hungarian minority in Zakarpattia Oblast' },
+           { countryCode: 'HR', status: 'regional', coverage: 0.003, notes: 'Hungarian minority in Baranya and Međimurje' },
+           { countryCode: 'AT', status: 'regional', coverage: 0.004, notes: 'Burgenland Hungarian community' },
+         ] },
   fi:  { native: 5,    total: 6,    official: ['FI'] },
   et:  { native: 1.1,  total: 1.2,  official: ['EE'] },
   lv:  { native: 1.5,  total: 2,    official: ['LV'] },
@@ -1027,15 +1210,42 @@ const SPEAKER_DATA = {
   cy:  { native: 0.9,  total: 1,    official: ['GB'] },
   ga:  { native: 0.17, total: 2,    official: ['IE'] },
   el:  { native: 13,   total: 14,   official: ['GR','CY'] },
-  tr:  { native: 80,   total: 88,   official: ['TR','CY'] },
-  az:  { native: 10,   total: 12,   official: ['AZ'] },
+  tr:  { native: 80,   total: 88,   official: ['TR','CY'],
+         regions: [
+           { countryCode: 'BG', status: 'regional', coverage: 0.08, notes: 'Turkish minority in southern and northeastern Bulgaria' },
+           { countryCode: 'GR', status: 'regional', coverage: 0.004, notes: 'Turkish-speaking Muslim minority in western Thrace' },
+           { countryCode: 'MK', status: 'regional', coverage: 0.04, notes: 'Turkish-speaking minority communities' },
+           { countryCode: 'DE', status: 'regional', coverage: 0.04, notes: 'Large Turkish diaspora, largest outside Turkey' },
+         ] },
+  az:  { native: 10,   total: 12,   official: ['AZ'],
+         regions: [
+           { countryCode: 'IR', status: 'regional', coverage: 0.20, notes: 'Widely spoken in NW provinces (South Azerbaijan, Ardabil, Zanjan)' },
+           { countryCode: 'RU', status: 'regional', coverage: 0.002, notes: 'Azerbaijani diaspora communities in Dagestan' },
+         ] },
   kk:  { native: 13,   total: 18,   official: ['KZ'] },
+  ku:  { native: 20,   total: 30,   official: [],
+         regions: [
+           { countryCode: 'TR', status: 'regional', coverage: 0.18, notes: 'Spoken across southeastern Turkey (no official recognition)' },
+           { countryCode: 'IR', status: 'regional', coverage: 0.10, notes: 'Kurdistan Province and western Iran' },
+           { countryCode: 'IQ', status: 'regional', coverage: 0.17, notes: 'Co-official in Kurdistan Region of Iraq' },
+           { countryCode: 'SY', status: 'regional', coverage: 0.10, notes: 'Spoken in northern Syria (Rojava)' },
+         ] },
   uz:  { native: 30,   total: 35,   official: ['UZ'] },
   ky:  { native: 4.5,  total: 5,    official: ['KG'] },
   tk:  { native: 7,    total: 8,    official: ['TM'] },
-  mn:  { native: 5,    total: 6,    official: ['MN'] },
+  mn:  { native: 5,    total: 6,    official: ['MN'],
+         regions: [
+           { countryCode: 'CN', status: 'regional', coverage: 0.002, notes: 'Spoken in Inner Mongolia Autonomous Region (~2.5M speakers)' },
+           { countryCode: 'RU', status: 'regional', coverage: 0.003, notes: 'Spoken in Buryatia and Kalmykia republics' },
+         ] },
   ka:  { native: 3.7,  total: 4.5,  official: ['GE'] },
-  hy:  { native: 6,    total: 8,    official: ['AM'] },
+  hy:  { native: 6,    total: 8,    official: ['AM'],
+         regions: [
+           { countryCode: 'GE', status: 'regional', coverage: 0.045, notes: 'Armenians concentrated in Javakheti and Tbilisi' },
+           { countryCode: 'LB', status: 'regional', coverage: 0.04, notes: 'Significant Armenian diaspora in Beirut' },
+           { countryCode: 'SY', status: 'regional', coverage: 0.01, notes: 'Historic Armenian community in Aleppo and other cities' },
+           { countryCode: 'RU', status: 'regional', coverage: 0.007, notes: 'Large Armenian diaspora in Moscow and southern Russia' },
+         ] },
   ar:  { native: 310,  total: 420,  official: ['DZ','BH','KM','DJ','EG','IQ','JO','KW','LB','LY','MR','MA','OM','QA','SA','SO','SD','SY','TN','AE','YE','ER','SS','PS'] },
   he:  { native: 5,    total: 9,    official: ['IL'] },
   fa:  { native: 70,   total: 110,  official: ['IR','AF','TJ'] },
@@ -1047,7 +1257,12 @@ const SPEAKER_DATA = {
   mr:  { native: 83,   total: 90,   official: ['IN'] },
   si:  { native: 17,   total: 19,   official: ['LK'] },
   ne:  { native: 17,   total: 25,   official: ['NP','IN'] },
-  ta:  { native: 78,   total: 90,   official: ['IN','LK','SG'] },
+  ta:  { native: 78,   total: 90,   official: ['IN','LK','SG'],
+         regions: [
+           { countryCode: 'MY', status: 'regional', coverage: 0.07, notes: 'Tamil diaspora, heavily concentrated in west coast states' },
+           { countryCode: 'MU', status: 'regional', coverage: 0.26, notes: 'One of the most spoken languages in Mauritius' },
+           { countryCode: 'ZA', status: 'regional', coverage: 0.002, notes: 'Tamil-speaking South African Indian community' },
+         ] },
   te:  { native: 83,   total: 95,   official: ['IN'] },
   kn:  { native: 44,   total: 50,   official: ['IN'] },
   ml:  { native: 38,   total: 42,   official: ['IN'] },
@@ -1060,7 +1275,12 @@ const SPEAKER_DATA = {
   ms:  { native: 20,   total: 80,   official: ['MY','BN','SG'] },
   tl:  { native: 28,   total: 90,   official: ['PH'] },
   zh:  { native: 920,  total: 1200, official: ['CN','TW','SG'] },
-  yue: { native: 85,   total: 90,   official: ['HK','MO'] },
+  yue: { native: 85,   total: 90,   official: ['HK','MO'],
+         regions: [
+           { countryCode: 'CN', status: 'regional', coverage: 0.035, notes: 'Dominant dialect in Guangdong province and surrounding areas' },
+           { countryCode: 'MY', status: 'regional', coverage: 0.10, notes: 'Major Chinese dialect community throughout Malaysia' },
+           { countryCode: 'SG', status: 'regional', coverage: 0.30, notes: 'Widely spoken Cantonese-speaking community' },
+         ] },
   ja:  { native: 125,  total: 128,  official: ['JP'] },
   ko:  { native: 77,   total: 82,   official: ['KR','KP'] },
   sw:  { native: 16,   total: 200,  official: ['TZ','KE','UG','RW','CD'] },
@@ -1075,10 +1295,26 @@ const SPEAKER_DATA = {
   so:  { native: 21,   total: 25,   official: ['SO','ET','DJ','KE'] },
   om:  { native: 39,   total: 45,   official: ['ET'] },
   ti:  { native: 9,    total: 10,   official: ['ET','ER'] },
-  sq:  { native: 7,    total: 8,    official: ['AL','MK','XK'] },
-  eu:  { native: 0.7,  total: 1,    official: ['ES'] },
-  ca:  { native: 4,    total: 10,   official: ['AD'] },
-  gl:  { native: 2.4,  total: 4,    official: ['ES'] },
+  sq:  { native: 7,    total: 8,    official: ['AL','MK','XK'],
+         regions: [
+           { countryCode: 'RS', status: 'regional', coverage: 0.01, notes: 'Albanian-speaking communities in Preševo Valley' },
+           { countryCode: 'ME', status: 'regional', coverage: 0.05, notes: 'Albanian minority in coastal and eastern regions' },
+           { countryCode: 'GR', status: 'regional', coverage: 0.03, notes: 'Arvanite and Albanian communities in Epirus' },
+         ] },
+  eu:  { native: 0.7,  total: 1,    official: ['ES'],
+         regions: [
+           { countryCode: 'FR', status: 'regional', coverage: 0.005, notes: 'Spoken in Pays Basque (Pyrénées-Atlantiques)' },
+         ] },
+  ca:  { native: 4,    total: 10,   official: ['AD'],
+         regions: [
+           { countryCode: 'ES', status: 'regional', coverage: 0.16, notes: 'Co-official in Catalonia, Valencia, and Balearic Islands' },
+           { countryCode: 'FR', status: 'regional', coverage: 0.003, notes: 'Spoken in Roussillon (Pyrénées-Orientales)' },
+           { countryCode: 'IT', status: 'regional', coverage: 0.001, notes: 'Spoken in Alghero, Sardinia' },
+         ] },
+  gl:  { native: 2.4,  total: 4,    official: ['ES'],
+         regions: [
+           { countryCode: 'PT', status: 'regional', coverage: 0.003, notes: 'Spoken in border regions of northern Portugal' },
+         ] },
   be:  { native: 5,    total: 10,   official: ['BY'] },
   lb:  { native: 0.4,  total: 0.6,  official: ['LU'] },
   mt:  { native: 0.5,  total: 0.6,  official: ['MT'] },
@@ -1129,6 +1365,224 @@ function flagEmoji(a2) {
   return [...a2.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
 }
 
+
+const DIACRITIC_COMPAT = new Set([
+  // Germanic ↔ plain and each other
+  'plain_latin|germanic_umlaut','plain_latin|scandinavian','plain_latin|nordic_extended',
+  'plain_latin|ibero_romance','plain_latin|western_romance','plain_latin|eastern_romance',
+  'plain_latin|albanian_latin','plain_latin|turkic_latin','plain_latin|basque_latin',
+  'plain_latin|cushitic_latin','plain_latin|maltese_latin','plain_latin|nguni_latin',
+  'plain_latin|sotho_latin','plain_latin|african_latin','plain_latin|yoruba_latin',
+  'germanic_umlaut|scandinavian','germanic_umlaut|nordic_extended',
+  'germanic_umlaut|ibero_romance','germanic_umlaut|western_romance','germanic_umlaut|eastern_romance',
+  'germanic_umlaut|finnic_latin','germanic_umlaut|hungarian_latin',
+  'scandinavian|nordic_extended','scandinavian|ibero_romance',
+  'scandinavian|western_romance','scandinavian|eastern_romance',
+  'ibero_romance|western_romance','ibero_romance|eastern_romance',
+  'western_romance|eastern_romance',
+  'finnic_latin|scandinavian','finnic_latin|plain_latin','finnic_latin|hungarian_latin',
+  'hungarian_latin|plain_latin',
+  'turkic_latin|cushitic_latin','turkic_latin|plain_latin',
+  'cushitic_latin|nguni_latin','cushitic_latin|sotho_latin','cushitic_latin|african_latin',
+  'nguni_latin|sotho_latin','nguni_latin|african_latin','sotho_latin|african_latin',
+  'slavic_caron|polish_latin',
+  // Cyrillic families
+  'russian_cyrillic|ukrainian_cyrillic','russian_cyrillic|belarusian_cyrillic',
+  'russian_cyrillic|south_slavic_cyrillic',
+  'ukrainian_cyrillic|belarusian_cyrillic','ukrainian_cyrillic|south_slavic_cyrillic',
+  'belarusian_cyrillic|south_slavic_cyrillic',
+  // Arabic families
+  'arabic_standard|persian_arabic','persian_arabic|urdu_arabic',
+  // Geez family
+  'geez|geez',
+]);
+
+const ORTHO_PROFILES = {
+  // West Germanic
+  de:  { group: 'germanic_umlaut',       consistency: 'medium' },
+  nl:  { group: 'germanic_umlaut',       consistency: 'medium' },
+  en:  { group: 'plain_latin',           consistency: 'low'    },
+  af:  { group: 'plain_latin',           consistency: 'high'   },
+  lb:  { group: 'germanic_umlaut',       consistency: 'medium' },
+  yi:  { group: 'hebrew_script',         consistency: 'medium' },
+  // North Germanic
+  sv:  { group: 'scandinavian',          consistency: 'medium' },
+  no:  { group: 'scandinavian',          consistency: 'medium' },
+  da:  { group: 'scandinavian',          consistency: 'low'    },
+  is:  { group: 'nordic_extended',       consistency: 'medium' },
+  fo:  { group: 'nordic_extended',       consistency: 'medium' },
+  // Ibero-Romance
+  es:  { group: 'ibero_romance',         consistency: 'high'   },
+  pt:  { group: 'ibero_romance',         consistency: 'high'   },
+  gl:  { group: 'ibero_romance',         consistency: 'high'   },
+  ca:  { group: 'ibero_romance',         consistency: 'high'   },
+  oc:  { group: 'ibero_romance',         consistency: 'high'   },
+  sc:  { group: 'western_romance',       consistency: 'high'   },
+  srd: { group: 'western_romance',       consistency: 'high'   },
+  // Gallo-Romance
+  fr:  { group: 'western_romance',       consistency: 'low'    },
+  it:  { group: 'western_romance',       consistency: 'high'   },
+  ht:  { group: 'plain_latin',           consistency: 'high'   },
+  // Eastern Romance
+  ro:  { group: 'eastern_romance',       consistency: 'high'   },
+  // West Slavic - Latin
+  pl:  { group: 'polish_latin',          consistency: 'high'   },
+  cs:  { group: 'slavic_caron',          consistency: 'high'   },
+  sk:  { group: 'slavic_caron',          consistency: 'high'   },
+  sl:  { group: 'slavic_caron',          consistency: 'high'   },
+  hr:  { group: 'slavic_caron',          consistency: 'high'   },
+  bs:  { group: 'slavic_caron',          consistency: 'high'   },
+  // East & South Slavic - Cyrillic
+  ru:  { group: 'russian_cyrillic',      consistency: 'medium' },
+  uk:  { group: 'ukrainian_cyrillic',    consistency: 'high'   },
+  be:  { group: 'belarusian_cyrillic',   consistency: 'medium' },
+  bg:  { group: 'south_slavic_cyrillic', consistency: 'high'   },
+  mk:  { group: 'south_slavic_cyrillic', consistency: 'high'   },
+  sr:  { group: 'south_slavic_cyrillic', consistency: 'high'   },
+  // Baltic
+  lv:  { group: 'baltic_extended',       consistency: 'high'   },
+  lt:  { group: 'baltic_extended',       consistency: 'high'   },
+  // Celtic
+  ga:  { group: 'gaelic_latin',          consistency: 'low'    },
+  cy:  { group: 'welsh_latin',           consistency: 'medium' },
+  // Finno-Ugric
+  fi:  { group: 'finnic_latin',          consistency: 'high'   },
+  et:  { group: 'finnic_latin',          consistency: 'high'   },
+  hu:  { group: 'hungarian_latin',       consistency: 'high'   },
+  se:  { group: 'sami_latin',            consistency: 'high'   },
+  // Turkic - Latin
+  tr:  { group: 'turkic_latin',          consistency: 'high'   },
+  az:  { group: 'turkic_latin',          consistency: 'high'   },
+  tk:  { group: 'turkic_latin',          consistency: 'high'   },
+  uz:  { group: 'turkic_latin',          consistency: 'high'   },
+  // Turkic - Cyrillic
+  kk:  { group: 'kazakh_cyrillic',       consistency: 'medium' },
+  ky:  { group: 'central_asian_cyrillic',consistency: 'medium' },
+  tg:  { group: 'central_asian_cyrillic',consistency: 'medium' },
+  tt:  { group: 'tatar_cyrillic',        consistency: 'medium' },
+  mn:  { group: 'mongolian_cyrillic',    consistency: 'medium' },
+  // Other Latin
+  sq:  { group: 'albanian_latin',        consistency: 'high'   },
+  mt:  { group: 'maltese_latin',         consistency: 'high'   },
+  eu:  { group: 'basque_latin',          consistency: 'high'   },
+  ku:  { group: 'kurdish_latin',         consistency: 'high'   },
+  so:  { group: 'cushitic_latin',        consistency: 'high'   },
+  sw:  { group: 'cushitic_latin',        consistency: 'high'   },
+  ha:  { group: 'cushitic_latin',        consistency: 'high'   },
+  om:  { group: 'cushitic_latin',        consistency: 'high'   },
+  yo:  { group: 'yoruba_latin',          consistency: 'high'   },
+  ig:  { group: 'african_latin',         consistency: 'high'   },
+  zu:  { group: 'nguni_latin',           consistency: 'high'   },
+  xh:  { group: 'nguni_latin',           consistency: 'high'   },
+  st:  { group: 'sotho_latin',           consistency: 'high'   },
+  tn:  { group: 'sotho_latin',           consistency: 'high'   },
+  vi:  { group: 'vietnamese_latin',      consistency: 'high'   },
+  id:  { group: 'plain_latin',           consistency: 'high'   },
+  ms:  { group: 'plain_latin',           consistency: 'high'   },
+  tl:  { group: 'plain_latin',           consistency: 'high'   },
+  jv:  { group: 'plain_latin',           consistency: 'high'   },
+  qu:  { group: 'plain_latin',           consistency: 'high'   },
+  gn:  { group: 'plain_latin',           consistency: 'high'   },
+  // Semitic - Arabic
+  ar:  { group: 'arabic_standard',       consistency: 'medium' },
+  fa:  { group: 'persian_arabic',        consistency: 'medium' },
+  ps:  { group: 'persian_arabic',        consistency: 'medium' },
+  ur:  { group: 'urdu_arabic',           consistency: 'medium' },
+  ug:  { group: 'persian_arabic',        consistency: 'medium' },
+  // Semitic - Hebrew
+  he:  { group: 'hebrew_script',         consistency: 'medium' },
+  // Indic - Devanagari
+  hi:  { group: 'devanagari',            consistency: 'high'   },
+  mr:  { group: 'devanagari',            consistency: 'high'   },
+  ne:  { group: 'devanagari',            consistency: 'high'   },
+  // Other Indic scripts
+  bn:  { group: 'bengali',               consistency: 'high'   },
+  pa:  { group: 'gurmukhi',              consistency: 'high'   },
+  gu:  { group: 'gujarati',              consistency: 'high'   },
+  ta:  { group: 'tamil',                 consistency: 'high'   },
+  te:  { group: 'telugu',                consistency: 'high'   },
+  kn:  { group: 'kannada',               consistency: 'high'   },
+  ml:  { group: 'malayalam',             consistency: 'high'   },
+  si:  { group: 'sinhala',               consistency: 'high'   },
+  // East Asian
+  zh:  { group: 'chinese',               consistency: 'medium' },
+  yue: { group: 'chinese',               consistency: 'medium' },
+  ja:  { group: 'japanese',              consistency: 'medium' },
+  ko:  { group: 'hangul',                consistency: 'high'   },
+  // Southeast Asian
+  my:  { group: 'burmese',               consistency: 'high'   },
+  th:  { group: 'thai',                  consistency: 'medium' },
+  lo:  { group: 'lao',                   consistency: 'high'   },
+  km:  { group: 'khmer',                 consistency: 'medium' },
+  // Caucasian
+  ka:  { group: 'georgian',              consistency: 'high'   },
+  hy:  { group: 'armenian',              consistency: 'high'   },
+  // Semitic - Geez
+  am:  { group: 'geez',                  consistency: 'high'   },
+  ti:  { group: 'geez',                  consistency: 'high'   },
+  // Tibetic
+  bo:  { group: 'tibetan',               consistency: 'low'    },
+};
+
+
+const LANG_NATIVE = {
+  en: 'English',       de: 'Deutsch',        nl: 'Nederlands',     af: 'Afrikaans',
+  sv: 'Svenska',       no: 'Norsk',          da: 'Dansk',          lb: 'Lëtzebuergesch',
+  is: 'Íslenska',      fo: 'Føroyskt',       yi: 'ייִדיש',
+  es: 'Español',       pt: 'Português',      fr: 'Français',       it: 'Italiano',
+  ro: 'Română',        ca: 'Català',         gl: 'Galego',         oc: 'Occitan',
+  srd:'Sardu',         sc: 'Sicilianu',      ht: 'Kreyòl ayisyen',
+  ru: 'Русский',       uk: 'Українська',     pl: 'Polski',         cs: 'Čeština',
+  sk: 'Slovenčina',    be: 'Беларуская',     bg: 'Български',      mk: 'Македонски',
+  hr: 'Hrvatski',      sl: 'Slovenščina',    sr: 'Српски',
+  el: 'Ελληνικά',      sq: 'Shqip',          hy: 'Հայերեն',        lv: 'Latviešu',
+  lt: 'Lietuvių',      ga: 'Gaeilge',        cy: 'Cymraeg',        hi: 'हिन्दी',
+  ur: 'اردو',          bn: 'বাংলা',          pa: 'ਪੰਜਾਬੀ',         mr: 'मराठी',
+  gu: 'ગુજરાતી',       ne: 'नेपाली',         si: 'සිංහල',          fa: 'فارسی',
+  ku: 'Kurdî',         ps: 'پښتو',           tg: 'Тоҷикӣ',
+  tr: 'Türkçe',        az: 'Azərbaycan',     kk: 'Қазақша',        uz: "O'zbek",
+  ky: 'Кыргызча',      tk: 'Türkmen',        tt: 'Татарча',        ug: 'ئۇيغۇرچە',
+  fi: 'Suomi',         hu: 'Magyar',         et: 'Eesti',          se: 'Davvisámegiella',
+  ar: 'العربية',       he: 'עברית',          am: 'አማርኛ',           ti: 'ትግርኛ',
+  mt: 'Malti',         ha: 'Hausa',          so: 'Soomaali',
+  zh: '普通话',         yue:'粵語',            ja: '日本語',          ko: '한국어',
+  mn: 'Монгол',        bo: 'བོད་སྐད།',
+  ta: 'தமிழ்',         te: 'తెలుగు',         kn: 'ಕನ್ನಡ',          ml: 'മലയാളം',
+  my: 'မြန်မာဘာသာ',    vi: 'Tiếng Việt',     km: 'ភាសាខ្មែរ',       th: 'ภาษาไทย',
+  lo: 'ພາສາລາວ',       id: 'Bahasa Indonesia',ms: 'Bahasa Melayu',  tl: 'Filipino',
+  jv: 'Basa Jawa',
+  ka: 'ქართული',       sw: 'Kiswahili',      zu: 'isiZulu',        yo: 'Yorùbá',
+  eu: 'Euskara',       qu: 'Runa Simi',      gn: 'Avañe\'ẽ',
+};
+
+const LANG_FLAG = {
+  en: '🇬🇧', de: '🇩🇪', nl: '🇳🇱', af: '🇿🇦', sv: '🇸🇪', no: '🇳🇴', da: '🇩🇰',
+  lb: '🇱🇺', is: '🇮🇸', fo: '🇫🇴', yi: '🇮🇱', es: '🇪🇸', pt: '🇵🇹', fr: '🇫🇷',
+  it: '🇮🇹', ro: '🇷🇴', ca: '🏴', gl: '🇪🇸', oc: '🇫🇷', srd:'🇮🇹', sc: '🇮🇹',
+  ht: '🇭🇹', ru: '🇷🇺', uk: '🇺🇦', pl: '🇵🇱', cs: '🇨🇿', sk: '🇸🇰', be: '🇧🇾',
+  bg: '🇧🇬', mk: '🇲🇰', hr: '🇭🇷', sl: '🇸🇮', sr: '🇷🇸', el: '🇬🇷', sq: '🇦🇱',
+  hy: '🇦🇲', lv: '🇱🇻', lt: '🇱🇹', ga: '🇮🇪', cy: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', hi: '🇮🇳', ur: '🇵🇰',
+  bn: '🇧🇩', pa: '🇮🇳', mr: '🇮🇳', gu: '🇮🇳', ne: '🇳🇵', si: '🇱🇰', fa: '🇮🇷',
+  ku: '🏳️', ps: '🇦🇫', tg: '🇹🇯', tr: '🇹🇷', az: '🇦🇿', kk: '🇰🇿', uz: '🇺🇿',
+  ky: '🇰🇬', tk: '🇹🇲', tt: '🇷🇺', ug: '🇨🇳', fi: '🇫🇮', hu: '🇭🇺', et: '🇪🇪',
+  se: '🇳🇴', ar: '🇸🇦', he: '🇮🇱', am: '🇪🇹', ti: '🇪🇷', mt: '🇲🇹', ha: '🇳🇬',
+  so: '🇸🇴', zh: '🇨🇳', yue:'🇭🇰', ja: '🇯🇵', ko: '🇰🇷', mn: '🇲🇳', bo: '🇨🇳',
+  ta: '🇮🇳', te: '🇮🇳', kn: '🇮🇳', ml: '🇮🇳', my: '🇲🇲', vi: '🇻🇳', km: '🇰🇭',
+  th: '🇹🇭', lo: '🇱🇦', id: '🇮🇩', ms: '🇲🇾', tl: '🇵🇭', jv: '🇮🇩', ka: '🇬🇪',
+  sw: '🇰🇪', zu: '🇿🇦', yo: '🇳🇬', eu: '🏳️', qu: '🇵🇪', gn: '🇵🇾',
+};
+
+const LANG_GROUPS = [
+  { id: 'germanic',      label: 'Germanic',                   codes: ['en','de','nl','af','sv','no','da','lb','is','fo','yi'] },
+  { id: 'romance',       label: 'Romance',                    codes: ['es','pt','fr','it','ro','ca','gl','oc','srd','sc','ht'] },
+  { id: 'slavic',        label: 'Slavic',                     codes: ['ru','uk','pl','cs','sk','be','bg','mk','hr','sl','sr'] },
+  { id: 'other_ie',      label: 'Other Indo-European',        codes: ['el','sq','hy','lv','lt','ga','cy','hi','ur','bn','pa','mr','gu','ne','si','fa','ku','ps','tg'] },
+  { id: 'turkic_uralic', label: 'Turkic & Uralic',            codes: ['tr','az','kk','uz','ky','tk','tt','ug','fi','hu','et','se'] },
+  { id: 'semitic',       label: 'Semitic & Afro-Asiatic',     codes: ['ar','he','am','ti','mt','ha','so'] },
+  { id: 'east_asian',    label: 'East Asian',                 codes: ['zh','yue','ja','ko','mn','bo'] },
+  { id: 'south_sea',     label: 'South & Southeast Asian',    codes: ['ta','te','kn','ml','my','vi','km','th','lo','id','ms','tl','jv'] },
+  { id: 'other',         label: 'African, Caucasian & Other', codes: ['ka','sw','zu','yo','eu','qu','gn'] },
+];
 
 const PARALLEL_SENTENCES = {
   'en|de': [
@@ -1760,33 +2214,68 @@ function app() {
     buildMapSvg(code) {
       if (!this.geoReady || !this.geoData) return '';
       const recSd = SPEAKER_DATA[code];
-      const recA2s = new Set(recSd ? recSd.official : []);
+      const recA2s  = new Set(recSd ? recSd.official : []);
       const recNums = new Set([...recA2s].map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+
+      // Build regional lookup: numericId → { coverage, notes }
+      const regionalNums = new Map();
+      for (const r of (recSd?.regions || [])) {
+        const num = ISO_A2_TO_NUM[r.countryCode];
+        if (num) regionalNums.set(num, r);
+      }
+
       const knownA2s = new Set();
       for (const spk of this.speakers) {
         const spkSd = SPEAKER_DATA[spk];
         if (spkSd) for (const a2 of spkSd.official) knownA2s.add(a2);
       }
       const knownNums = new Set([...knownA2s].map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+
+      // Theme-aware diagonal hatch pattern for regional countries
+      const isDark  = this.darkMode;
+      const emerald = isDark ? '#34d399' : '#059669';
+      const violet  = isDark ? '#c4b5fd' : '#a78bfa';
+      const defs =
+        '<defs>' +
+          '<pattern id="rh-em" x="0" y="0" width="8" height="8"' +
+          ' patternUnits="userSpaceOnUse" patternTransform="rotate(45 4 4)">' +
+            '<rect width="8" height="8" fill="none"/>' +
+            '<line x1="0" y1="0" x2="0" y2="8" stroke="' + emerald + '" stroke-width="3" stroke-opacity="0.55"/>' +
+          '</pattern>' +
+          '<pattern id="rh-vl" x="0" y="0" width="8" height="8"' +
+          ' patternUnits="userSpaceOnUse" patternTransform="rotate(45 4 4)">' +
+            '<rect width="8" height="8" fill="none"/>' +
+            '<line x1="0" y1="0" x2="0" y2="8" stroke="' + violet + '" stroke-width="3" stroke-opacity="0.55"/>' +
+          '</pattern>' +
+        '</defs>';
+
       const W = 960, H = 480;
       let paths = '';
       for (const f of this.geoData) {
         if (!f.geometry) continue;
         const id = +f.id;
-        const isRec = recNums.has(id), isKnown = knownNums.has(id);
-        const cls = isRec && isKnown ? 'country overlap'
-                  : isRec            ? 'country recommended'
-                  : isKnown          ? 'country known'
-                  :                    'country';
+        const isRec      = recNums.has(id);
+        const isKnown    = knownNums.has(id);
+        const isRegional = !isRec && regionalNums.has(id);
+
+        let cls, fillAttr = '';
+        if (isRec && isKnown)           { cls = 'country overlap'; }
+        else if (isRec)                 { cls = 'country recommended'; }
+        else if (isRegional && isKnown) { cls = 'country regional overlap'; fillAttr = ' fill="url(#rh-vl)"'; }
+        else if (isRegional)            { cls = 'country regional'; fillAttr = ' fill="url(#rh-em)"'; }
+        else if (isKnown)               { cls = 'country known'; }
+        else                            { cls = 'country'; }
+
         let d = '';
         const geom = f.geometry;
         const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
         for (const poly of polys) for (const ring of poly) d += this._geoRing(ring, W, H);
-        if (d) paths += '<path class="' + cls + '" data-cid="' + id + '" d="' + d + '"/>';
+        if (d) paths += '<path class="' + cls + '"' + fillAttr + ' data-cid="' + id + '" d="' + d + '"/>';
       }
+
       return '<svg class="lang-map-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
         + '<rect width="' + W + '" height="' + H + '" class="ocean"/>'
-        + paths + '</svg>';
+        + defs + paths + '</svg>';
     },
 
     fmtM(n) {
@@ -1813,17 +2302,31 @@ function app() {
     smallCountries(code) {
       if (!this.geoReady || !this.geoData) return [];
       const recSd = SPEAKER_DATA[code];
-      if (!recSd || !recSd.official.length) return [];
-      const recA2s = new Set(recSd.official);
+      if (!recSd) return [];
       const W = 960, H = 480;
-      const numToA2 = getNumToA2();
+      const seen = new Set();
       const result = [];
-      for (const a2 of recSd.official) {
+      // Official countries (full colour) — always listed if tiny
+      for (const a2 of (recSd.official || [])) {
+        if (seen.has(a2)) continue; seen.add(a2);
         const num = ISO_A2_TO_NUM[a2];
-        if (!num) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) }); continue; }
+        if (!num) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang), regional: false }); continue; }
         const feat = this.geoData.find(f => +f.id === num);
-        if (!feat || !feat.geometry) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) }); continue; }
-        if (this._bboxArea(feat, W, H) < 16) result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
+        if (!feat || !feat.geometry) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang), regional: false }); continue; }
+        if (this._bboxArea(feat, W, H) < 16) result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang), regional: false });
+      }
+      // Regional countries — only list if bbox area < 80 (notable small countries like Lebanon)
+      for (const r of (recSd.regions || [])) {
+        const a2 = r.countryCode;
+        if (seen.has(a2)) continue; seen.add(a2);
+        const num = ISO_A2_TO_NUM[a2];
+        if (!num) continue;
+        const feat = this.geoData.find(f => +f.id === num);
+        if (!feat || !feat.geometry) continue;
+        if (this._bboxArea(feat, W, H) < 80) {
+          result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang), regional: true,
+            coverage: Math.round(r.coverage * 100) });
+        }
       }
       result.sort((a, b) => a.name.localeCompare(b.name));
       return result;
@@ -1838,15 +2341,23 @@ function app() {
       if (!a2) { this.tooltip.visible = false; return; }
       const recSd = SPEAKER_DATA[code];
       const recA2s = new Set(recSd ? recSd.official : []);
+      // Build regional lookup for the target language
+      const regionalMap = new Map((recSd?.regions || []).map(r => [r.countryCode, r]));
       const knownLangs = this.speakers.filter(spk => {
         const sd = SPEAKER_DATA[spk];
         return sd && sd.official.includes(a2);
       });
+      const isOfficial = recA2s.has(a2);
+      const regionalEntry = !isOfficial ? regionalMap.get(a2) : null;
       let status = '';
-      if (recA2s.has(a2) && knownLangs.length) {
+      if (isOfficial && knownLangs.length) {
         status = this.langName(code) + ' + ' + knownLangs.map(l => this.langName(l)).join(', ');
-      } else if (recA2s.has(a2)) {
+      } else if (isOfficial) {
         status = this.langName(code);
+      } else if (regionalEntry) {
+        const pct = Math.round(regionalEntry.coverage * 100);
+        status = this.langName(code) + ' (Regional — ~' + pct + '% of population)';
+        if (knownLangs.length) status += ' · ' + knownLangs.map(l => this.langName(l)).join(', ');
       } else if (knownLangs.length) {
         status = knownLangs.map(l => this.langName(l)).join(', ');
       }
@@ -1927,12 +2438,45 @@ function app() {
     },
 
     writingSystem(a, b) {
-      const sa = DATA.languages[a].writing_system, sb = DATA.languages[b].writing_system;
-      if (sa === sb) return 1.0;
-      if (sa.includes('Latin') && sb.includes('Latin')) return 1.0;
-      if (sa.includes('Cyrillic') && sb.includes('Cyrillic')) return 1.0;
-      if (sa.includes('Arabic') && sb.includes('Arabic')) return 1.0;
-      return 0.0;
+      // 3-tier Orthographic Distance Algorithm (max 100 pts → normalised 0-1)
+      const la = DATA.languages[a], lb = DATA.languages[b];
+      const sa = la.writing_system, sb = lb.writing_system;
+
+      // ── Tier 1: Base Script Family (70 pts) ─────────────────────
+      function scriptFamily(ws) {
+        if (ws.includes('Latin'))    return 'Latin';
+        if (ws.includes('Cyrillic')) return 'Cyrillic';
+        if (ws.includes('Arabic'))   return 'Arabic';
+        if (ws.includes('Hebrew'))   return 'Hebrew';
+        if (ws.includes('Devanagari')) return 'Devanagari';
+        return ws; // unique scripts: Georgian, Armenian, Hangul, Japanese, etc.
+      }
+      const fa = scriptFamily(sa), fb = scriptFamily(sb);
+      if (fa !== fb) return 0.0;
+      let score = 70;
+
+      // ── Tier 2: Diacritic & Character Alignment (15 pts) ────────
+      const pa = ORTHO_PROFILES[a] || { group: fa + '_default', consistency: 'medium' };
+      const pb = ORTHO_PROFILES[b] || { group: fb + '_default', consistency: 'medium' };
+      let alignment;
+      if (pa.group === pb.group) {
+        alignment = 'identical';
+      } else {
+        const k1 = pa.group + '|' + pb.group, k2 = pb.group + '|' + pa.group;
+        alignment = (DIACRITIC_COMPAT.has(k1) || DIACRITIC_COMPAT.has(k2))
+          ? 'minor_deviation' : 'major_deviation';
+      }
+      if (alignment === 'identical')        score += 15;
+      else if (alignment === 'minor_deviation') score += 10;
+      else                                  score += 5;
+
+      // ── Tier 3: Phonetic Consistency Layer (15 pts) ─────────────
+      const ca = pa.consistency, cb = pb.consistency;
+      if (ca === 'high' && cb === 'high')   score += 15;
+      else if (ca === 'low' || cb === 'low') score += 5;
+      else                                  score += 10;
+
+      return score / 100;
     },
 
     contactBonus(h, t) {
