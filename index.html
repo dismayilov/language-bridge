@@ -176,142 +176,333 @@
   </section>
 
   <!-- Results -->
-  <section x-show="speakers.length > 0" class="space-y-3">
-    <h2 class="text-lg font-medium mb-2">
-      <span x-text="t('sectionResults')"></span>
-      <span class="text-sm font-normal text-stone-500 dark:text-stone-400">(<span x-text="t('topN', {n: topN})"></span>)</span>
-    </h2>
+  <section x-show="speakers.length > 0" class="space-y-4">
 
-    <template x-for="(rec, idx) in recommendations" :key="rec.target">
-      <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden transition-shadow"
-           :class="selectedCard === rec.target ? 'ring-2 ring-emerald-500 dark:ring-emerald-400' : 'hover:shadow-md'">
+    <!-- Tab bar + Share button -->
+    <div class="flex items-center gap-2 flex-wrap">
+      <div class="flex bg-stone-100 dark:bg-stone-800 rounded-lg p-1 gap-1">
+        <button @click="viewMode='recommendations'"
+                :class="viewMode==='recommendations' ? 'bg-white dark:bg-stone-700 shadow text-stone-900 dark:text-stone-100' : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'"
+                class="px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                x-text="t('recTab')"></button>
+        <button @click="viewMode='reverse'"
+                :class="viewMode==='reverse' ? 'bg-white dark:bg-stone-700 shadow text-stone-900 dark:text-stone-100' : 'text-stone-500 dark:text-stone-400 hover:text-stone-700 dark:hover:text-stone-200'"
+                class="px-3 py-1.5 rounded-md text-sm font-medium transition-all"
+                x-text="t('reverseTab')"></button>
+      </div>
 
-        <!-- Clickable summary row -->
-        <div class="p-4 md:p-5 cursor-pointer" @click="toggleCard(rec.target)">
-          <div class="flex flex-col md:flex-row md:items-start md:gap-5">
+      <!-- topN selector (only in recommendations mode) -->
+      <span x-show="viewMode==='recommendations'" class="text-sm text-stone-500 dark:text-stone-400 ml-1">(<span x-text="t('topN', {n: topN})"></span>)</span>
 
-            <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
-              <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
-              <div>
-                <div class="font-medium text-stone-900 dark:text-stone-100" x-text="langName(rec.target)"></div>
-                <div class="text-xs text-stone-500 dark:text-stone-400" x-text="branchName(rec.target) + ' · ' + familyName(rec.target)"></div>
-              </div>
-              <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-            </div>
+      <!-- Share button -->
+      <button @click="shareTopFive()"
+              :disabled="sharing || !recommendations.length"
+              class="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm">
+        <template x-if="!sharing">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+          </svg>
+        </template>
+        <template x-if="sharing">
+          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+          </svg>
+        </template>
+        <span x-text="t('shareBtn')"></span>
+      </button>
+    </div>
 
-            <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
+    <!-- ═══ RECOMMENDATIONS TAB ═══ -->
+    <template x-if="viewMode==='recommendations'">
+      <div class="space-y-3">
+        <template x-for="(rec, idx) in recommendations" :key="rec.target">
+          <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden transition-shadow"
+               :class="selectedCard === rec.target ? 'ring-2 ring-emerald-500 dark:ring-emerald-400' : 'hover:shadow-md'">
 
-            <div class="flex-1">
-              <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
-              <div class="flex flex-wrap gap-2 text-xs">
-                <template x-for="dim in subscoreDims" :key="dim.key">
-                  <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
-                    <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
-                    <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
+            <!-- Clickable summary row -->
+            <div class="p-4 md:p-5 cursor-pointer" @click="toggleCard(rec.target)">
+              <div class="flex flex-col md:flex-row md:items-start md:gap-5">
+
+                <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
+                  <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
+                  <div>
+                    <div class="font-medium text-stone-900 dark:text-stone-100" x-text="langName(rec.target)"></div>
+                    <div class="text-xs text-stone-500 dark:text-stone-400" x-text="branchName(rec.target) + ' · ' + familyName(rec.target)"></div>
                   </div>
-                </template>
+                  <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
+                </div>
+
+                <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
+
+                <div class="flex-1">
+                  <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
+                  <div class="flex flex-wrap gap-2 text-xs">
+                    <template x-for="dim in subscoreDims" :key="dim.key">
+                      <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+                        <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
+                        <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
+                      </div>
+                    </template>
+                  </div>
+                </div>
+
+                <div class="hidden md:flex flex-col items-end ml-3 flex-shrink-0">
+                  <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
+                  <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
+                </div>
+
+                <!-- Chevron -->
+                <div class="hidden md:flex items-center ml-2 flex-shrink-0 text-stone-400 dark:text-stone-500 self-center">
+                  <svg class="w-5 h-5 transition-transform duration-200" :class="selectedCard === rec.target ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                  </svg>
+                </div>
               </div>
             </div>
 
-            <div class="hidden md:flex flex-col items-end ml-3 flex-shrink-0">
-              <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
-            </div>
+            <!-- Detail panel -->
+            <div x-show="selectedCard === rec.target"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 -translate-y-1"
+                 x-transition:enter-end="opacity-100 translate-y-0"
+                 class="border-t border-stone-100 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 p-4 md:p-5">
 
-            <!-- Chevron -->
-            <div class="hidden md:flex items-center ml-2 flex-shrink-0 text-stone-400 dark:text-stone-500 self-center">
-              <svg class="w-5 h-5 transition-transform duration-200" :class="selectedCard === rec.target ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-              </svg>
-            </div>
-          </div>
-        </div>
-
-        <!-- Detail panel -->
-        <div x-show="selectedCard === rec.target"
-             x-transition:enter="transition ease-out duration-150"
-             x-transition:enter-start="opacity-0"
-             x-transition:enter-end="opacity-100"
-             class="border-t border-stone-200 dark:border-stone-700 px-4 md:px-5 pb-5 pt-4">
-
-          <!-- Speaker stats -->
-          <template x-if="SPEAKER_DATA[rec.target]">
-            <div class="flex flex-wrap gap-6 mb-4">
-              <div>
-                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('nativeSpeakers')"></div>
-                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums" x-text="fmtM(SPEAKER_DATA[rec.target].native)"></div>
+              <!-- Card detail header: title + share button -->
+              <div class="flex items-center justify-between mb-3">
+                <div class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500">Language details</div>
+                <button @click.stop="shareCardFootprint(rec.target)"
+                        :disabled="sharingCard === rec.target"
+                        class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white">
+                  <template x-if="sharingCard !== rec.target">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+                    </svg>
+                  </template>
+                  <template x-if="sharingCard === rec.target">
+                    <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                  </template>
+                  <span x-text="t('shareBtn')"></span>
+                </button>
               </div>
-              <div>
-                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('totalSpeakers')"></div>
-                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums" x-text="fmtM(SPEAKER_DATA[rec.target].total)"></div>
-              </div>
-              <div>
-                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('officialIn')"></div>
-                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums"
-                     x-text="SPEAKER_DATA[rec.target].official.length > 0 ? SPEAKER_DATA[rec.target].official.length + ' ' + t('countries') : t('noOfficialStatus')"></div>
-              </div>
-            </div>
-          </template>
 
-          <!-- World map -->
-          <div class="rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
-               @mousemove="mapHover($event, rec.target)"
-               @mouseleave="tooltip.visible = false">
-            <template x-if="mapLoading">
-              <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500">
-                <svg class="animate-spin w-5 h-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
-                <span x-text="t('mapLoading')"></span>
-              </div>
-            </template>
-            <template x-if="!mapLoading && geoError">
-              <div class="flex flex-col items-center justify-center py-10 gap-2">
-                <span class="text-sm text-stone-400">Map could not load.</span>
-                <button @click.stop="geoError=false; loadGeoData()" class="text-xs px-3 py-1.5 rounded bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600">Retry</button>
-              </div>
-            </template>
-            <template x-if="!mapLoading && !geoError && geoReady">
-              <div x-html="buildMapSvg(rec.target)"></div>
-            </template>
-            <template x-if="!mapLoading && !geoError && !geoReady">
-              <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500" x-text="t('mapLoading')"></div>
-            </template>
-          </div>
-
-          <!-- Map legend -->
-          <template x-if="!mapLoading && !geoError && geoReady">
-            <div class="flex flex-wrap gap-x-5 gap-y-1 mt-2 text-xs text-stone-500 dark:text-stone-400">
-              <span class="flex items-center gap-1.5">
-                <span class="inline-block w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-400 flex-shrink-0"></span>
-                <span x-text="langName(rec.target)"></span>
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span class="inline-block w-3 h-3 rounded-sm bg-blue-500 flex-shrink-0"></span>
-                <span x-text="t('legendKnown')"></span>
-              </span>
-              <span class="flex items-center gap-1.5">
-                <span class="inline-block w-3 h-3 rounded-sm bg-violet-600 flex-shrink-0"></span>
-                <span x-text="t('legendBoth')"></span>
-              </span>
-            </div>
-          </template>
-
-          <!-- Small / invisible country callout list -->
-          <template x-if="!mapLoading && !geoError && geoReady && smallCountries(rec.target).length > 0">
-            <div class="mt-3 pt-3 border-t border-stone-200 dark:border-stone-700">
-              <div class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-2" x-text="t('alsoSpokenIn')"></div>
-              <div class="flex flex-wrap gap-2">
-                <template x-for="c in smallCountries(rec.target)" :key="c.a2">
-                  <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
-                    <span x-text="c.flag"></span>
-                    <span x-text="c.name"></span>
+              <!-- Speaker stats -->
+              <div class="flex flex-wrap gap-4 mb-4 text-sm">
+                <div class="flex flex-col">
+                  <span class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-0.5" x-text="t('nativeSpeakers')"></span>
+                  <span class="font-medium text-stone-800 dark:text-stone-200" x-text="fmtM(SPEAKER_DATA[rec.target]?.native)"></span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-0.5" x-text="t('totalSpeakers')"></span>
+                  <span class="font-medium text-stone-800 dark:text-stone-200" x-text="fmtM(SPEAKER_DATA[rec.target]?.total)"></span>
+                </div>
+                <div class="flex flex-col">
+                  <span class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-0.5" x-text="t('officialIn')"></span>
+                  <span class="font-medium text-stone-800 dark:text-stone-200">
+                    <template x-if="SPEAKER_DATA[rec.target]?.official?.length">
+                      <span><span x-text="SPEAKER_DATA[rec.target].official.length"></span>&nbsp;<span x-text="t('countries')"></span></span>
+                    </template>
+                    <template x-if="!SPEAKER_DATA[rec.target]?.official?.length">
+                      <span x-text="t('noOfficialStatus')"></span>
+                    </template>
                   </span>
+                </div>
+              </div>
+
+              <!-- World map -->
+              <div class="relative rounded-lg overflow-hidden border border-stone-200 dark:border-stone-700"
+                   @mousemove="mapHover($event, rec.target)"
+                   @mouseleave="tooltip.visible = false">
+                <template x-if="mapLoading">
+                  <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500" x-text="t('mapLoading')"></div>
+                </template>
+                <template x-if="geoError">
+                  <div class="flex items-center justify-center py-10 text-sm text-red-400">Map unavailable</div>
+                </template>
+                <template x-if="!mapLoading && !geoError && geoReady">
+                  <div x-html="buildMapSvg(rec.target)"></div>
+                </template>
+                <template x-if="!mapLoading && !geoError && !geoReady">
+                  <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500" x-text="t('mapLoading')"></div>
                 </template>
               </div>
+
+              <!-- Map legend -->
+              <template x-if="!mapLoading && !geoError && geoReady">
+                <div class="flex flex-wrap gap-x-5 gap-y-1 mt-2 text-xs text-stone-500 dark:text-stone-400">
+                  <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-400 flex-shrink-0"></span>
+                    <span x-text="langName(rec.target)"></span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-sm bg-blue-500 flex-shrink-0"></span>
+                    <span x-text="t('legendKnown')"></span>
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <span class="inline-block w-3 h-3 rounded-sm bg-violet-600 flex-shrink-0"></span>
+                    <span x-text="t('legendBoth')"></span>
+                  </span>
+                </div>
+              </template>
+
+              <!-- Small / invisible country callout list -->
+              <template x-if="!mapLoading && !geoError && geoReady && smallCountries(rec.target).length > 0">
+                <div class="mt-3 pt-3 border-t border-stone-200 dark:border-stone-700">
+                  <div class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-2" x-text="t('alsoSpokenIn')"></div>
+                  <div class="flex flex-wrap gap-2">
+                    <template x-for="c in smallCountries(rec.target)" :key="c.a2">
+                      <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                        <span x-text="c.flag"></span>
+                        <span x-text="c.name"></span>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </template>
+
+              <!-- About this Language -->
+              <template x-if="LANG_CONTEXT[rec.target]">
+                <div class="mt-4 pt-4 border-t border-stone-200 dark:border-stone-700">
+                  <div class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-2">About this language</div>
+                  <p class="text-sm text-stone-600 dark:text-stone-300 leading-relaxed" x-text="LANG_CONTEXT[rec.target].description"></p>
+                  <a :href="LANG_CONTEXT[rec.target].wikiUrl" target="_blank" rel="noopener noreferrer"
+                     class="inline-flex items-center gap-1 mt-2 text-xs font-medium text-emerald-600 dark:text-emerald-400 hover:underline">
+                    Learn more on Wikipedia
+                    <svg class="w-3 h-3 ml-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                    </svg>
+                  </a>
+                </div>
+              </template>
             </div>
-          </template>
-        </div>
+          </div>
+        </template>
       </div>
     </template>
+
+    <!-- ═══ REVERSE SEARCH TAB ═══ -->
+    <template x-if="viewMode==='reverse'">
+      <div class="space-y-4">
+
+        <!-- Target language search -->
+        <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-4 md:p-5">
+          <label class="block text-sm font-medium text-stone-700 dark:text-stone-300 mb-2" x-text="t('reverseLabel')"></label>
+
+          <template x-if="!reverseTarget">
+            <div class="relative">
+              <input type="text" x-model="reverseSearch"
+                     :placeholder="t('reverseSearchPlaceholder')"
+                     class="w-full px-3 py-2 pr-10 rounded-lg border border-stone-300 dark:border-stone-600 bg-white dark:bg-stone-800 text-stone-900 dark:text-stone-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:focus:ring-emerald-400"/>
+              <svg class="absolute right-3 top-2.5 w-4 h-4 text-stone-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+              </svg>
+              <div class="mt-1 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-md overflow-hidden" x-show="reverseSearchResults.length">
+                <template x-for="code in reverseSearchResults" :key="code">
+                  <button @click="reverseTarget=code; reverseSearch=''"
+                          class="w-full text-left px-4 py-2 text-sm hover:bg-emerald-50 dark:hover:bg-emerald-900/20 text-stone-800 dark:text-stone-200 border-b border-stone-100 dark:border-stone-800 last:border-0 transition-colors">
+                    <span x-text="langName(code)"></span>
+                    <span class="text-stone-400 dark:text-stone-500 text-xs ml-2" x-text="branchName(code) + ' · ' + familyName(code)"></span>
+                  </button>
+                </template>
+              </div>
+            </div>
+          </template>
+
+          <template x-if="reverseTarget">
+            <div class="flex items-center gap-3">
+              <div class="flex-1">
+                <div class="font-semibold text-stone-900 dark:text-stone-100 text-lg" x-text="langName(reverseTarget)"></div>
+                <div class="text-sm text-stone-500 dark:text-stone-400" x-text="branchName(reverseTarget) + ' · ' + familyName(reverseTarget)"></div>
+              </div>
+              <button @click="reverseTarget=''; reverseSearch=''"
+                      class="p-1.5 rounded-full hover:bg-stone-100 dark:hover:bg-stone-800 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 transition-colors">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                </svg>
+              </button>
+            </div>
+          </template>
+        </div>
+
+        <!-- Empty state -->
+        <template x-if="!reverseTarget">
+          <div class="text-center py-12 text-stone-400 dark:text-stone-500 text-sm" x-text="t('reverseEmpty')"></div>
+        </template>
+
+        <!-- Analysis breakdown -->
+        <template x-if="reverseTarget && reverseAnalysis">
+          <div class="space-y-3">
+            <p class="text-sm text-stone-600 dark:text-stone-400 font-medium" x-text="t('reverseSubtitle', {target: langName(reverseTarget)})"></p>
+
+            <template x-for="(row, ri) in reverseAnalysis" :key="row.helper">
+              <div class="bg-white dark:bg-stone-900 rounded-xl border overflow-hidden transition-all"
+                   :class="ri===0 ? 'border-emerald-400 dark:border-emerald-500 ring-1 ring-emerald-400 dark:ring-emerald-500' : 'border-stone-200 dark:border-stone-800'">
+                <!-- Header row -->
+                <div class="flex items-center gap-3 px-4 py-3 border-b border-stone-100 dark:border-stone-800"
+                     :class="ri===0 ? 'bg-emerald-50 dark:bg-emerald-950/40' : 'bg-stone-50 dark:bg-stone-950'">
+                  <div class="flex-1">
+                    <div class="flex items-center gap-2">
+                      <span class="font-semibold text-stone-900 dark:text-stone-100" x-text="langName(row.helper)"></span>
+                      <template x-if="proficiency[row.helper]">
+                        <span class="text-xs px-1.5 py-0.5 rounded bg-stone-200 dark:bg-stone-700 text-stone-600 dark:text-stone-300 font-mono" x-text="proficiency[row.helper]"></span>
+                      </template>
+                      <template x-if="ri===0">
+                        <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-600 text-white font-medium" x-text="t('reverseBest')"></span>
+                      </template>
+                    </div>
+                    <div class="text-xs text-stone-400 dark:text-stone-500 mt-0.5" x-text="branchName(row.helper) + ' · ' + familyName(row.helper)"></div>
+                  </div>
+                  <!-- Overall score badge -->
+                  <div class="text-right flex-shrink-0">
+                    <div class="text-2xl font-light tabular-nums"
+                         :class="ri===0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-stone-700 dark:text-stone-300'"
+                         x-text="row.total.toFixed(2)"></div>
+                    <div class="text-xs text-stone-400 dark:text-stone-500" x-text="t('reverseTotal')"></div>
+                  </div>
+                </div>
+
+                <!-- Dimension bars -->
+                <div class="p-4 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                  <template x-for="dim in [
+                    {key:'lexical',    label: t('subLex'),    val: row.lexBonus},
+                    {key:'grammatical',label: t('subGram'),   val: row.weighted.grammatical},
+                    {key:'phonological',label:t('subPhon'),   val: row.weighted.phonological},
+                    {key:'writing_system',label:t('subScript'),val:row.weighted.writing_system},
+                    {key:'genealogical',label:t('subFamily'), val: row.weighted.genealogical}
+                  ]" :key="dim.key">
+                    <div class="space-y-1">
+                      <div class="flex justify-between text-xs">
+                        <span class="text-stone-500 dark:text-stone-400" x-text="dim.label"></span>
+                        <span class="font-medium tabular-nums"
+                              :class="dim.val>=0.7?'text-emerald-600 dark:text-emerald-400':dim.val>=0.4?'text-amber-600 dark:text-amber-400':'text-stone-500 dark:text-stone-400'"
+                              x-text="Math.round(dim.val*100)+'%'"></span>
+                      </div>
+                      <div class="h-2 rounded-full bg-stone-100 dark:bg-stone-800 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-500"
+                             :class="dim.val>=0.7?'bg-emerald-500':dim.val>=0.4?'bg-amber-500':'bg-stone-400 dark:bg-stone-600'"
+                             :style="'width:'+Math.round(dim.val*100)+'%'"></div>
+                      </div>
+                    </div>
+                  </template>
+                </div>
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <!-- No speakers state -->
+        <template x-if="reverseTarget && !speakers.length">
+          <div class="text-center py-8 text-stone-400 dark:text-stone-500 text-sm" x-text="t('reverseNoSpeakers')"></div>
+        </template>
+      </div>
+    </template>
+
   </section>
 
   <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center" x-text="t('noSelection')"></p>
@@ -371,6 +562,17 @@ const TRANSLATIONS = {
     expScriptPartial: "The script overlaps but isn’t identical.",
     expPhonSimilar: "Sound system shares many of the same distinctive sounds.",
     expPhonDiff: "Sound inventory is quite different — pronunciation will need fresh work.",
+    shareBtn: "Share My Footprint",
+    reverseTab: "Analyze a Target",
+    recTab: "Recommendations",
+    reverseLabel: "Select a language you want to learn:",
+    reverseSearchPlaceholder: "Search languages…",
+    reverseSubtitle: "How your languages help you learn {target}",
+    reverseBest: "Top helper",
+    reverseEmpty: "Search and select a target language above to see how your known languages contribute.",
+    reverseNoSpeakers: "Add languages you know first.",
+    reverseTotal: "Total",
+    reverseContrib: "Contribution to {target}",
   },
   de: {
     subtitle: "Sag uns, welche Sprachen du sprichst. Wir zeigen dir, welche du am leichtesten lernen könntest — und warum, aufgeschlüsselt nach Wortschatz, Grammatik, Aussprache und Schrift.",
@@ -410,6 +612,17 @@ const TRANSLATIONS = {
     expScriptPartial: "Die Schrift überschneidet sich, ist aber nicht identisch.",
     expPhonSimilar: "Das Lautsystem teilt viele der gleichen charakteristischen Laute.",
     expPhonDiff: "Der Lautinventar ist recht verschieden — die Aussprache wird neue Arbeit erfordern.",
+    shareBtn: "Mein Sprachprofil teilen",
+    reverseTab: "Zielsprache analysieren",
+    recTab: "Empfehlungen",
+    reverseLabel: "Wähle eine Sprache, die du lernen möchtest:",
+    reverseSearchPlaceholder: "Sprachen suchen…",
+    reverseSubtitle: "Wie deine Sprachen beim Erlernen von {target} helfen",
+    reverseBest: "Beste Hilfe",
+    reverseEmpty: "Suche und wähle oben eine Zielsprache, um zu sehen, wie deine Sprachen beitragen.",
+    reverseNoSpeakers: "Füge zuerst Sprachen hinzu, die du sprichst.",
+    reverseTotal: "Gesamt",
+    reverseContrib: "Beitrag zu {target}",
   },
   fr: {
     subtitle: "Dites-nous quelles langues vous parlez. Nous vous montrerons lesquelles seront les plus faciles à apprendre — et pourquoi, en détaillant le vocabulaire, la grammaire, les sons et le système d’écriture.",
@@ -449,6 +662,18 @@ const TRANSLATIONS = {
     expScriptPartial: "Le système d’écriture se chevauche mais n’est pas identique.",
     expPhonSimilar: "Le système sonore partage beaucoup des mêmes sons distinctifs.",
     expPhonDiff: "L’inventaire sonore est assez différent — la prononciation nécessitera un travail spécifique.",
+
+    shareBtn: "Partager mon profil linguistique",
+    reverseTab: "Analyser une cible",
+    recTab: "Recommandations",
+    reverseLabel: "Sélectionnez une langue à apprendre :",
+    reverseSearchPlaceholder: "Rechercher des langues…",
+    reverseSubtitle: "Comment vos langues vous aident à apprendre {target}",
+    reverseBest: "Meilleur atout",
+    reverseEmpty: "Recherchez et sélectionnez une langue cible ci-dessus pour voir comment vos langues contribuent.",
+    reverseNoSpeakers: "Ajoutez d’abord des langues que vous parlez.",
+    reverseTotal: "Total",
+    reverseContrib: "Contribution à {target}",
   },
   es: {
     subtitle: "Dínos qué idiomas hablas. Te mostraremos cuáles serán más fáciles de aprender — y por qué, desglosado en vocabulario, gramática, pronunciación y sistema de escritura.",
@@ -488,6 +713,17 @@ const TRANSLATIONS = {
     expScriptPartial: "El sistema de escritura se superpone pero no es idéntico.",
     expPhonSimilar: "El sistema de sonidos comparte muchos de los mismos sonidos distintivos.",
     expPhonDiff: "El inventario de sonidos es bastante diferente — la pronunciación requerirá trabajo nuevo.",
+    shareBtn: "Compartir mi perfil lingüístico",
+    reverseTab: "Analizar un objetivo",
+    recTab: "Recomendaciones",
+    reverseLabel: "Selecciona un idioma que quieras aprender:",
+    reverseSearchPlaceholder: "Buscar idiomas…",
+    reverseSubtitle: "Cómo tus idiomas te ayudan a aprender {target}",
+    reverseBest: "Mayor ventaja",
+    reverseEmpty: "Busca y selecciona un idioma objetivo arriba para ver cómo contribuyen tus idiomas.",
+    reverseNoSpeakers: "Primero añade idiomas que hablas.",
+    reverseTotal: "Total",
+    reverseContrib: "Contribución a {target}",
   },
   it: {
     subtitle: "Dicci quali lingue parli. Ti mostreremo quali saranno più facili da imparare — e perché, suddivise in vocabolario, grammatica, suoni e sistema di scrittura.",
@@ -527,6 +763,18 @@ const TRANSLATIONS = {
     expScriptPartial: "Il sistema di scrittura si sovrappone ma non è identico.",
     expPhonSimilar: "Il sistema dei suoni condivide molti degli stessi suoni distintivi.",
     expPhonDiff: "L’inventario dei suoni è abbastanza diverso — la pronuncia richiederà lavoro aggiuntivo.",
+
+    shareBtn: "Condividi il mio profilo linguistico",
+    reverseTab: "Analizza un obiettivo",
+    recTab: "Raccomandazioni",
+    reverseLabel: "Seleziona una lingua che vuoi imparare:",
+    reverseSearchPlaceholder: "Cerca lingue…",
+    reverseSubtitle: "Come le tue lingue ti aiutano ad imparare {target}",
+    reverseBest: "Miglior contributo",
+    reverseEmpty: "Cerca e seleziona una lingua target sopra per vedere come le tue lingue contribuiscono.",
+    reverseNoSpeakers: "Aggiungi prima le lingue che parli.",
+    reverseTotal: "Totale",
+    reverseContrib: "Contributo a {target}",
   },
   pl: {
     subtitle: "Powiedz nam, jakie języki znasz. Pokażemy, które będą najłatwiejsze do nauczenia — i wyjaśnimy dlaczego, analizując słownictwo, gramatykę, wymowę i pismo.",
@@ -566,6 +814,17 @@ const TRANSLATIONS = {
     expScriptPartial: "Pismo pokrywa się częściowo, ale nie jest identyczne.",
     expPhonSimilar: "System dźwiękowy podziela wiele tych samych charakterystycznych dźwięków.",
     expPhonDiff: "Zasoby dźwiękowe są dość różne — wymowa będzie wymagała nowej pracy.",
+    shareBtn: "Udostępnij mój profil językowy",
+    reverseTab: "Analizuj cel",
+    recTab: "Rekomendacje",
+    reverseLabel: "Wybierz język, którego chcesz się uczyć:",
+    reverseSearchPlaceholder: "Szukaj języków…",
+    reverseSubtitle: "Jak twoje języki pomagają ci uczyć się {target}",
+    reverseBest: "Najlepsza pomoc",
+    reverseEmpty: "Wyszukaj i wybierz język docelowy powyżej, aby zobaczyć, jak twoje języki przyczyniają się do nauki.",
+    reverseNoSpeakers: "Najpierw dodaj języki, które znasz.",
+    reverseTotal: "Łącznie",
+    reverseContrib: "Twój wkład w {target}",
   },
   tr: {
     subtitle: "Hangi dilleri konuştuğunuzu söyleyin. Hangi dillerin öğrenilmesi en kolay olacağını — ve neden, sözcük dağarcığı, dilbilgisi, sesler ve yazı sistemi bazında — gösterelim.",
@@ -605,6 +864,17 @@ const TRANSLATIONS = {
     expScriptPartial: "Yazı sistemi kısmen örtüşüyor, ancak aynı değil.",
     expPhonSimilar: "Ses sistemi aynı karakteristik seslerin çoğunu paylaşıyor.",
     expPhonDiff: "Ses envanteri oldukça farklı — telaffuz yeni bir çalışma gerektirecek.",
+    shareBtn: "Dil profilimi paylaş",
+    reverseTab: "Hedef dil analizi",
+    recTab: "Öneriler",
+    reverseLabel: "Öğrenmek istediğiniz bir dil seçin:",
+    reverseSearchPlaceholder: "Dil ara…",
+    reverseSubtitle: "{target} dilini öğrenmede bildiğiniz diller nasıl yardımcı oluyor",
+    reverseBest: "En iyi yardımcı",
+    reverseEmpty: "Katkılarınızı görmek için yukarıdan bir hedef dil arayın ve seçin.",
+    reverseNoSpeakers: "Önce bildiğiniz dilleri ekleyin.",
+    reverseTotal: "Toplam",
+    reverseContrib: "{target} diline katkınız",
   },
   ru: {
     subtitle: "Расскажите нам, какими языками вы владеете. Мы покажем, какие языки будет проще всего выучить — и объясним почему, анализируя словарный запас, грамматику, произношение и систему письма.",
@@ -645,6 +915,17 @@ const TRANSLATIONS = {
     expScriptPartial: "Системы письма частично совпадают, но не идентичны.",
     expPhonSimilar: "Звуковая система разделяет многие характерные звуки.",
     expPhonDiff: "Звуковой инвентарь существенно отличается — произношение потребует отдельной работы.",
+    shareBtn: "Поделиться моим языковым профилем",
+    reverseTab: "Анализ целевого языка",
+    recTab: "Рекомендации",
+    reverseLabel: "Выберите язык, который хотите выучить:",
+    reverseSearchPlaceholder: "Поиск языков…",
+    reverseSubtitle: "Как ваши языки помогают вам в изучении {target}",
+    reverseBest: "Лучший помощник",
+    reverseEmpty: "Найдите и выберите целевой язык выше, чтобы увидеть вклад ваших языков.",
+    reverseNoSpeakers: "Сначала добавьте языки, которыми вы владеете.",
+    reverseTotal: "Итого",
+    reverseContrib: "Вклад в {target}",
   },
 };
 
@@ -796,6 +1077,105 @@ function flagEmoji(a2) {
 }
 
 
+const LANG_CONTEXT = {
+  af: { description: `A West Germanic language that evolved from 17th-century Dutch, spoken natively by around 7 million people primarily in South Africa and Namibia. Its simplified grammar (no verb conjugation for person, no grammatical gender) makes it one of the most accessible Germanic languages for English speakers.`, wikiUrl: `https://en.wikipedia.org/wiki/Afrikaans` },
+  am: { description: `The official working language of Ethiopia and the second-most widely spoken Semitic language in the world, with around 22 million native speakers. It uses the distinctive Ethiopic (Ge'ez) script and is notable for its ejective consonants and complex verb morphology.`, wikiUrl: `https://en.wikipedia.org/wiki/Amharic` },
+  ar: { description: `Modern Standard Arabic is the formal written form used across 22 Arab nations in media, literature, and government, and as the liturgical language of Islam it is understood by hundreds of millions worldwide. As one of the six official languages of the United Nations, fluency opens doors across the Middle East, North Africa, and Muslim-majority communities globally.`, wikiUrl: `https://en.wikipedia.org/wiki/Arabic` },
+  az: { description: `A Turkic language spoken natively by around 30 million people across Azerbaijan, northwestern Iran, and diaspora communities. Closely related to Turkish, it underwent a dramatic script shift — Arabic to Cyrillic to Latin — following Azerbaijani independence in 1991.`, wikiUrl: `https://en.wikipedia.org/wiki/Azerbaijani_language` },
+  be: { description: `An East Slavic language closely related to Russian and Ukrainian, spoken natively by around 6–7 million people in Belarus, though Russian dominates urban daily life. Its distinctive soft consonants and vocabulary set it apart from its Slavic neighbors, and it has seen renewed cultural interest since 2020.`, wikiUrl: `https://en.wikipedia.org/wiki/Belarusian_language` },
+  bg: { description: `A South Slavic language notable for being the first Slavic language to be written down (in Old Church Slavonic) and for several unusual features within its family: it has definite articles and largely lacks grammatical cases for nouns. Spoken by around 8 million people in Bulgaria, it uses the Cyrillic alphabet.`, wikiUrl: `https://en.wikipedia.org/wiki/Bulgarian_language` },
+  bn: { description: `An Indo-Aryan language spoken natively by around 234 million people, making it the fifth-most spoken language in the world by native speakers. The official language of Bangladesh and the state language of West Bengal, it has a rich literary tradition crowned by Nobel laureate Rabindranath Tagore.`, wikiUrl: `https://en.wikipedia.org/wiki/Bengali_language` },
+  bo: { description: `A Sino-Tibetan language spoken natively by around 6 million Tibetans across the Tibetan Plateau, Bhutan, Nepal, and India. Written in the elegant Tibetan script introduced in the 7th century, it has an extraordinarily rich tradition of Buddhist philosophical and scientific texts that have been translated from Sanskrit.`, wikiUrl: `https://en.wikipedia.org/wiki/Tibetan_language` },
+  ca: { description: `A vibrant Romance language with around 9–10 million speakers across Catalonia, Valencia, the Balearic Islands, Andorra (where it's the sole official language), and pockets of France and Italy. Despite lacking its own sovereign state, Catalan has a rich medieval literary tradition and is co-official in several Spanish autonomous communities.`, wikiUrl: `https://en.wikipedia.org/wiki/Catalan_language` },
+  cs: { description: `A West Slavic language spoken by around 10.7 million people in the Czech Republic, known for its rich literary tradition and notably complex phonology — including the rare consonantal syllable, as in the tongue-twister 'strč prst skrz krk'. Its 7-case system and 3-gender grammar typify West Slavic structure.`, wikiUrl: `https://en.wikipedia.org/wiki/Czech_language` },
+  cy: { description: `A Brittonic Celtic language spoken natively by around 870,000 people in Wales, UK — one of the most successful language revitalization stories in Europe. Supported by government policy, Welsh-medium education, and the S4C television channel, it's notable for its initial consonant mutations and for being the only Celtic language to have grown its speaker base in recent decades.`, wikiUrl: `https://en.wikipedia.org/wiki/Welsh_language` },
+  da: { description: `A North Germanic language and the official language of Denmark, spoken by around 6 million people and mutually intelligible with Norwegian and partly with Swedish. Its distinctive 'stød' (a glottal constriction feature) and swallowed consonants give Danish its characteristic melodic sound.`, wikiUrl: `https://en.wikipedia.org/wiki/Danish_language` },
+  de: { description: `A West Germanic language spoken natively by around 76 million people — the most widely spoken native language in the European Union. Known for its compound words ('Donaudampfschifffahrtsgesellschaft'), three grammatical genders, four-case system, and rich literary tradition spanning Goethe, Schiller, and Kafka.`, wikiUrl: `https://en.wikipedia.org/wiki/German_language` },
+  el: { description: `One of the world's oldest recorded languages, with an unbroken literary tradition spanning over 3,400 years from Homer to the present day. Spoken natively by around 13.5 million people in Greece and Cyprus, Classical Greek forms the etymological backbone of much of the world's scientific, philosophical, and medical vocabulary.`, wikiUrl: `https://en.wikipedia.org/wiki/Greek_language` },
+  en: { description: `The world's primary global lingua franca, with around 400 million native speakers and 1.5 billion total speakers across every continent. Shaped by Germanic roots, Norman French, and Latin, English has become the de facto language of science, technology, aviation, diplomacy, and international business.`, wikiUrl: `https://en.wikipedia.org/wiki/English_language` },
+  es: { description: `A Romance language with around 485 million native speakers — the world's second most widely spoken native language — and official status across 20 countries spanning Europe, Latin America, Africa, and the United States. Spanish is the dominant language of the Western Hemisphere and a pillar of global culture, from literature to music to cinema.`, wikiUrl: `https://en.wikipedia.org/wiki/Spanish_language` },
+  et: { description: `A Finno-Ugric language closely related to Finnish, spoken natively by around 1.1 million people in Estonia — one of the world's most digitally advanced nations. Its 14 grammatical cases, long compound words, and complete unrelatedness to neighboring Indo-European languages make it a fascinating challenge.`, wikiUrl: `https://en.wikipedia.org/wiki/Estonian_language` },
+  eu: { description: `One of Europe's greatest linguistic mysteries — a language isolate with no known relatives anywhere on Earth, spoken by around 750,000 people in the Basque Country straddling northern Spain and southwestern France. Its agglutinative grammar, ancient vocabulary, and ergative-absolutive case system place it entirely outside the Indo-European family.`, wikiUrl: `https://en.wikipedia.org/wiki/Basque_language` },
+  fa: { description: `An Iranian language with an unbroken literary tradition spanning over 2,500 years — the language of Rumi, Hafez, and Omar Khayyam — and the official language of Iran, Afghanistan (as Dari), and Tajikistan (as Tajik). Spoken natively by around 70–110 million people, it was once the administrative and cultural lingua franca from Anatolia to Bengal.`, wikiUrl: `https://en.wikipedia.org/wiki/Persian_language` },
+  fi: { description: `A Finno-Ugric language entirely unrelated to its Indo-European neighbors, spoken by around 5.4 million people in Finland and minority communities in Sweden and Norway. Famous for its 15 grammatical cases, vowel harmony, extremely long compound words, and agglutinative morphology.`, wikiUrl: `https://en.wikipedia.org/wiki/Finnish_language` },
+  fo: { description: `A North Germanic language spoken by around 66,000 people in the Faroe Islands, directly descended from the Old Norse brought by Viking settlers. Despite its tiny speaker population it boasts a thriving modern literature, its own Wikipedia, and high mutual intelligibility with Icelandic.`, wikiUrl: `https://en.wikipedia.org/wiki/Faroese_language` },
+  fr: { description: `A Romance language spoken natively by around 80 million people and as an official language across 29 countries on five continents, making it one of the most geographically widespread languages in the world. As a language of diplomacy, cuisine, fashion, and literature, French carries immense cultural prestige and opens doors across Europe, Africa, and the Americas.`, wikiUrl: `https://en.wikipedia.org/wiki/French_language` },
+  ga: { description: `A Goidelic Celtic language and the first official language of Ireland, though spoken natively in Gaeltacht areas by only around 100,000–170,000 people today. Known for its VSO word order (verb-subject-object), initial consonant mutations, and lenition, it's a living link to the pre-Roman Celtic world.`, wikiUrl: `https://en.wikipedia.org/wiki/Irish_language` },
+  gl: { description: `A Romance language spoken by around 2.4 million people in Galicia, the northwestern corner of Spain, sitting linguistically between Spanish and Portuguese. So closely related to Portuguese that many linguists historically grouped them as one 'Galician-Portuguese' language — mutual comprehension is very high.`, wikiUrl: `https://en.wikipedia.org/wiki/Galician_language` },
+  gn: { description: `A Tupian language co-official with Spanish in Paraguay, where it is spoken by around 90% of the population — making it the most widely spoken indigenous language in the Americas with genuine national official status. Around 6–7 million people speak it, often in a natural mixed form with Spanish called Jopará.`, wikiUrl: `https://en.wikipedia.org/wiki/Guarani_language` },
+  gu: { description: `An Indo-Aryan language spoken natively by around 56 million people, primarily in the Indian state of Gujarat, with a highly mobile diaspora in the UK, USA, and East Africa. Written in its own Gujarati script (descended from Devanagari), it's the language of Mahatma Gandhi and a major language of Indian commerce.`, wikiUrl: `https://en.wikipedia.org/wiki/Gujarati_language` },
+  ha: { description: `A Chadic language of the Afro-Asiatic family, serving as the most important trade lingua franca across West Africa with 60–80 million native speakers and many more L2 users across Nigeria, Niger, Ghana, and Cameroon. It uses a modified Latin alphabet (Boko) in modern contexts but has a centuries-long tradition of Arabic-script literacy.`, wikiUrl: `https://en.wikipedia.org/wiki/Hausa_language` },
+  he: { description: `One of history's most remarkable linguistic revival stories — a Semitic language restored as a living spoken tongue in the 19th–20th century after nearly two millennia of use primarily as a liturgical and literary language. Today around 9 million people speak Modern Hebrew natively in Israel, where it's the primary official language.`, wikiUrl: `https://en.wikipedia.org/wiki/Hebrew_language` },
+  hi: { description: `An Indo-Aryan language written in the Devanagari script, spoken natively by around 600 million people and serving as one of the two official languages of India's Union government. In its informal spoken form it is mutually intelligible with Urdu, forming the vast 'Hindustani' dialect continuum spoken across northern India and Pakistan.`, wikiUrl: `https://en.wikipedia.org/wiki/Hindi` },
+  hr: { description: `Mutually intelligible South Slavic languages forming a dialect continuum, spoken together by around 21 million people across Croatia, Serbia, Bosnia-Herzegovina, and Montenegro. The main distinction between Croatian and Serbian lies in script (Latin vs. Cyrillic), regional vocabulary, and cultural identity rather than in fundamental grammar.`, wikiUrl: `https://en.wikipedia.org/wiki/Croatian_language` },
+  ht: { description: `A French-based creole language spoken by virtually all 10–12 million Haitians as their mother tongue, making it the most widely spoken creole language in the world. It emerged from the creative blending of French with West African languages during Haiti's colonial era and gained official status alongside French in 1987.`, wikiUrl: `https://en.wikipedia.org/wiki/Haitian_Creole` },
+  hu: { description: `A Uralic language completely unrelated to its Indo-European neighbors in Central Europe, spoken by around 13 million people in Hungary and minority communities in Romania, Slovakia, and Serbia. Notable for its vowel harmony, 18 grammatical cases, complex verb conjugation for object definiteness, and near-total absence of grammatical gender.`, wikiUrl: `https://en.wikipedia.org/wiki/Hungarian_language` },
+  hy: { description: `A unique Indo-European language forming its own branch, written in the distinctive Armenian alphabet created in 405 AD — one of the world's oldest alphabets still in use. Spoken by around 6.7 million people in Armenia and large diaspora communities in Russia, France, and the United States.`, wikiUrl: `https://en.wikipedia.org/wiki/Armenian_language` },
+  id: { description: `A standardized form of Malay adopted as the official language of Indonesia, the world's fourth most populous country, with around 43 million native speakers and over 200 million who use it as their lingua franca. Its simple grammar — no grammatical genders, no verb tenses, no subject-verb agreement — makes it one of the most accessible major languages.`, wikiUrl: `https://en.wikipedia.org/wiki/Indonesian_language` },
+  is: { description: `A North Germanic language spoken by around 370,000 people in Iceland, so conservative in its evolution that Icelanders can read 13th-century Viking sagas in nearly their original form. Its language council actively coins new vocabulary from Old Norse roots — for example 'tölva' (computer) from 'tala' (number) + 'völva' (seeress).`, wikiUrl: `https://en.wikipedia.org/wiki/Icelandic_language` },
+  it: { description: `A Romance language spoken natively by around 64 million people in Italy, San Marino, Vatican City, Switzerland, and enclaves in Croatia and Slovenia. Often considered the direct descendant of Latin most recognizable to classical scholars, Italian is the language of opera, Renaissance art, Dante, and one of the world's great culinary traditions.`, wikiUrl: `https://en.wikipedia.org/wiki/Italian_language` },
+  ja: { description: `A Japonic language spoken natively by around 125 million people, almost exclusively in Japan. Its writing system uniquely combines three scripts — the syllabic hiragana and katakana alphabets alongside thousands of Chinese-derived kanji — and its elaborate honorific register system (keigo) mirrors Japan's intricate social hierarchies.`, wikiUrl: `https://en.wikipedia.org/wiki/Japanese_language` },
+  jv: { description: `An Austronesian language spoken natively by around 82 million people on the island of Java in Indonesia, making it the most widely spoken regional language in Southeast Asia. Its elaborate speech-level system (ngoko, madya, krama) encodes traditional Javanese social hierarchy into every conversation.`, wikiUrl: `https://en.wikipedia.org/wiki/Javanese_language` },
+  ka: { description: `A Kartvelian language and the official language of Georgia, written in the elegant, distinctive Georgian script (Mkhedruli) that dates to the 5th century AD. Spoken natively by around 4 million people, it's completely unrelated to any Indo-European language and is typologically remarkable for its complex consonant clusters.`, wikiUrl: `https://en.wikipedia.org/wiki/Georgian_language` },
+  kk: { description: `A Turkic language spoken natively by around 13–15 million people in Kazakhstan, where it's the state language, and in diaspora communities across Russia and China's Xinjiang region. It has undergone multiple script changes — Arabic to Latin to Cyrillic and now back to Latin — reflecting Kazakhstan's geopolitical shifts across the 20th and 21st centuries.`, wikiUrl: `https://en.wikipedia.org/wiki/Kazakh_language` },
+  km: { description: `The official language of Cambodia, spoken natively by around 16 million people. It uses the Khmer script, which contains more letters than any other writing system in the world (74 letters), and is distinctive among its Southeast Asian neighbors for being non-tonal despite the prevalence of tonal languages in the region.`, wikiUrl: `https://en.wikipedia.org/wiki/Khmer_language` },
+  kn: { description: `A Dravidian language with a literary tradition spanning over 1,500 years, spoken natively by around 45 million people primarily in the Indian state of Karnataka. It uses its own distinctive Kannada script, one of the oldest surviving scripts in South Asia, and was granted Classical Language status by India in 2008.`, wikiUrl: `https://en.wikipedia.org/wiki/Kannada` },
+  ko: { description: `A language forming its own Koreanic family (with no proven relatives outside a tiny dialect cluster), spoken natively by around 77 million people across South and North Korea and diaspora communities worldwide. Its Hangul alphabet, commissioned by King Sejong the Great in 1443, is celebrated as a triumph of scientific phonological design.`, wikiUrl: `https://en.wikipedia.org/wiki/Korean_language` },
+  ku: { description: `An Iranian language spoken natively by around 30–40 million Kurds across Turkey, Iran, Iraq, and Syria — one of the world's largest ethnolinguistic groups without a sovereign state. Its three main dialect groups (Kurmanji, Sorani, and Southern Kurdish) differ enough that they are sometimes treated as separate languages.`, wikiUrl: `https://en.wikipedia.org/wiki/Kurdish_languages` },
+  ky: { description: `A Turkic language spoken natively by around 4.5 million people in Kyrgyzstan and neighboring Central Asian countries. Like its Turkic relatives, it features vowel harmony and agglutinative morphology; it was historically written in Arabic and Cyrillic, with recent efforts to introduce a Latin-based alphabet.`, wikiUrl: `https://en.wikipedia.org/wiki/Kyrgyz_language` },
+  lb: { description: `A Moselle Franconian variety of German elevated to the status of national language in Luxembourg, spoken natively by around 400,000 people. Luxembourg's trilingual reality — Luxembourgish for daily life, French for legislation, and German for administration — makes it a unique European sociolinguistic case study.`, wikiUrl: `https://en.wikipedia.org/wiki/Luxembourgish` },
+  lo: { description: `The official language of Laos, spoken natively by around 7 million people and closely related to Thai, with which it is partially mutually intelligible. Written in a distinctive abugida script, it's a tonal language with 6 tones in the standard Vientiane dialect and is spoken across both banks of the Mekong River.`, wikiUrl: `https://en.wikipedia.org/wiki/Lao_language` },
+  lt: { description: `Considered the most archaic of all living Indo-European languages, Lithuanian preserves features of Proto-Indo-European lost in every other branch of the family. Spoken natively by around 3 million people in Lithuania and diaspora communities, it's an indispensable reference point for Indo-European historical linguistics.`, wikiUrl: `https://en.wikipedia.org/wiki/Lithuanian_language` },
+  lv: { description: `A Baltic language and one of only two surviving members of the Baltic branch of Indo-European (alongside Lithuanian), spoken natively by around 1.75 million people in Latvia. It retains a distinctive pitch accent system and is invaluable to historical linguists for the archaic Proto-Indo-European features it preserves.`, wikiUrl: `https://en.wikipedia.org/wiki/Latvian_language` },
+  mk: { description: `A South Slavic language and the official language of North Macedonia, closely related to Bulgarian and Serbian. Spoken by around 2 million people, its written standard was codified only after World War II, and it uses the Cyrillic alphabet in a form specifically tailored to its phonological system.`, wikiUrl: `https://en.wikipedia.org/wiki/Macedonian_language` },
+  ml: { description: `A Dravidian language spoken natively by around 38 million people, primarily in the Indian state of Kerala, which consistently records the highest literacy rates in India. Its script is among the most visually complex in the world — a flowing circular abugida — and it has a rich classical literature tradition.`, wikiUrl: `https://en.wikipedia.org/wiki/Malayalam` },
+  mn: { description: `An Altaic-family language spoken natively by around 5.2 million people in Mongolia and Inner Mongolia (China). Traditional Mongolian script — one of the few major scripts that runs vertically from top to bottom — is experiencing a revival in Mongolia alongside the Soviet-era Cyrillic alphabet.`, wikiUrl: `https://en.wikipedia.org/wiki/Mongolian_language` },
+  mr: { description: `An Indo-Aryan language spoken natively by around 83 million people, primarily in the Indian state of Maharashtra. The third-largest language in India by native speakers, it's written in the Devanagari script and has a literary tradition dating to the 13th century, including the devotional poetry of saints like Tukaram and Dnyaneshwar.`, wikiUrl: `https://en.wikipedia.org/wiki/Marathi_language` },
+  ms: { description: `An Austronesian language and the official language of Malaysia, Brunei, and Singapore (as a national language), spoken natively by around 20 million people. Together with standardized Indonesian, it forms the world's most widely used Austronesian language cluster, understood by over 250 million people across maritime Southeast Asia.`, wikiUrl: `https://en.wikipedia.org/wiki/Malay_language` },
+  mt: { description: `The only Semitic language written natively in the Latin alphabet, and one of the official languages of the European Union, spoken by around 520,000 people in Malta. A unique linguistic mosaic, Maltese blends an Arabic-derived base grammar with extensive Sicilian, Italian, English, and French vocabulary.`, wikiUrl: `https://en.wikipedia.org/wiki/Maltese_language` },
+  my: { description: `The official language of Myanmar, spoken natively by around 33 million people and used as a lingua franca by the country's 54 million inhabitants. It uses a rounded script derived from ancient Mon writing, and its tonal system with complex politeness registers makes it a fascinating typological study.`, wikiUrl: `https://en.wikipedia.org/wiki/Burmese_language` },
+  ne: { description: `An Indo-Aryan language and the official language of Nepal, also spoken in the Indian state of Sikkim and parts of Bhutan, with around 17 million native speakers. Written in the Devanagari script, it's closely related to Hindi and serves as the lingua franca across Nepal's ethnically diverse Himalayan communities.`, wikiUrl: `https://en.wikipedia.org/wiki/Nepali_language` },
+  nl: { description: `A West Germanic language spoken natively by around 24 million people in the Netherlands, Belgium (Flanders), Suriname, and the Dutch Caribbean islands. The closest major relative of both German and English, Dutch formed the basis of Afrikaans and once served as a global colonial lingua franca.`, wikiUrl: `https://en.wikipedia.org/wiki/Dutch_language` },
+  no: { description: `A North Germanic language with two competing official written standards — Bokmål (dominant in cities) and Nynorsk (reviving rural forms) — spoken by around 5.3 million people in Norway. Sitting in the center of the Scandinavian dialect continuum, Norwegian is mutually intelligible with both Danish and Swedish.`, wikiUrl: `https://en.wikipedia.org/wiki/Norwegian_language` },
+  oc: { description: `Once the prestige literary language of medieval Europe — the tongue of the troubadours whose poetry shaped the entire Western lyric tradition — Occitan is now spoken by an estimated 200,000–1.5 million active users across southern France, Monaco, Italy's Occitan Valleys, and Catalonia. Despite centuries of decline, it's experiencing a cultural renaissance through regional media and schools.`, wikiUrl: `https://en.wikipedia.org/wiki/Occitan_language` },
+  pa: { description: `An Indo-Aryan language spoken natively by around 113 million people, making it one of the world's ten most spoken languages by native speakers. Split between India (where it's written in Gurmukhi script and is the sacred language of Sikhism) and Pakistan (written in Arabic-derived Shahmukhi), its heartland is the fertile Punjab region.`, wikiUrl: `https://en.wikipedia.org/wiki/Punjabi_language` },
+  pl: { description: `A West Slavic language spoken natively by around 45 million people in Poland and large diaspora communities in the USA, UK, and Germany, making it the most spoken Slavic language outside of Russian. Famous for its complex consonant clusters (szcz, źdź, trz), 7 grammatical cases, and being the official language of a major EU economy.`, wikiUrl: `https://en.wikipedia.org/wiki/Polish_language` },
+  ps: { description: `An Eastern Iranian language and one of the two official languages of Afghanistan, spoken natively by around 40–60 million people across Afghanistan and northwestern Pakistan. Written in a modified Perso-Arabic script with additional letters for Pashto-specific sounds, it's the mother tongue of the Pashtun people.`, wikiUrl: `https://en.wikipedia.org/wiki/Pashto` },
+  pt: { description: `A Romance language spoken natively by around 250 million people — the sixth-most spoken language in the world by native speakers. Portugal's 15th–16th century empire spread it across Brazil, Angola, Mozambique, Cape Verde, São Tomé, Guinea-Bissau, and East Timor, creating a rich global tapestry of regional varieties.`, wikiUrl: `https://en.wikipedia.org/wiki/Portuguese_language` },
+  qu: { description: `The most widely spoken indigenous language family of the Americas, with around 8–10 million speakers across Peru, Bolivia, Ecuador, Colombia, and Argentina. Once the administrative language of the vast Inca Empire, Quechua's many regional varieties form a dialect continuum, and in Peru and Bolivia it holds co-official status.`, wikiUrl: `https://en.wikipedia.org/wiki/Quechuan_languages` },
+  ro: { description: `A Romance language spoken natively by around 24 million people in Romania and Moldova, unique among major Romance languages for retaining a full grammatical case system. As the easternmost large Romance language, Romanian preserves many Latin features lost in its western relatives and has a fascinating layer of Slavic loanwords.`, wikiUrl: `https://en.wikipedia.org/wiki/Romanian_language` },
+  ru: { description: `An East Slavic language spoken natively by around 150 million people and used as a second language across much of the former Soviet Union, making it the most geographically widespread language in Eurasia. One of the six official languages of the United Nations, Russian has a rich literary tradition including Tolstoy, Dostoevsky, and Chekhov.`, wikiUrl: `https://en.wikipedia.org/wiki/Russian_language` },
+  sc: { description: `A Romance language spoken by around 5 million people in Sicily and in diaspora communities worldwide, classified by many linguists as a distinct language rather than a dialect of Italian. It carries layers of Arabic, Norman French, Greek, and Spanish influence, reflecting Sicily's rich history as a crossroads of Mediterranean civilizations.`, wikiUrl: `https://en.wikipedia.org/wiki/Sicilian_language` },
+  se: { description: `The largest of the Sami languages, spoken by around 20,000–30,000 people across the Sápmi region spanning northern Norway, Sweden, and Finland. A Finno-Ugric language with 9 grammatical cases and complex consonant gradation, it's the traditional language of the Sami people — Europe's northernmost indigenous group.`, wikiUrl: `https://en.wikipedia.org/wiki/Northern_Sami` },
+  si: { description: `An Indo-Aryan language spoken natively by around 16 million Sinhalese in Sri Lanka, where it's an official language alongside Tamil. Written in the ornate, circular Sinhala script, it features a striking diglossia — formal written Sinhala and everyday colloquial speech differ so significantly that they are sometimes treated as separate registers.`, wikiUrl: `https://en.wikipedia.org/wiki/Sinhala_language` },
+  sk: { description: `A West Slavic language closely related to Czech, spoken natively by around 5 million people in Slovakia. While highly mutually intelligible with Czech, Slovak has its own phonological system, vocabulary, and 6-case grammar, and the two languages diverged significantly during centuries of separate political histories.`, wikiUrl: `https://en.wikipedia.org/wiki/Slovak_language` },
+  sl: { description: `A South Slavic language spoken natively by around 2.5 million people in Slovenia, remarkable for preserving the grammatical dual number — a distinct form for referring to exactly two of something — lost in most other Slavic languages. Its 46 recognized dialects show extraordinary internal variation for such a small language community.`, wikiUrl: `https://en.wikipedia.org/wiki/Slovenian_language` },
+  so: { description: `A Cushitic language spoken natively by around 21 million Somalis across Somalia, Djibouti, Ethiopia, and Kenya, with diaspora communities across Europe and North America. A written Somali standard using the Latin alphabet was only established in 1972; before that, the language had a rich oral tradition of poetry considered a national art form.`, wikiUrl: `https://en.wikipedia.org/wiki/Somali_language` },
+  sq: { description: `An Indo-European language forming its own branch with no close living relatives, spoken natively by around 7.5 million Albanians across Albania, Kosovo, North Macedonia, and diaspora communities worldwide. Its two main dialects — Gheg in the north and Tosk in the south — differ significantly in phonology and vocabulary.`, wikiUrl: `https://en.wikipedia.org/wiki/Albanian_language` },
+  srd: { description: `Often described as the most conservative of all Romance languages, Sardinian preserves phonological and grammatical features from Latin that have been lost in every other Romance language — making it a living linguistic time capsule. Spoken by around 1–1.3 million people in Sardinia, it has official regional recognition in Italy.`, wikiUrl: `https://en.wikipedia.org/wiki/Sardinian_language` },
+  sv: { description: `A North Germanic language spoken natively by around 10–13 million people in Sweden and Finland, and the most widely spoken of the Scandinavian languages by native count. Its characteristic singsong pitch accent (two tones), mutually intelligibility with Norwegian and Danish, and Sweden's significant cultural exports make it a high-value learning target.`, wikiUrl: `https://en.wikipedia.org/wiki/Swedish_language` },
+  sw: { description: `A Bantu language serving as the primary lingua franca across East and Central Africa, with around 200 million total speakers. Official in Tanzania, Kenya, Uganda, the DRC, and the African Union itself, Swahili is the most studied African language in the world and is notable for its relatively simple agglutinative grammar.`, wikiUrl: `https://en.wikipedia.org/wiki/Swahili_language` },
+  ta: { description: `A Dravidian language with one of the world's longest unbroken literary traditions, with Tamil texts dated to over 2,000 years ago. Spoken natively by around 75–80 million people in Tamil Nadu, Sri Lanka, Singapore, and diaspora communities, Tamil is one of the world's few classical languages that is also a thriving, evolving mother tongue.`, wikiUrl: `https://en.wikipedia.org/wiki/Tamil_language` },
+  te: { description: `A Dravidian language spoken natively by around 83 million people in the Indian states of Andhra Pradesh and Telangana, often called 'the Italian of the East' by linguists for its melodic, vowel-ending words. Telugu has a classical literature tradition exceeding 1,000 years and was designated a Classical Language of India in 2008.`, wikiUrl: `https://en.wikipedia.org/wiki/Telugu_language` },
+  tg: { description: `An Iranian language very closely related to Persian and Dari, serving as the official language of Tajikistan with around 8–9 million native speakers. Unlike its Persian and Afghan relatives, Tajik is written in the Cyrillic alphabet — a legacy of Soviet policy — though efforts to restore the Persian script are ongoing.`, wikiUrl: `https://en.wikipedia.org/wiki/Tajik_language` },
+  th: { description: `A Kra-Dai language and the official language of Thailand, spoken natively by around 70 million people. A tonal language with 5 tones written in its own abugida script (44 consonants, 15 vowel symbols), Thai has an intricate system of honorific vocabulary (Rachasap) reserved for speaking to or about the monarchy.`, wikiUrl: `https://en.wikipedia.org/wiki/Thai_language` },
+  ti: { description: `A Semitic language spoken natively by around 9–10 million people in Eritrea and the Tigray region of Ethiopia, written in the ancient Ethiopic (Ge'ez) script. It's the most widely spoken language in Eritrea and one of the country's official working languages, with a tradition of liturgical use in the Ethiopian Orthodox Church.`, wikiUrl: `https://en.wikipedia.org/wiki/Tigrinya_language` },
+  tk: { description: `A Turkic language spoken natively by around 5–7 million people in Turkmenistan and minority communities in Afghanistan and Iran. Sharing significant mutual intelligibility with Turkish and Uzbek, it was written in Arabic, then Latin, then Cyrillic during the Soviet era, and switched back to a Latin-based alphabet in 1993.`, wikiUrl: `https://en.wikipedia.org/wiki/Turkmen_language` },
+  tl: { description: `An Austronesian language and the basis of Filipino, the national language of the Philippines, with around 28 million native speakers concentrated in Luzon and the Manila capital region. Its standardized form (Filipino) draws on vocabulary from English, Spanish, and other Philippine languages and is understood across the nation's 110+ million people.`, wikiUrl: `https://en.wikipedia.org/wiki/Tagalog_language` },
+  tr: { description: `A Turkic language spoken natively by around 80 million people in Turkey and Cyprus, known for its highly agglutinative structure where entire sentences can be expressed as single words through suffix chains. Atatürk's 1928 script reform replaced the Arabic alphabet with a Latin-based one, making Turkish one of the most accessible Turkic languages for learners.`, wikiUrl: `https://en.wikipedia.org/wiki/Turkish_language` },
+  tt: { description: `A Turkic language spoken natively by around 5–6 million Tatars, primarily in Russia's Republic of Tatarstan and Bashkortostan. Closely related to Bashkir, it uses the Cyrillic alphabet in Russia, though efforts to restore the Latin script used before Stalinist repression are ongoing.`, wikiUrl: `https://en.wikipedia.org/wiki/Tatar_language` },
+  ug: { description: `A Turkic language spoken natively by around 12 million Uyghurs in China's Xinjiang region and diaspora communities across Central Asia and Kazakhstan. Written in the Arabic script (reading right to left), it has a rich classical literary tradition under the Chagatai language and is closely related to Uzbek.`, wikiUrl: `https://en.wikipedia.org/wiki/Uyghur_language` },
+  uk: { description: `An East Slavic language spoken natively by around 40 million people in Ukraine, most closely related to Belarusian and sharing significant vocabulary with Russian while being a fully distinct language. Written in Cyrillic in a distinct orthography, Ukrainian's identity as a separate language — once suppressed — has become a profound symbol of national resilience.`, wikiUrl: `https://en.wikipedia.org/wiki/Ukrainian_language` },
+  ur: { description: `An Indo-Aryan language and the national language of Pakistan, spoken natively by around 70–80 million people and understood across much of South Asia. Written in the elegant Nastaliq calligraphic style of the Arabic script (right to left), it's largely mutually intelligible with Hindi in spoken form but diverges sharply in formal vocabulary.`, wikiUrl: `https://en.wikipedia.org/wiki/Urdu` },
+  uz: { description: `A Turkic language spoken natively by around 35 million people, making it the most widely spoken Turkic language in Central Asia. Uzbekistan switched from Cyrillic to a Latin-based alphabet in 1993, and Uzbek serves as the official language across a strategically important country at the heart of the ancient Silk Road.`, wikiUrl: `https://en.wikipedia.org/wiki/Uzbek_language` },
+  vi: { description: `An Austroasiatic language spoken natively by around 77 million people in Vietnam. Distinctively written in Chữ Quốc Ngữ — a Latin-based alphabet developed by Jesuit missionaries, using diacritical marks to encode its six tones — Vietnamese is an isolating, analytical language despite its geographic proximity to more morphologically complex neighbors.`, wikiUrl: `https://en.wikipedia.org/wiki/Vietnamese_language` },
+  yi: { description: `A High German-derived language written in the Hebrew alphabet, historically the vernacular of Ashkenazi Jewish communities across Eastern Europe with a peak of around 11–13 million speakers before the Holocaust. Today around 1–1.5 million speakers maintain living Yiddish, primarily in ultra-Orthodox communities in Israel, New York, and Antwerp.`, wikiUrl: `https://en.wikipedia.org/wiki/Yiddish` },
+  yo: { description: `A Niger-Congo language spoken natively by around 45 million people primarily in southwestern Nigeria, Benin, and Togo. One of Africa's most documented and internationally taught indigenous languages, Yoruba has a three-tone tonal system, a rich oral tradition, and the Ifá divination corpus recognized by UNESCO as an Intangible Cultural Heritage.`, wikiUrl: `https://en.wikipedia.org/wiki/Yoruba_language` },
+  yue: { description: `A Sinitic language spoken natively by around 85 million people in Guangdong province, Hong Kong, and Macau, and is the dominant language of Chinese diaspora communities worldwide. While sharing the Chinese writing system with Mandarin, spoken Cantonese is mutually unintelligible with it and preserves many Middle Chinese features lost in other varieties.`, wikiUrl: `https://en.wikipedia.org/wiki/Cantonese` },
+  zh: { description: `The most widely spoken language by native speakers in the world, with around 920 million native speakers across China, Taiwan, and Southeast Asia. A tonal language with four tones plus a neutral tone, it uses thousands of logographic characters rather than an alphabet, and Mandarin Chinese serves as the standard spoken form (Putonghua) across the diverse Sinophone world.`, wikiUrl: `https://en.wikipedia.org/wiki/Standard_Chinese` },
+  zu: { description: `A Bantu language and the most widely spoken indigenous language of South Africa, with around 12–14 million native speakers. Zulu is notable for its click consonants (c, q, x) borrowed from neighboring Khoisan languages, its vibrant Zulu music scene (isicathamiya, maskandi), and its role as one of South Africa's 11 official languages.`, wikiUrl: `https://en.wikipedia.org/wiki/Zulu_language` },
+};
+
 const FAMILY_NAMES = {
   en: {'Afro-Asiatic':'Afro-Asiatic','Austroasiatic':'Austroasiatic','Austronesian':'Austronesian','Dravidian':'Dravidian','Indo-European':'Indo-European','Isolate':'Language Isolate','Japonic':'Japonic','Kartvelian':'Kartvelian','Koreanic':'Koreanic','Mongolic':'Mongolic','Niger-Congo':'Niger-Congo','Quechuan':'Quechuan','Sino-Tibetan':'Sino-Tibetan','Tai-Kadai':'Tai-Kadai','Tupian':'Tupian','Turkic':'Turkic','Uralic':'Uralic'},
   de: {'Afro-Asiatic':'Afroasiatisch','Austroasiatic':'Austroasiatisch','Austronesian':'Austronesisch','Dravidian':'Drawidisch','Indo-European':'Indoeuropäisch','Isolate':'Sprachliches Isolat','Japonic':'Japanisch','Kartvelian':'Kartwelisch','Koreanic':'Koreanisch','Mongolic':'Mongolisch','Niger-Congo':'Niger-Kongo','Quechuan':'Quechua','Sino-Tibetan':'Sinotibetisch','Tai-Kadai':'Tai-Kadai','Tupian':'Tupianisch','Turkic':'Türksprachig','Uralic':'Uralisch'},
@@ -834,6 +1214,11 @@ function app() {
     geoReady: false,
     mapLoading: false,
     geoError: false,
+    viewMode: 'recommendations',
+    reverseTarget: '',
+    reverseSearch: '',
+    sharing: false,
+    sharingCard: null,
     tooltip: { visible: false, x: 0, y: 0, flag: '', country: '', status: '' },
     isDark: document.documentElement.classList.contains('dark'),
     currentLang: (function() {
@@ -873,6 +1258,77 @@ function app() {
       const t = BRANCH_NAMES[this.currentLang];
       return (t && t[br]) ? t[br] : br;
     },
+    // ====== REVERSE SEARCH ======
+    get reverseAnalysis() {
+      const target = this.reverseTarget;
+      if (!target || !this.speakers.length) return null;
+      const dims = ['genealogical','lexical','grammatical','phonological','writing_system'];
+      const totalW = Object.values(this.weights).reduce((a,b)=>a+b,0)||1;
+      const w = {};
+      for (const k of Object.keys(this.weights)) w[k] = this.weights[k]/totalW;
+
+      const rows = this.speakers.map(h => {
+        const m = CEFR_WEIGHTS[this.proficiency[h]] ?? 1.0;
+        const raw = {
+          genealogical:  this.genealogical(h, target),
+          lexical:       this.lexicalSimilarity(h, target),
+          grammatical:   this.grammatical(h, target),
+          phonological:  this.phonological(h, target),
+          writing_system:this.writingSystem(h, target),
+        };
+        const weighted = {};
+        for (const d of dims) weighted[d] = raw[d] * m;
+        const [bonus] = this.contactBonus(h, target);
+        const lexBonus = Math.min(1.0, weighted.lexical + bonus * m);
+        const total =
+          weighted.genealogical  * w.genealogical  +
+          lexBonus               * w.lexical        +
+          weighted.grammatical   * w.grammatical    +
+          weighted.phonological  * w.phonological   +
+          weighted.writing_system* w.writing_system;
+        return { helper: h, weighted, lexBonus, total, raw, contactBonus: bonus };
+      });
+      rows.sort((a,b) => b.total - a.total);
+      return rows;
+    },
+
+    get reverseSearchResults() {
+      const q = this.reverseSearch.trim().toLowerCase();
+      const all = Object.keys(DATA.languages).filter(c => !this.speakers.includes(c));
+      if (!q) return all.sort((a,b)=>this.langName(a).localeCompare(this.langName(b))).slice(0,12);
+      return all
+        .filter(c => this.langName(c).toLowerCase().includes(q) || DATA.languages[c].name.toLowerCase().includes(q))
+        .sort((a,b)=>{
+          const ia = this.langName(a).toLowerCase().indexOf(q);
+          const ib = this.langName(b).toLowerCase().indexOf(q);
+          return ia !== ib ? ia - ib : this.langName(a).localeCompare(this.langName(b));
+        })
+        .slice(0,10);
+    },
+
+    dimPct(row, dim) {
+      const v = dim === 'lexical' ? row.lexBonus : row.weighted[dim === 'writing' ? 'writing_system' : dim === 'genealogical' ? 'genealogical' : dim];
+      return Math.round((v||0)*100);
+    },
+
+    init() {
+      const saved = localStorage.getItem('lb-theme');
+      if (saved === 'dark') { document.documentElement.classList.add('dark'); this.isDark = true; }
+      else if (saved === 'light') { document.documentElement.classList.remove('dark'); this.isDark = false; }
+      document.documentElement.lang = this.currentLang;
+    },
+
+    toggleSpeaker(code) {
+      if (this.speakers.includes(code)) {
+        this.speakers = this.speakers.filter(c => c !== code);
+        const p = { ...this.proficiency };
+        delete p[code];
+        this.proficiency = p;
+      } else {
+        this.speakers = [...this.speakers, code];
+        this.proficiency = { ...this.proficiency, [code]: 'C2' };
+      }
+    },
 
     toggleTheme() {
       this.isDark = !this.isDark;
@@ -885,6 +1341,39 @@ function app() {
       }
     },
 
+    resetWeights() {
+      this.weights = { ...DEFAULT_WEIGHTS };
+    },
+
+    get filteredLanguages() {
+      const q = this.search.toLowerCase();
+      if (!q) return Object.keys(DATA.languages);
+      return Object.keys(DATA.languages).filter(code =>
+        DATA.languages[code].name.toLowerCase().includes(q) ||
+        (LANG_NAMES[this.currentLang]?.[code] || '').toLowerCase().includes(q)
+      );
+    },
+
+    get weightDims() {
+      return [
+        { key: 'lexical',         label: this.t('dimLexicon') },
+        { key: 'grammatical',     label: this.t('dimGrammar') },
+        { key: 'phonological',    label: this.t('dimPhonology') },
+        { key: 'writing_system',  label: this.t('dimWriting') },
+        { key: 'genealogical',    label: this.t('dimFamily') },
+      ];
+    },
+
+    get subscoreDims() {
+      return [
+        { key: 'lexical',         label: this.t('subLex') },
+        { key: 'grammatical',     label: this.t('subGram') },
+        { key: 'phonological',    label: this.t('subPhon') },
+        { key: 'writing_system',  label: this.t('subScript') },
+        { key: 'genealogical',    label: this.t('subFamily') },
+      ];
+    },
+
     // ── Detail panel ─────────────────────────────────────────────
     toggleCard(code) {
       this.selectedCard = (this.selectedCard === code) ? null : code;
@@ -892,33 +1381,27 @@ function app() {
     },
 
     async loadGeoData() {
-      this.mapLoading = true;
-      this.geoError = false;
+      this.mapLoading = true; this.geoError = false;
       try {
-        // Only topojson-client needed — no d3 dependency
-        if (!window._topoLoaded) {
+        if (!window.topojson) {
           await new Promise((res, rej) => {
             const s = document.createElement('script');
             s.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
             s.onload = res; s.onerror = rej;
             document.head.appendChild(s);
           });
-          window._topoLoaded = true;
         }
         const r = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
-        if (!r.ok) throw new Error('HTTP ' + r.status);
         const topo = await r.json();
-        // Pre-convert to GeoJSON features once and cache
         this.geoData = topojson.feature(topo, topo.objects.countries).features;
         this.geoReady = true;
-      } catch(e) {
-        console.error('Map load failed:', e);
+      } catch (e) {
         this.geoError = true;
+      } finally {
+        this.mapLoading = false;
       }
-      this.mapLoading = false;
     },
 
-    // Pure-JS equirectangular projection — no d3 needed
     _geoRing(ring, W, H) {
       let d = '';
       for (let i = 0; i < ring.length; i++) {
@@ -931,11 +1414,9 @@ function app() {
 
     buildMapSvg(code) {
       if (!this.geoReady || !this.geoData) return '';
-      // Recommended language countries
       const recSd = SPEAKER_DATA[code];
       const recA2s = new Set(recSd ? recSd.official : []);
       const recNums = new Set([...recA2s].map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
-      // Known languages countries
       const knownA2s = new Set();
       for (const spk of this.speakers) {
         const spkSd = SPEAKER_DATA[spk];
@@ -969,7 +1450,7 @@ function app() {
       if (n >= 1)    return n.toFixed(n < 10 ? 1 : 0).replace(/\.0$/, '') + 'M';
       return Math.round(n * 1000) + 'K';
     },
-    // bounding-box pixel area of a GeoJSON feature (equirectangular projection)
+
     _bboxArea(f, W, H) {
       let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
       const geom = f.geometry;
@@ -984,7 +1465,6 @@ function app() {
       return ((maxLon - minLon) / 360 * W) * ((maxLat - minLat) / 180 * H);
     },
 
-    // Returns array of small/invisible highlighted countries for callout list
     smallCountries(code) {
       if (!this.geoReady || !this.geoData) return [];
       const recSd = SPEAKER_DATA[code];
@@ -992,107 +1472,49 @@ function app() {
       const recA2s = new Set(recSd.official);
       const W = 960, H = 480;
       const numToA2 = getNumToA2();
-      const seenA2 = new Set();
       const result = [];
-      // Check features that exist in topojson
-      for (const f of this.geoData) {
-        if (!f.geometry) continue;
-        const a2 = numToA2[+f.id];
-        if (!a2 || !recA2s.has(a2)) continue;
-        seenA2.add(a2);
-        if (this._bboxArea(f, W, H) < 16) {
-          result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
-        }
-      }
-      // Also catch official countries with NO feature in 110m topojson (too tiny)
       for (const a2 of recSd.official) {
-        if (!seenA2.has(a2) && ISO_A2_TO_NUM[a2]) {
-          result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
-        }
+        const num = ISO_A2_TO_NUM[a2];
+        if (!num) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) }); continue; }
+        const feat = this.geoData.find(f => +f.id === num);
+        if (!feat || !feat.geometry) { result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) }); continue; }
+        if (this._bboxArea(feat, W, H) < 16) result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
       }
-      return result.sort((a, b) => a.name.localeCompare(b.name));
+      result.sort((a, b) => a.name.localeCompare(b.name));
+      return result;
     },
 
-    // Tooltip on SVG path hover
     mapHover(event, code) {
-      const el = event.target;
-      if (el.tagName !== 'path' || !el.dataset || !el.dataset.cid) {
-        this.tooltip.visible = false; return;
-      }
-      const a2 = getNumToA2()[+el.dataset.cid];
+      const cidStr = event.target.dataset?.cid;
+      if (!cidStr) { this.tooltip.visible = false; return; }
+      const cid = +cidStr;
+      const numToA2 = getNumToA2();
+      const a2 = numToA2[cid];
       if (!a2) { this.tooltip.visible = false; return; }
       const recSd = SPEAKER_DATA[code];
-      const isRec = recSd && recSd.official.includes(a2);
-      const knownLang = this.speakers.find(s => SPEAKER_DATA[s] && SPEAKER_DATA[s].official.includes(a2));
-      // Status line: always English — it's a micro-tooltip
-      const parts = [];
-      if (isRec && knownLang)  parts.push(this.langName(code) + ' · Official  /  ' + this.langName(knownLang) + ' · You speak');
-      else if (isRec)          parts.push(this.langName(code) + ' · Official language');
-      else if (knownLang)      parts.push(this.langName(knownLang) + ' · You speak');
-      this.tooltip = {
-        visible: true,
-        x: event.clientX,
-        y: event.clientY,
-        flag: flagEmoji(a2),
-        country: countryDisplayName(a2, this.currentLang),
-        status: parts[0] || '',
-      };
-    },
-
-    // ── end detail panel ─────────────────────────────────────────
-
-    get weightDims() {
-      return [
-        {key:'lexical',      label: this.t('dimLexicon')},
-        {key:'grammatical',  label: this.t('dimGrammar')},
-        {key:'phonological', label: this.t('dimPhonology')},
-        {key:'writing_system', label: this.t('dimWriting')},
-        {key:'genealogical', label: this.t('dimFamily')},
-      ];
-    },
-
-    get subscoreDims() {
-      return [
-        {key:'lexical',      label: this.t('subLex')},
-        {key:'grammatical',  label: this.t('subGram')},
-        {key:'phonological', label: this.t('subPhon')},
-        {key:'writing_system', label: this.t('subScript')},
-        {key:'genealogical', label: this.t('subFamily')},
-      ];
-    },
-
-    init() {
-      document.documentElement.lang = this.currentLang;
-    },
-
-    get filteredLanguages() {
-      const codes = Object.keys(DATA.languages).sort((a,b)=> DATA.languages[a].name.localeCompare(DATA.languages[b].name));
-      const q = this.search.toLowerCase().trim();
-      if (!q) return codes;
-      return codes.filter(c => this.langName(c).toLowerCase().includes(q) || DATA.languages[c].name.toLowerCase().includes(q));
-    },
-
-    toggleSpeaker(code) {
-      const i = this.speakers.indexOf(code);
-      if (i >= 0) {
-        this.speakers.splice(i, 1);
-      } else {
-        if (!this.proficiency[code]) {
-          this.proficiency = { ...this.proficiency, [code]: 'C2' };
-        }
-        this.speakers.push(code);
+      const recA2s = new Set(recSd ? recSd.official : []);
+      const knownLangs = this.speakers.filter(spk => {
+        const sd = SPEAKER_DATA[spk];
+        return sd && sd.official.includes(a2);
+      });
+      let status = '';
+      if (recA2s.has(a2) && knownLangs.length) {
+        status = this.langName(code) + ' + ' + knownLangs.map(l => this.langName(l)).join(', ');
+      } else if (recA2s.has(a2)) {
+        status = this.langName(code);
+      } else if (knownLangs.length) {
+        status = knownLangs.map(l => this.langName(l)).join(', ');
       }
+      this.tooltip = { visible: true, x: event.clientX, y: event.clientY,
+        flag: flagEmoji(a2), country: countryDisplayName(a2, this.currentLang), status };
     },
 
-    resetWeights() { this.weights = {...DEFAULT_WEIGHTS}; },
+    // ── Scoring ──────────────────────────────────────────────────
+    k(a, b) { return a < b ? a + '|' + b : b + '|' + a; },
 
-    // ====== SCORING (port of similarity.py) ======
-
-    k(a,b) { return a < b ? a+'|'+b : b+'|'+a; },
-
-    lexicalSimilarity(a,b) {
-      if (a===b) return 1.0;
-      const key = this.k(a,b);
+    lexicalSimilarity(a, b) {
+      if (a === b) return 1.0;
+      const key = this.k(a, b);
       if (DATA.lexical[key] !== undefined) return DATA.lexical[key];
       const la = DATA.languages[a], lb = DATA.languages[b];
       if (la.family !== lb.family) return 0.03;
@@ -1101,7 +1523,7 @@ function app() {
       return 0.55;
     },
 
-    genealogical(a,b) {
+    genealogical(a, b) {
       const la = DATA.languages[a], lb = DATA.languages[b];
       if (la.family !== lb.family) return 0.0;
       if (la.branch !== lb.branch) return 0.4;
@@ -1109,14 +1531,10 @@ function app() {
       return 1.0;
     },
 
-    wordOrderSim(la,lb) {
+    wordOrderSim(la, lb) {
       const fam = {
-        'SVO': ['SVO'],
-        'V2': ['V2','SVO'],
-        'SOV': ['SOV'],
-        'VSO': ['VSO'],
-        'SVO(free)': ['SVO(free)','SVO'],
-        'SOV(free)': ['SOV(free)','SOV'],
+        'SVO': ['SVO'], 'V2': ['V2','SVO'], 'SOV': ['SOV'], 'VSO': ['VSO'],
+        'SVO(free)': ['SVO(free)','SVO'], 'SOV(free)': ['SOV(free)','SOV'],
         'topic-focus(free)': ['topic-focus(free)','SVO(free)','SVO'],
       };
       if (la.word_order === lb.word_order) return 1.0;
@@ -1125,23 +1543,19 @@ function app() {
       return 0.0;
     },
 
-    morphSim(la,lb) {
+    morphSim(la, lb) {
       if (la.morphology === lb.morphology) return 1.0;
       const pairs = {
-        'analytic|analytic-fusional': 0.8,
-        'fusional|analytic-fusional': 0.8,
-        'analytic|fusional': 0.3,
-        'fusional|agglutinative': 0.2,
-        'analytic|agglutinative': 0.1,
-        'analytic-fusional|agglutinative': 0.15,
-        'analytic|analytic-agglutinative': 0.4,
-        'agglutinative|analytic-agglutinative': 0.6,
+        'analytic|analytic-fusional': 0.8, 'fusional|analytic-fusional': 0.8,
+        'analytic|fusional': 0.3, 'fusional|agglutinative': 0.2,
+        'analytic|agglutinative': 0.1, 'analytic-fusional|agglutinative': 0.15,
+        'analytic|analytic-agglutinative': 0.4, 'agglutinative|analytic-agglutinative': 0.6,
       };
       const key = [la.morphology, lb.morphology].sort().join('|');
       return pairs[key] || 0.0;
     },
 
-    grammatical(a,b) {
+    grammatical(a, b) {
       const la = DATA.languages[a], lb = DATA.languages[b];
       const caseDiff = Math.abs(la.case_count - lb.case_count);
       const caseScore = Math.max(0, 1 - caseDiff/8);
@@ -1151,13 +1565,13 @@ function app() {
       if (la.articles === lb.articles) artScore = 1.0;
       else if (la.articles !== 'none' && lb.articles !== 'none') artScore = 0.5;
       else artScore = 0.2;
-      const wordScore = this.wordOrderSim(la,lb);
-      const morphScore = this.morphSim(la,lb);
+      const wordScore = this.wordOrderSim(la, lb);
+      const morphScore = this.morphSim(la, lb);
       const vhScore = (la.vowel_harmony === lb.vowel_harmony) ? 1.0 : 0.0;
       return (caseScore + genderScore + artScore + wordScore + morphScore + vhScore) / 6;
     },
 
-    phonological(a,b) {
+    phonological(a, b) {
       const pa = new Set(DATA.languages[a].phoneme_features);
       const pb = new Set(DATA.languages[b].phoneme_features);
       if (pa.size === 0 && pb.size === 0) return 1.0;
@@ -1167,7 +1581,7 @@ function app() {
       return union === 0 ? 0 : inter / union;
     },
 
-    writingSystem(a,b) {
+    writingSystem(a, b) {
       const sa = DATA.languages[a].writing_system, sb = DATA.languages[b].writing_system;
       if (sa === sb) return 1.0;
       if (sa.includes('Latin') && sb.includes('Latin')) return 1.0;
@@ -1176,8 +1590,8 @@ function app() {
       return 0.0;
     },
 
-    contactBonus(h,t) {
-      const info = DATA.contact[h+'|'+t];
+    contactBonus(h, t) {
+      const info = DATA.contact[h + '|' + t];
       return info ? [info.bonus, info.note] : [0, null];
     },
 
@@ -1185,43 +1599,36 @@ function app() {
       const dims = ['genealogical','lexical','grammatical','phonological','writing_system'];
       const best = {}; const helpers = {};
       for (const d of dims) { best[d] = 0; helpers[d] = null; }
-      const notes = [];
-      let totalBonus = 0;
-
+      const notes = []; let totalBonus = 0;
       for (const h of this.speakers) {
         const m = CEFR_WEIGHTS[this.proficiency[h]] ?? 1.0;
         const sub = {
-          genealogical: this.genealogical(h, target) * m,
-          lexical: this.lexicalSimilarity(h, target) * m,
-          grammatical: this.grammatical(h, target) * m,
-          phonological: this.phonological(h, target) * m,
+          genealogical:   this.genealogical(h, target) * m,
+          lexical:        this.lexicalSimilarity(h, target) * m,
+          grammatical:    this.grammatical(h, target) * m,
+          phonological:   this.phonological(h, target) * m,
           writing_system: this.writingSystem(h, target) * m,
         };
         for (const d of dims) {
           if (sub[d] > best[d]) { best[d] = sub[d]; helpers[d] = h; }
         }
         const [b, n] = this.contactBonus(h, target);
-        if (b) { totalBonus += b * m; notes.push({helper: h, note: n}); }
+        if (b) { totalBonus += b * m; notes.push({ helper: h, note: n }); }
       }
-
       const lexWithBonus = Math.min(1.0, best.lexical + totalBonus);
-      const totalW = Object.values(this.weights).reduce((a,b)=>a+b, 0) || 1;
+      const totalW = Object.values(this.weights).reduce((a, b) => a + b, 0) || 1;
       const w = {};
       for (const k of Object.keys(this.weights)) w[k] = this.weights[k] / totalW;
       const total =
-        best.genealogical * w.genealogical +
-        lexWithBonus * w.lexical +
-        best.grammatical * w.grammatical +
-        best.phonological * w.phonological +
-        best.writing_system * w.writing_system;
-
+        best.genealogical  * w.genealogical  +
+        lexWithBonus       * w.lexical        +
+        best.grammatical   * w.grammatical    +
+        best.phonological  * w.phonological   +
+        best.writing_system* w.writing_system;
       return {
-        target, total,
-        sub_scores: best,
-        helpers_per_dim: helpers,
+        target, total, sub_scores: best, helpers_per_dim: helpers,
         lexical_with_contact_bonus: lexWithBonus,
-        contact_bonus: totalBonus,
-        contact_notes: notes,
+        contact_bonus: totalBonus, contact_notes: notes,
       };
     },
 
@@ -1229,9 +1636,433 @@ function app() {
       if (this.speakers.length === 0) return [];
       const candidates = Object.keys(DATA.languages).filter(c => !this.speakers.includes(c));
       const scored = candidates.map(t => this.combinedScore(t));
-      scored.sort((a,b) => b.total - a.total);
+      scored.sort((a, b) => b.total - a.total);
       return scored.slice(0, this.topN);
     },
+
+
+    // ====== CANVAS SHARING ENGINE ======
+
+    // Helper: rounded rectangle path (cross-browser)
+    _rrect(ctx, x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+    },
+
+    // Helper: draw a labelled progress bar (returns new y)
+    _bar(ctx, x, y, w, label, pct, color) {
+      ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter,system-ui,sans-serif';
+      ctx.fillText(label, x, y);
+      ctx.fillStyle = '#1e293b'; ctx.fillRect(x, y + 3, w, 7);
+      ctx.fillStyle = color; ctx.fillRect(x, y + 3, w * pct, 7);
+      ctx.fillStyle = color; ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+      ctx.fillText(Math.round(pct * 100) + '%', x + w + 6, y + 11);
+      return y + 22;
+    },
+
+    // Helper: wrap text, returns new y
+    _wrapText(ctx, text, x, y, maxW, lineH) {
+      const words = text.split(' ');
+      let line = '';
+      for (const word of words) {
+        const test = line ? line + ' ' + word : word;
+        if (ctx.measureText(test).width > maxW && line) {
+          ctx.fillText(line, x, y); line = word; y += lineH;
+        } else { line = test; }
+      }
+      if (line) { ctx.fillText(line, x, y); y += lineH; }
+      return y;
+    },
+
+    // Helper: draw SVG map onto canvas at given rect
+    async _drawMapToCanvas(ctx, svgStr, x, y, w, h) {
+      if (!svgStr) return;
+      const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      await new Promise((res) => {
+        const img = new Image();
+        img.onload = () => { ctx.drawImage(img, x, y, w, h); URL.revokeObjectURL(url); res(); };
+        img.onerror = () => { URL.revokeObjectURL(url); res(); };
+        img.src = url;
+      });
+    },
+
+    // Build an inline-styled SVG map for canvas rendering (single language)
+    buildShareMapSvg(code) {
+      if (!this.geoReady || !this.geoData) return '';
+      const recNums = new Set((SPEAKER_DATA[code]?.official || []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+      const knownNums = new Set(
+        this.speakers.flatMap(spk => (SPEAKER_DATA[spk]?.official || []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean))
+      );
+      const W = 960, H = 480;
+      let paths = '';
+      for (const f of this.geoData) {
+        if (!f.geometry) continue;
+        const id = +f.id, isRec = recNums.has(id), isKnown = knownNums.has(id);
+        const fill = isRec && isKnown ? '#a78bfa' : isRec ? '#34d399' : isKnown ? '#60a5fa' : '#3d3730';
+        const sw = isRec || isKnown ? '0.8' : '0.3';
+        let d = '';
+        const geom = f.geometry;
+        const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+        for (const poly of polys) for (const ring of poly) d += this._geoRing(ring, W, H);
+        if (d) paths += `<path fill="${fill}" stroke="#1c1917" stroke-width="${sw}" d="${d}"/>`;
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#1e3a5f"/>${paths}</svg>`;
+    },
+
+    // Build an inline-styled SVG map for the Top 5 combined view
+    buildTopFiveMapSvg() {
+      if (!this.geoReady || !this.geoData) return '';
+      const allNums = new Set(
+        this.recommendations.slice(0, 5).flatMap(rec =>
+          (SPEAKER_DATA[rec.target]?.official || []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean)
+        )
+      );
+      const knownNums = new Set(
+        this.speakers.flatMap(spk => (SPEAKER_DATA[spk]?.official || []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean))
+      );
+      const W = 960, H = 480;
+      let paths = '';
+      for (const f of this.geoData) {
+        if (!f.geometry) continue;
+        const id = +f.id, isRec = allNums.has(id), isKnown = knownNums.has(id);
+        const fill = isRec && isKnown ? '#a78bfa' : isRec ? '#34d399' : isKnown ? '#60a5fa' : '#3d3730';
+        const sw = isRec || isKnown ? '0.8' : '0.3';
+        let d = '';
+        const geom = f.geometry;
+        const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+        for (const poly of polys) for (const ring of poly) d += this._geoRing(ring, W, H);
+        if (d) paths += `<path fill="${fill}" stroke="#1c1917" stroke-width="${sw}" d="${d}"/>`;
+      }
+      return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg"><rect width="${W}" height="${H}" fill="#1e3a5f"/>${paths}</svg>`;
+    },
+
+    // ── ENTRY POINT A: Top 5 Dashboard (800×1200 @ 2×) ─────────────────────
+    async shareTopFive() {
+      if (this.sharing || !this.recommendations.length) return;
+      this.sharing = true;
+      if (!this.geoReady) await this.loadGeoData();
+      await document.fonts.ready;
+
+      const S = 2, W = 800, H = 1200;
+      const canvas = document.createElement('canvas');
+      canvas.width = W * S; canvas.height = H * S;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(S, S);
+
+      // Background gradient
+      const bg = ctx.createLinearGradient(0, 0, 0, H);
+      bg.addColorStop(0, '#0f172a'); bg.addColorStop(0.45, '#052e16'); bg.addColorStop(1, '#0f172a');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      let y = 0;
+
+      // ── HEADER ──
+      y = 46;
+      ctx.fillStyle = '#6ee7b7'; ctx.font = 'bold 26px Inter,system-ui,sans-serif';
+      ctx.fillText('MyNextLanguage', 32, y);
+      y += 22;
+      ctx.fillStyle = '#475569'; ctx.font = '12px Inter,system-ui,sans-serif';
+      ctx.fillText('Your personalized language learning footprint', 32, y);
+      y += 20;
+
+      // Known language chips
+      let chipX = 32;
+      for (const spk of this.speakers) {
+        const prof = this.proficiency[spk];
+        const label = this.langName(spk) + (prof ? ' · ' + prof : '');
+        ctx.font = '11px Inter,system-ui,sans-serif';
+        const tw = ctx.measureText(label).width;
+        const cw = tw + 18, ch = 20, cr = 5;
+        this._rrect(ctx, chipX, y - 14, cw, ch, cr);
+        ctx.fillStyle = '#1e3a5f'; ctx.fill();
+        ctx.fillStyle = '#93c5fd'; ctx.fillText(label, chipX + 9, y + 1);
+        chipX += cw + 7;
+        if (chipX > W - 120) break;
+      }
+      y += 22;
+
+      // Divider
+      ctx.strokeStyle = '#1e3a2f'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(32, y); ctx.lineTo(W - 32, y); ctx.stroke();
+      y += 18;
+
+      ctx.fillStyle = '#34d399'; ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+      ctx.fillText('TOP 5 RECOMMENDATIONS', 32, y);
+      y += 16;
+
+      // ── TOP 5 ROWS ──
+      const top5 = this.recommendations.slice(0, 5);
+      const barColors = ['#059669', '#0284c7', '#7c3aed', '#d97706', '#dc2626'];
+      const dimKeys = [
+        r => r.lexical_with_contact_bonus,
+        r => r.sub_scores.grammatical,
+        r => r.sub_scores.phonological,
+        r => r.sub_scores.writing_system,
+        r => r.sub_scores.genealogical,
+      ];
+      const dimLabels = ['Lex', 'Gram', 'Sound', 'Script', 'Family'];
+
+      for (let ri = 0; ri < top5.length; ri++) {
+        const rec = top5[ri];
+        const rowH = 108;
+        const rowY = y;
+
+        // Row background
+        this._rrect(ctx, 32, rowY, W - 64, rowH - 6, 8);
+        ctx.fillStyle = ri === 0 ? '#052e16' : '#0d1f14';
+        ctx.fill();
+        if (ri === 0) {
+          ctx.strokeStyle = '#059669'; ctx.lineWidth = 1.5;
+          this._rrect(ctx, 32, rowY, W - 64, rowH - 6, 8); ctx.stroke();
+        }
+
+        // Rank badge
+        this._rrect(ctx, 44, rowY + 10, 30, 30, 6);
+        ctx.fillStyle = ri === 0 ? '#059669' : '#1e3a2f'; ctx.fill();
+        ctx.fillStyle = ri === 0 ? '#fff' : '#6ee7b7';
+        ctx.font = 'bold 15px Inter,system-ui,sans-serif';
+        ctx.textAlign = 'center'; ctx.fillText(ri + 1, 59, rowY + 31); ctx.textAlign = 'left';
+
+        // Language name
+        ctx.fillStyle = '#ffffff';
+        ctx.font = `bold ${ri === 0 ? 22 : 17}px Inter,system-ui,sans-serif`;
+        ctx.fillText(this.langName(rec.target), 84, rowY + 27);
+
+        // Branch · Family
+        ctx.fillStyle = '#64748b'; ctx.font = '11px Inter,system-ui,sans-serif';
+        ctx.fillText(this.branchName(rec.target) + ' · ' + this.familyName(rec.target), 84, rowY + 44);
+
+        // Score badge
+        const sx = W - 72;
+        this._rrect(ctx, sx - 26, rowY + 10, 54, 30, 6);
+        ctx.fillStyle = ri === 0 ? '#064e3b' : '#1e3a2f'; ctx.fill();
+        ctx.fillStyle = ri === 0 ? '#6ee7b7' : '#4ade80';
+        ctx.font = `bold ${ri === 0 ? 16 : 14}px Inter,system-ui,sans-serif`;
+        ctx.textAlign = 'center'; ctx.fillText(rec.total.toFixed(2), sx, rowY + 30); ctx.textAlign = 'left';
+
+        // Mini dimension bars
+        const barsY = rowY + 57;
+        const barsX = 84;
+        const totalBarW = W - 64 - barsX - 70;
+        const slotW = (totalBarW - 4 * 8) / 5;
+
+        for (let di = 0; di < 5; di++) {
+          const bx = barsX + di * (slotW + 8);
+          const pct = dimKeys[di](rec);
+          ctx.fillStyle = '#475569'; ctx.font = '8.5px Inter,system-ui,sans-serif';
+          ctx.fillText(dimLabels[di], bx, barsY - 3);
+          ctx.fillStyle = '#1e293b'; ctx.fillRect(bx, barsY, slotW, 5);
+          ctx.fillStyle = barColors[di]; ctx.fillRect(bx, barsY, slotW * pct, 5);
+          ctx.fillStyle = '#64748b'; ctx.font = '8.5px Inter,system-ui,sans-serif';
+          ctx.fillText(Math.round(pct * 100) + '%', bx, barsY + 17);
+        }
+        y += rowH;
+      }
+
+      y += 12;
+
+      // ── WORLD MAP ──
+      ctx.strokeStyle = '#1e3a2f'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(32, y); ctx.lineTo(W - 32, y); ctx.stroke();
+      y += 14;
+      ctx.fillStyle = '#34d399'; ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+      ctx.fillText('COMBINED GLOBAL FOOTPRINT', 32, y);
+      y += 12;
+
+      const mapH = 224;
+      await this._drawMapToCanvas(ctx, this.buildTopFiveMapSvg(), 32, y, W - 64, mapH);
+      y += mapH + 14;
+
+      // ── COMBINED STATS ──
+      ctx.strokeStyle = '#1e3a2f'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(32, y); ctx.lineTo(W - 32, y); ctx.stroke();
+      y += 14;
+      ctx.fillStyle = '#34d399'; ctx.font = 'bold 10px Inter,system-ui,sans-serif';
+      ctx.fillText('COMBINED REACH', 32, y);
+      y += 18;
+
+      let totalNative = 0, totalAll = 0;
+      for (const rec of top5) {
+        const sd = SPEAKER_DATA[rec.target];
+        if (sd) { totalNative += sd.native || 0; totalAll += sd.total || 0; }
+      }
+
+      const statCols = [
+        { label: 'Native speakers', value: this.fmtM(totalNative) },
+        { label: 'Total speakers', value: this.fmtM(totalAll) },
+        { label: 'Languages', value: String(top5.length) },
+        { label: 'Avg score', value: (top5.reduce((a, r) => a + r.total, 0) / top5.length).toFixed(2) },
+      ];
+      const colW = (W - 64) / 4;
+      for (let si = 0; si < statCols.length; si++) {
+        const sx = 32 + si * colW;
+        ctx.fillStyle = '#64748b'; ctx.font = '10px Inter,system-ui,sans-serif';
+        ctx.fillText(statCols[si].label, sx, y);
+        ctx.fillStyle = '#ffffff'; ctx.font = 'bold 20px Inter,system-ui,sans-serif';
+        ctx.fillText(statCols[si].value, sx, y + 22);
+      }
+      y += 48;
+
+      // Language name tags
+      y += 8;
+      let tagX = 32;
+      for (const rec of top5) {
+        const name = this.langName(rec.target);
+        ctx.font = '11px Inter,system-ui,sans-serif';
+        const tw = ctx.measureText(name).width;
+        const cw = tw + 16, ch = 20, cr = 4;
+        this._rrect(ctx, tagX, y - 14, cw, ch, cr);
+        ctx.fillStyle = '#064e3b'; ctx.fill();
+        ctx.fillStyle = '#6ee7b7'; ctx.fillText(name, tagX + 8, y + 1);
+        tagX += cw + 6;
+      }
+      y += 14;
+
+      // Footer
+      ctx.fillStyle = '#334155'; ctx.font = '11px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText('mynextlanguage.github.io', W / 2, H - 18); ctx.textAlign = 'left';
+
+      // Export
+      canvas.toBlob(async blob => {
+        this.sharing = false;
+        const file = new File([blob], 'my-top5-languages.png', { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: 'My top 5 languages to learn next!' }); } catch (_) {}
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob); a.download = 'my-top5-languages.png'; a.click();
+        }
+      }, 'image/png');
+    },
+
+    // ── ENTRY POINT B: Individual Card (900×480 @ 2×) ───────────────────────
+    async shareCardFootprint(code) {
+      if (this.sharingCard === code) return;
+      this.sharingCard = code;
+      if (!this.geoReady) await this.loadGeoData();
+      await document.fonts.ready;
+
+      const rec = this.recommendations.find(r => r.target === code);
+      if (!rec) { this.sharingCard = null; return; }
+
+      const S = 2, W = 900, H = 480;
+      const canvas = document.createElement('canvas');
+      canvas.width = W * S; canvas.height = H * S;
+      const ctx = canvas.getContext('2d');
+      ctx.scale(S, S);
+
+      // Background
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, '#0f172a'); bg.addColorStop(1, '#052e16');
+      ctx.fillStyle = bg; ctx.fillRect(0, 0, W, H);
+
+      const LW = 420;
+
+      // App name (small)
+      ctx.fillStyle = '#6ee7b7'; ctx.font = 'bold 14px Inter,system-ui,sans-serif';
+      ctx.fillText('MyNextLanguage', 32, 34);
+
+      // Language name
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 34px Inter,system-ui,sans-serif';
+      ctx.fillText(this.langName(rec.target), 32, 76);
+
+      // Branch · Family
+      ctx.fillStyle = '#64748b'; ctx.font = '13px Inter,system-ui,sans-serif';
+      ctx.fillText(this.branchName(rec.target) + ' · ' + this.familyName(rec.target), 32, 96);
+
+      // Score badge
+      const bx = LW - 60, by = 56;
+      this._rrect(ctx, bx - 30, by - 26, 60, 32, 8);
+      ctx.fillStyle = '#064e3b'; ctx.fill();
+      ctx.fillStyle = '#6ee7b7'; ctx.font = 'bold 20px Inter,system-ui,sans-serif';
+      ctx.textAlign = 'center'; ctx.fillText(rec.total.toFixed(2), bx, by); ctx.textAlign = 'left';
+
+      // Divider
+      ctx.strokeStyle = '#1e3a2f'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(32, 112); ctx.lineTo(LW - 16, 112); ctx.stroke();
+
+      // Dimension bars
+      const barDims = [
+        { label: 'Lexicon',  color: '#059669', v: rec.lexical_with_contact_bonus },
+        { label: 'Grammar',  color: '#0284c7', v: rec.sub_scores.grammatical },
+        { label: 'Sounds',   color: '#7c3aed', v: rec.sub_scores.phonological },
+        { label: 'Writing',  color: '#d97706', v: rec.sub_scores.writing_system },
+        { label: 'Family',   color: '#dc2626', v: rec.sub_scores.genealogical },
+      ];
+      let barY = 126;
+      const barW = LW - 80;
+      for (const d of barDims) {
+        barY = this._bar(ctx, 32, barY, barW, d.label, d.v, d.color);
+      }
+
+      // Speaker stats
+      const sd = SPEAKER_DATA[code];
+      if (sd) {
+        barY += 8;
+        ctx.strokeStyle = '#1e3a2f'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(32, barY); ctx.lineTo(LW - 16, barY); ctx.stroke();
+        barY += 14;
+        const stats = [
+          { label: 'Native', val: this.fmtM(sd.native) },
+          { label: 'Total',  val: this.fmtM(sd.total) },
+          { label: 'Countries', val: sd.official?.length ? sd.official.length + '' : '—' },
+        ];
+        let sx = 32;
+        for (const st of stats) {
+          ctx.fillStyle = '#64748b'; ctx.font = '10px Inter,system-ui,sans-serif';
+          ctx.fillText(st.label, sx, barY);
+          ctx.fillStyle = '#ffffff'; ctx.font = 'bold 16px Inter,system-ui,sans-serif';
+          ctx.fillText(st.val, sx, barY + 18);
+          sx += (LW - 48) / 3;
+        }
+      }
+
+      // URL
+      ctx.fillStyle = '#334155'; ctx.font = '11px Inter,system-ui,sans-serif';
+      ctx.fillText('mynextlanguage.github.io', 32, H - 18);
+
+      // World map (right panel)
+      const mapX = LW + 8, mapY = 12, mapW = W - mapX - 12, mapH = H - 50;
+      await this._drawMapToCanvas(ctx, this.buildShareMapSvg(code), mapX, mapY, mapW, mapH);
+
+      // Map legend
+      const leg = [
+        { color: '#34d399', label: this.langName(code) },
+        { color: '#60a5fa', label: 'Known' },
+        { color: '#a78bfa', label: 'Both' },
+      ];
+      let lx = mapX, ly = H - 20;
+      for (const l of leg) {
+        ctx.fillStyle = l.color; ctx.fillRect(lx, ly - 8, 10, 9);
+        ctx.fillStyle = '#94a3b8'; ctx.font = '10px Inter,system-ui,sans-serif';
+        ctx.fillText(l.label, lx + 13, ly);
+        lx += ctx.measureText(l.label).width + 28;
+      }
+
+      // Export
+      canvas.toBlob(async blob => {
+        this.sharingCard = null;
+        const name = this.langName(code).toLowerCase().replace(/\s+/g, '-');
+        const file = new File([blob], `mynextlanguage-${name}.png`, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: `I\'m learning ${this.langName(code)} next!` }); } catch (_) {}
+        } else {
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob); a.download = `mynextlanguage-${name}.png`; a.click();
+        }
+      }, 'image/png');
+    },
+
 
     // ====== EXPLANATION GENERATOR ======
 
