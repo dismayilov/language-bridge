@@ -137,6 +137,45 @@
     line-height: 1; padding: 0;
   }
   .dark .selected-pill-remove { background: #34d399; color: #052e16; }
+
+  /* ── iTalki affiliate CTA ── */
+  .italki-cta-wrap {
+    margin-top: 1.25rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid #e7e5e4;
+  }
+  .dark .italki-cta-wrap { border-top-color: #292524; }
+  .italki-cta-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.8rem 1.25rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.25;
+    text-decoration: none;
+    color: #ffffff;
+    background: linear-gradient(135deg, #059669 0%, #0d9488 100%);
+    box-shadow: 0 2px 8px 0 rgba(5,150,105,0.28), 0 1px 2px 0 rgba(0,0,0,0.08);
+    transition: filter 0.15s, box-shadow 0.15s, transform 0.12s;
+    user-select: none;
+  }
+  .italki-cta-btn:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 4px 16px 0 rgba(5,150,105,0.38);
+    transform: translateY(-1px);
+  }
+  .italki-cta-btn:active {
+    filter: brightness(0.96);
+    transform: translateY(0);
+  }
+  .italki-cta-icon { flex-shrink: 0; width: 1.15rem; height: 1.15rem; }
+  .italki-cta-ext  { flex-shrink: 0; opacity: 0.72; width: 0.9rem; height: 0.9rem; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -544,6 +583,28 @@
                   </a>
                 </div>
               </template>
+
+              <!-- ── iTalki Affiliate CTA ── -->
+              <div class="italki-cta-wrap">
+                <a href="https://www.italki.com/affshare?ref=af32244518"
+                   target="_blank"
+                   rel="noopener noreferrer"
+                   class="italki-cta-btn"
+                   @click="umamiTrack('click_italki_affiliate', { language: langName(rec.target) })">
+                  <!-- Microphone / conversation icon -->
+                  <svg class="italki-cta-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4M12 4a3 3 0 00-3 3v4a3 3 0 006 0V7a3 3 0 00-3-3z"/>
+                  </svg>
+                  <span>Practice <span x-text="langName(rec.target)"></span> with a native speaker on iTalki</span>
+                  <!-- External link chevron -->
+                  <svg class="italki-cta-ext" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
+                  </svg>
+                </a>
+              </div>
+
             </div>
           </div>
         </template>
