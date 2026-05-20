@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Language Bridges — find your next language</title>
+<title>MyNextLanguage</title>
 <meta name="description" content="Tell us what you speak. We'll show which languages will feel easiest to learn next, broken down by lexicon, grammar, phonology, and writing system.">
 <script>
   (function() {
@@ -31,12 +31,24 @@
   .dark .chip.selected select option { color: #f5f5f4; background-color: #292524; }
   /* World map */
   .lang-map-svg { width: 100%; height: auto; display: block; }
-  .lang-map-svg .country { fill: #e7e5e4; stroke: #ffffff; stroke-width: 0.3; }
+  .lang-map-svg .country { fill: #e7e5e4; stroke: #fff; stroke-width: 0.3; transition: opacity .15s; }
   .dark .lang-map-svg .country { fill: #44403c; stroke: #1c1917; stroke-width: 0.3; }
-  .lang-map-svg .country.highlighted { fill: #0F6E56; }
-  .dark .lang-map-svg .country.highlighted { fill: #34d399; }
+  /* recommended language – emerald */
+  .lang-map-svg .country.recommended { fill: #059669; stroke: #fff; stroke-width: 0.6; }
+  .dark .lang-map-svg .country.recommended { fill: #34d399; stroke: #1c1917; stroke-width: 0.6; }
+  /* languages you already know – blue */
+  .lang-map-svg .country.known { fill: #3b82f6; stroke: #fff; stroke-width: 0.6; }
+  .dark .lang-map-svg .country.known { fill: #60a5fa; stroke: #1c1917; stroke-width: 0.6; }
+  /* official in both – violet bridge */
+  .lang-map-svg .country.overlap { fill: #7c3aed; stroke: #fff; stroke-width: 0.6; }
+  .dark .lang-map-svg .country.overlap { fill: #a78bfa; stroke: #1c1917; stroke-width: 0.6; }
+  .lang-map-svg path.recommended:hover,
+  .lang-map-svg path.known:hover,
+  .lang-map-svg path.overlap:hover { opacity: .75; cursor: pointer; }
   .lang-map-svg .ocean { fill: #dbeafe; }
   .dark .lang-map-svg .ocean { fill: #1e3a5f; }
+  /* tooltip */
+  [x-cloak] { display: none !important; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -46,7 +58,7 @@
   <!-- Header -->
   <header class="mb-8 flex items-start justify-between gap-4">
     <div>
-      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">Language Bridges</h1>
+      <h1 class="text-3xl md:text-4xl font-semibold tracking-tight">MyNextLanguage</h1>
       <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl" x-html="t('subtitle')"></p>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
@@ -181,8 +193,8 @@
             <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
               <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
               <div>
-                <div class="font-medium text-stone-900 dark:text-stone-100" x-text="DATA.languages[rec.target].name"></div>
-                <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
+                <div class="font-medium text-stone-900 dark:text-stone-100" x-text="langName(rec.target)"></div>
+                <div class="text-xs text-stone-500 dark:text-stone-400" x-text="branchName(rec.target) + ' · ' + familyName(rec.target)"></div>
               </div>
               <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
             </div>
@@ -242,7 +254,9 @@
           </template>
 
           <!-- World map -->
-          <div class="rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800">
+          <div class="rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800"
+               @mousemove="mapHover($event, rec.target)"
+               @mouseleave="tooltip.visible = false">
             <template x-if="mapLoading">
               <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500">
                 <svg class="animate-spin w-5 h-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
@@ -262,6 +276,39 @@
               <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500" x-text="t('mapLoading')"></div>
             </template>
           </div>
+
+          <!-- Map legend -->
+          <template x-if="!mapLoading && !geoError && geoReady">
+            <div class="flex flex-wrap gap-x-5 gap-y-1 mt-2 text-xs text-stone-500 dark:text-stone-400">
+              <span class="flex items-center gap-1.5">
+                <span class="inline-block w-3 h-3 rounded-sm bg-emerald-600 dark:bg-emerald-400 flex-shrink-0"></span>
+                <span x-text="langName(rec.target)"></span>
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="inline-block w-3 h-3 rounded-sm bg-blue-500 flex-shrink-0"></span>
+                <span x-text="t('legendKnown')"></span>
+              </span>
+              <span class="flex items-center gap-1.5">
+                <span class="inline-block w-3 h-3 rounded-sm bg-violet-600 flex-shrink-0"></span>
+                <span x-text="t('legendBoth')"></span>
+              </span>
+            </div>
+          </template>
+
+          <!-- Small / invisible country callout list -->
+          <template x-if="!mapLoading && !geoError && geoReady && smallCountries(rec.target).length > 0">
+            <div class="mt-3 pt-3 border-t border-stone-200 dark:border-stone-700">
+              <div class="text-xs text-stone-400 dark:text-stone-500 uppercase tracking-wide mb-2" x-text="t('alsoSpokenIn')"></div>
+              <div class="flex flex-wrap gap-2">
+                <template x-for="c in smallCountries(rec.target)" :key="c.a2">
+                  <span class="inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-700">
+                    <span x-text="c.flag"></span>
+                    <span x-text="c.name"></span>
+                  </span>
+                </template>
+              </div>
+            </div>
+          </template>
         </div>
       </div>
     </template>
@@ -269,7 +316,19 @@
 
   <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center" x-text="t('noSelection')"></p>
 
-  <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400" x-text="t('footer')"></footer>
+  <!-- Global floating tooltip (position:fixed, lives outside card overflow) -->
+<div x-show="tooltip.visible"
+     x-cloak
+     class="fixed z-50 pointer-events-none bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-lg shadow-xl px-3 py-2 text-sm max-w-xs"
+     :style="{ left: Math.min(tooltip.x + 14, (typeof window !== 'undefined' ? window.innerWidth : 800) - 260) + 'px', top: Math.max(8, tooltip.y - 56) + 'px' }">
+  <div class="font-medium text-stone-900 dark:text-stone-100">
+    <span x-text="tooltip.flag"></span>
+    <span class="ml-1" x-text="tooltip.country"></span>
+  </div>
+  <div x-show="tooltip.status" class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 leading-snug" x-text="tooltip.status"></div>
+</div>
+
+<footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400" x-text="t('footer')"></footer>
 </div>
 
 <script>
@@ -295,7 +354,7 @@ const TRANSLATIONS = {
     langSelector: "Select interface language",
     cefrTitle: "CEFR proficiency level",
     removeLanguage: "Remove",
-    nativeSpeakers: "Native speakers", totalSpeakers: "Total speakers", officialIn: "Official in", countries: "countries", noOfficialStatus: "No official status", mapLoading: "Loading map…",
+    nativeSpeakers: "Native speakers", totalSpeakers: "Total speakers", officialIn: "Official in", countries: "countries", noOfficialStatus: "No official status", mapLoading: "Loading map…", legendKnown: "Your languages", legendBoth: "Both", alsoSpokenIn: "Also official in",
     expSameSubbranch: "{target} is in the same subbranch as {helper}, so the core grammar will feel native.",
     expSameBranch: "{target} is a close cousin of {helper} within the same branch.",
     expSameFamily: "{target} shares deep {family} roots with {helper} but in a different branch.",
@@ -334,7 +393,7 @@ const TRANSLATIONS = {
     langSelector: "Sprache der Benutzeroberfläche wählen",
     cefrTitle: "CEFR-Sprachniveau",
     removeLanguage: "Entfernen",
-    nativeSpeakers: "Muttersprachler", totalSpeakers: "Sprecher gesamt", officialIn: "Amtssprache in", countries: "Ländern", noOfficialStatus: "Kein offizieller Status", mapLoading: "Karte wird geladen…",
+    nativeSpeakers: "Muttersprachler", totalSpeakers: "Sprecher gesamt", officialIn: "Amtssprache in", countries: "Ländern", noOfficialStatus: "Kein offizieller Status", mapLoading: "Karte wird geladen…", legendKnown: "Deine Sprachen", legendBoth: "Beide", alsoSpokenIn: "Auch offiziell in",
     expSameSubbranch: "{target} gehört zum gleichen Unterzweig wie {helper} — die Kerngrammatik wird sich sofort vertraut anfühlen.",
     expSameBranch: "{target} ist ein naher Verwandter von {helper} im gleichen Zweig.",
     expSameFamily: "{target} teilt tiefe {family}-Wurzeln mit {helper}, gehört aber einem anderen Zweig an.",
@@ -373,7 +432,7 @@ const TRANSLATIONS = {
     langSelector: "Choisir la langue de l’interface",
     cefrTitle: "Niveau CECRL",
     removeLanguage: "Supprimer",
-    nativeSpeakers: "Locuteurs natifs", totalSpeakers: "Locuteurs totaux", officialIn: "Officielle en", countries: "pays", noOfficialStatus: "Pas de statut officiel", mapLoading: "Chargement de la carte…",
+    nativeSpeakers: "Locuteurs natifs", totalSpeakers: "Locuteurs totaux", officialIn: "Officielle en", countries: "pays", noOfficialStatus: "Pas de statut officiel", mapLoading: "Chargement de la carte…", legendKnown: "Vos langues", legendBoth: "Les deux", alsoSpokenIn: "Aussi officielle en",
     expSameSubbranch: "{target} appartient au même sous-groupe que {helper} — la grammaire de base semblera naturelle.",
     expSameBranch: "{target} est un proche cousin de {helper} dans la même branche.",
     expSameFamily: "{target} partage de profondes racines {family} avec {helper} mais dans une branche différente.",
@@ -412,7 +471,7 @@ const TRANSLATIONS = {
     langSelector: "Seleccionar idioma de la interfaz",
     cefrTitle: "Nivel MCER",
     removeLanguage: "Eliminar",
-    nativeSpeakers: "Hablantes nativos", totalSpeakers: "Hablantes totales", officialIn: "Oficial en", countries: "países", noOfficialStatus: "Sin estado oficial", mapLoading: "Cargando mapa…",
+    nativeSpeakers: "Hablantes nativos", totalSpeakers: "Hablantes totales", officialIn: "Oficial en", countries: "países", noOfficialStatus: "Sin estado oficial", mapLoading: "Cargando mapa…", legendKnown: "Tus idiomas", legendBoth: "Ambos", alsoSpokenIn: "También oficial en",
     expSameSubbranch: "{target} está en la misma subrama que {helper} — la gramática central te resultará nativa.",
     expSameBranch: "{target} es un primo cercano de {helper} dentro de la misma rama.",
     expSameFamily: "{target} comparte raíces {family} profundas con {helper} pero en una rama diferente.",
@@ -451,7 +510,7 @@ const TRANSLATIONS = {
     langSelector: "Seleziona la lingua dell’interfaccia",
     cefrTitle: "Livello QCER",
     removeLanguage: "Rimuovi",
-    nativeSpeakers: "Madrelingua", totalSpeakers: "Parlanti totali", officialIn: "Ufficiale in", countries: "paesi", noOfficialStatus: "Nessuno stato ufficiale", mapLoading: "Caricamento mappa…",
+    nativeSpeakers: "Madrelingua", totalSpeakers: "Parlanti totali", officialIn: "Ufficiale in", countries: "paesi", noOfficialStatus: "Nessuno stato ufficiale", mapLoading: "Caricamento mappa…", legendKnown: "Le tue lingue", legendBoth: "Entrambe", alsoSpokenIn: "Anche ufficiale in",
     expSameSubbranch: "{target} appartiene allo stesso sottoramo di {helper} — la grammatica di base sembrerà naturale.",
     expSameBranch: "{target} è un cugino stretto di {helper} nello stesso ramo.",
     expSameFamily: "{target} condivide radici {family} profonde con {helper} ma in un ramo diverso.",
@@ -490,7 +549,7 @@ const TRANSLATIONS = {
     langSelector: "Wybierz język interfejsu",
     cefrTitle: "Poziom CEFR",
     removeLanguage: "Usuń",
-    nativeSpeakers: "Rodzimi mówcy", totalSpeakers: "Wszyscy mówiący", officialIn: "Oficjalny w", countries: "krajach", noOfficialStatus: "Brak statusu oficjalnego", mapLoading: "Ładowanie mapy…",
+    nativeSpeakers: "Rodzimi mówcy", totalSpeakers: "Wszyscy mówiący", officialIn: "Oficjalny w", countries: "krajach", noOfficialStatus: "Brak statusu oficjalnego", mapLoading: "Ładowanie mapy…", legendKnown: "Twoje języki", legendBoth: "Oba", alsoSpokenIn: "Także oficjalny w",
     expSameSubbranch: "{target} należy do tej samej podgałęzi co {helper} — gramatyka będzie od razu znajoma.",
     expSameBranch: "{target} jest bliskim krewnym {helper} w tej samej gałęzi.",
     expSameFamily: "{target} ma wspólne korzenie {family} z {helper}, ale należy do innej gałęzi.",
@@ -529,7 +588,7 @@ const TRANSLATIONS = {
     langSelector: "Arayüz dilini seçin",
     cefrTitle: "CEFR yeterlilik düzeyi",
     removeLanguage: "Kaldır",
-    nativeSpeakers: "Anadıl konuşanlar", totalSpeakers: "Toplam konuşanlar", officialIn: "Resmi dil", countries: "ülke", noOfficialStatus: "Resmi statüsü yok", mapLoading: "Harita yükleniyor…",
+    nativeSpeakers: "Anadıl konuşanlar", totalSpeakers: "Toplam konuşanlar", officialIn: "Resmi dil", countries: "ülke", noOfficialStatus: "Resmi statüsü yok", mapLoading: "Harita yükleniyor…", legendKnown: "Bildiğin diller", legendBoth: "Her ikisi", alsoSpokenIn: "Ayrıca resmi",
     expSameSubbranch: "{target}, {helper} ile aynı alt dalda — temel dilbilgisi hemen tanıdık gelecek.",
     expSameBranch: "{target}, aynı dal içinde {helper}’in yakın akrabasıdır.",
     expSameFamily: "{target}, farklı bir dalda olsa da {helper} ile derin {family} köklerini paylaşır.",
@@ -569,7 +628,7 @@ const TRANSLATIONS = {
     langSelector: "Выбрать язык интерфейса",
     cefrTitle: "Уровень CEFR",
     removeLanguage: "Удалить",
-    nativeSpeakers: "Носители", totalSpeakers: "Всего говорящих", officialIn: "Официальный в", countries: "странах", noOfficialStatus: "Нет официального статуса", mapLoading: "Загрузка карты…",
+    nativeSpeakers: "Носители", totalSpeakers: "Всего говорящих", officialIn: "Официальный в", countries: "странах", noOfficialStatus: "Нет официального статуса", mapLoading: "Загрузка карты…", legendKnown: "Ваши языки", legendBoth: "Оба", alsoSpokenIn: "Также официальный в",
     expSameSubbranch: "{target} принадлежит той же подветви, что и {helper} — основная грамматика покажется родной.",
     expSameBranch: "{target} — близкий родственник {helper} в той же ветви.",
     expSameFamily: "{target} разделяет глубокие корни {family} с {helper}, но относится к другой ветви.",
@@ -714,6 +773,50 @@ const ISO_A2_TO_NUM = {
   VU:548,WS:882,XK:383,YE:887,ZA:710,ZM:894,ZW:716,
 };
 
+// Module-level helpers (outside Alpine proxy to avoid reactivity issues)
+let _numToA2 = null;
+function getNumToA2() {
+  if (!_numToA2) {
+    _numToA2 = {};
+    for (const [a2, n] of Object.entries(ISO_A2_TO_NUM)) _numToA2[n] = a2;
+  }
+  return _numToA2;
+}
+const _dnCache = {};
+function countryDisplayName(a2, lang) {
+  const k = a2 + ':' + lang;
+  if (!_dnCache[k]) {
+    try { _dnCache[k] = new Intl.DisplayNames([lang, 'en'], { type: 'region' }).of(a2) || a2; }
+    catch { _dnCache[k] = a2; }
+  }
+  return _dnCache[k];
+}
+function flagEmoji(a2) {
+  return [...a2.toUpperCase()].map(c => String.fromCodePoint(0x1F1E6 + c.charCodeAt(0) - 65)).join('');
+}
+
+
+const FAMILY_NAMES = {
+  en: {'Afro-Asiatic':'Afro-Asiatic','Austroasiatic':'Austroasiatic','Austronesian':'Austronesian','Dravidian':'Dravidian','Indo-European':'Indo-European','Isolate':'Language Isolate','Japonic':'Japonic','Kartvelian':'Kartvelian','Koreanic':'Koreanic','Mongolic':'Mongolic','Niger-Congo':'Niger-Congo','Quechuan':'Quechuan','Sino-Tibetan':'Sino-Tibetan','Tai-Kadai':'Tai-Kadai','Tupian':'Tupian','Turkic':'Turkic','Uralic':'Uralic'},
+  de: {'Afro-Asiatic':'Afroasiatisch','Austroasiatic':'Austroasiatisch','Austronesian':'Austronesisch','Dravidian':'Drawidisch','Indo-European':'Indoeuropäisch','Isolate':'Sprachliches Isolat','Japonic':'Japanisch','Kartvelian':'Kartwelisch','Koreanic':'Koreanisch','Mongolic':'Mongolisch','Niger-Congo':'Niger-Kongo','Quechuan':'Quechua','Sino-Tibetan':'Sinotibetisch','Tai-Kadai':'Tai-Kadai','Tupian':'Tupianisch','Turkic':'Türksprachig','Uralic':'Uralisch'},
+  fr: {'Afro-Asiatic':'Afro-asiatique','Austroasiatic':'Austro-asiatique','Austronesian':'Austronésien','Dravidian':'Dravidien','Indo-European':'Indo-européen','Isolate':'Langue isolée','Japonic':'Japonique','Kartvelian':'Kartvélien','Koreanic':'Coréanique','Mongolic':'Mongolique','Niger-Congo':'Niger-Congo','Quechuan':'Quechua','Sino-Tibetan':'Sino-tibétain','Tai-Kadai':'Taï-Kadaï','Tupian':'Tupien','Turkic':'Turcique','Uralic':'Ouralien'},
+  es: {'Afro-Asiatic':'Afroasiático','Austroasiatic':'Austroasiático','Austronesian':'Austronesio','Dravidian':'Drávida','Indo-European':'Indoeuropeo','Isolate':'Aislado lingüístico','Japonic':'Japónico','Kartvelian':'Kartvelio','Koreanic':'Coreánico','Mongolic':'Mongólico','Niger-Congo':'Níger-Congo','Quechuan':'Quechua','Sino-Tibetan':'Sinotibetano','Tai-Kadai':'Tai-Kadai','Tupian':'Tupí','Turkic':'Túrquico','Uralic':'Urálico'},
+  it: {'Afro-Asiatic':'Afro-asiatico','Austroasiatic':'Austro-asiatico','Austronesian':'Austronesiano','Dravidian':'Dravidico','Indo-European':'Indoeuropeo','Isolate':'Isolato linguistico','Japonic':'Japonico','Kartvelian':'Kartveliano','Koreanic':'Coreano','Mongolic':'Mongolico','Niger-Congo':'Niger-Congo','Quechuan':'Quechua','Sino-Tibetan':'Sino-tibetano','Tai-Kadai':'Tai-Kadai','Tupian':'Tupiano','Turkic':'Turco','Uralic':'Uralico'},
+  pl: {'Afro-Asiatic':'Afroazjatycki','Austroasiatic':'Austroazjatycki','Austronesian':'Austronezyjski','Dravidian':'Drawidyjski','Indo-European':'Indoeuropejski','Isolate':'Język izolowany','Japonic':'Japoniczny','Kartvelian':'Kartwelski','Koreanic':'Koreański','Mongolic':'Mongolski','Niger-Congo':'Niger-Kongo','Quechuan':'Keczua','Sino-Tibetan':'Chińsko-tybetański','Tai-Kadai':'Tai-Kadai','Tupian':'Tupi','Turkic':'Turkijski','Uralic':'Uralski'},
+  tr: {'Afro-Asiatic':'Afro-Asya','Austroasiatic':'Avustro-Asya','Austronesian':'Avustronezya','Dravidian':'Dravid','Indo-European':'Hint-Avrupa','Isolate':'Dil izolesi','Japonic':'Japonik','Kartvelian':'Kartvel','Koreanic':'Kore','Mongolic':'Moğol','Niger-Congo':'Niger-Kongo','Quechuan':'Keçuva','Sino-Tibetan':'Sino-Tibet','Tai-Kadai':'Tai-Kadai','Tupian':'Tupi','Turkic':'Türk','Uralic':'Ural'},
+  ru: {'Afro-Asiatic':'Афразийская','Austroasiatic':'Австроазиатская','Austronesian':'Австронезийская','Dravidian':'Дравидийская','Indo-European':'Индоевропейская','Isolate':'Изолированный язык','Japonic':'Японская','Kartvelian':'Картвельская','Koreanic':'Корейская','Mongolic':'Монгольская','Niger-Congo':'Нигеро-конголезская','Quechuan':'Кечуанская','Sino-Tibetan':'Сино-тибетская','Tai-Kadai':'Тай-кадайская','Tupian':'Тупийская','Turkic':'Тюркская','Uralic':'Уральская'},
+};
+const BRANCH_NAMES = {
+  en: {'Albanian':'Albanian','Armenian':'Armenian','Baltic':'Baltic','Bantu':'Bantu','Celtic':'Celtic','Chadic':'Chadic','Cushitic':'Cushitic','Finnic':'Finnic','Germanic':'Germanic','Hellenic':'Hellenic','Indo-Aryan':'Indo-Aryan','Iranian':'Iranian','Isolate':'Isolate','Japonic':'Japonic','Karluk':'Karluk','Kartvelian':'Kartvelian','Khmeric':'Khmeric','Kipchak':'Kipchak','Koreanic':'Koreanic','Malayo-Polynesian':'Malayo-Polynesian','Mongolic':'Mongolic','Oghuz':'Oghuz','Quechuan':'Quechuan','Romance':'Romance','Sami':'Sami','Semitic':'Semitic','Sinitic':'Sinitic','Slavic':'Slavic','South-Central Dravidian':'South-Central Dravidian','Southern Dravidian':'Southern Dravidian','Tai':'Tai','Tibeto-Burman':'Tibeto-Burman','Tupi-Guarani':'Tupi-Guarani','Ugric':'Ugric','Vietic':'Vietic','Volta-Niger':'Volta-Niger'},
+  de: {'Albanian':'Albanisch','Armenian':'Armenisch','Baltic':'Baltisch','Bantu':'Bantu','Celtic':'Keltisch','Chadic':'Tschadisch','Cushitic':'Kuschitisch','Finnic':'Finnisch','Germanic':'Germanisch','Hellenic':'Hellenisch','Indo-Aryan':'Indoarisch','Iranian':'Iranisch','Isolate':'Isolat','Japonic':'Japanisch','Karluk':'Karlukisch','Kartvelian':'Kartwelisch','Khmeric':'Khmerisch','Kipchak':'Kiptschakisch','Koreanic':'Koreanisch','Malayo-Polynesian':'Malayo-Polynesisch','Mongolic':'Mongolisch','Oghuz':'Oghusisch','Quechuan':'Quechua','Romance':'Romanisch','Sami':'Samisch','Semitic':'Semitisch','Sinitic':'Sinisch','Slavic':'Slawisch','South-Central Dravidian':'Süd-Zentraldrawidisch','Southern Dravidian':'Süddrawidisch','Tai':'Tai','Tibeto-Burman':'Tibeto-Birmanisch','Tupi-Guarani':'Tupí-Guaraní','Ugric':'Ugrisch','Vietic':'Vietisch','Volta-Niger':'Volta-Niger'},
+  fr: {'Albanian':'Albanais','Armenian':'Arménien','Baltic':'Baltique','Bantu':'Bantou','Celtic':'Celtique','Chadic':'Tchadique','Cushitic':'Couchitique','Finnic':'Fennique','Germanic':'Germanique','Hellenic':'Hellénique','Indo-Aryan':'Indo-aryen','Iranian':'Iranien','Isolate':'Isolat','Japonic':'Japonique','Karluk':'Karlouk','Kartvelian':'Kartvélien','Khmeric':'Khmer','Kipchak':'Kiptchak','Koreanic':'Coréen','Malayo-Polynesian':'Malayo-polynésien','Mongolic':'Mongolique','Oghuz':'Oghouze','Quechuan':'Quechua','Romance':'Roman','Sami':'Sami','Semitic':'Sémitique','Sinitic':'Sinitique','Slavic':'Slave','South-Central Dravidian':'Dravidien centro-méridional','Southern Dravidian':'Dravidien méridional','Tai':'Taï','Tibeto-Burman':'Tibéto-birman','Tupi-Guarani':'Tupi-guarani','Ugric':'Ougrien','Vietic':'Viet','Volta-Niger':'Volta-Niger'},
+  es: {'Albanian':'Albanés','Armenian':'Armenio','Baltic':'Báltico','Bantu':'Bantú','Celtic':'Céltico','Chadic':'Chádico','Cushitic':'Cusítico','Finnic':'Fínico','Germanic':'Germánico','Hellenic':'Helénico','Indo-Aryan':'Indoario','Iranian':'Iraní','Isolate':'Aislado','Japonic':'Japónico','Karluk':'Karluk','Kartvelian':'Kartvelio','Khmeric':'Jemer','Kipchak':'Kipchak','Koreanic':'Coreano','Malayo-Polynesian':'Malayo-polinesio','Mongolic':'Mongólico','Oghuz':'Oguz','Quechuan':'Quechua','Romance':'Romance','Sami':'Sami','Semitic':'Semítico','Sinitic':'Sínico','Slavic':'Eslavo','South-Central Dravidian':'Drávida centrosureño','Southern Dravidian':'Drávida sureño','Tai':'Tai','Tibeto-Burman':'Tibetano-birmano','Tupi-Guarani':'Tupí-guaraní','Ugric':'Ugrio','Vietic':'Viet','Volta-Niger':'Volta-Níger'},
+  it: {'Albanian':'Albanese','Armenian':'Armeno','Baltic':'Baltico','Bantu':'Bantu','Celtic':'Celtico','Chadic':'Ciadico','Cushitic':'Cuscitico','Finnic':'Finnico','Germanic':'Germanico','Hellenic':'Ellenico','Indo-Aryan':'Indo-ariano','Iranian':'Iraniano','Isolate':'Isolato','Japonic':'Japonico','Karluk':'Karluk','Kartvelian':'Kartveliano','Khmeric':'Khmer','Kipchak':'Kipchak','Koreanic':'Coreano','Malayo-Polynesian':'Malayo-polinesiano','Mongolic':'Mongolico','Oghuz':'Oghuz','Quechuan':'Quechua','Romance':'Romanzo','Sami':'Sami','Semitic':'Semitico','Sinitic':'Sinitico','Slavic':'Slavo','South-Central Dravidian':'Dravidico centro-meridionale','Southern Dravidian':'Dravidico meridionale','Tai':'Tai','Tibeto-Burman':'Tibeto-birmano','Tupi-Guarani':'Tupi-guaranì','Ugric':'Ugrico','Vietic':'Viet','Volta-Niger':'Volta-Niger'},
+  pl: {'Albanian':'Albański','Armenian':'Ormiański','Baltic':'Bałtycki','Bantu':'Bantu','Celtic':'Celtycki','Chadic':'Czadyjski','Cushitic':'Kuszyty','Finnic':'Fiński','Germanic':'Germański','Hellenic':'Helleński','Indo-Aryan':'Indoaryjski','Iranian':'Irański','Isolate':'Izolat','Japonic':'Japoński','Karluk':'Karlucki','Kartvelian':'Kartwelski','Khmeric':'Khmerski','Kipchak':'Kipczakski','Koreanic':'Koreański','Malayo-Polynesian':'Malajo-polinezyjski','Mongolic':'Mongolski','Oghuz':'Oguzycki','Quechuan':'Keczua','Romance':'Romański','Sami':'Saamski','Semitic':'Semicki','Sinitic':'Sinicki','Slavic':'Słowiański','South-Central Dravidian':'Płd.-środkowy drawidyjski','Southern Dravidian':'Południowy drawidyjski','Tai':'Tai','Tibeto-Burman':'Tybetańsko-birmański','Tupi-Guarani':'Tupi-guarani','Ugric':'Ugryjski','Vietic':'Wietnamski','Volta-Niger':'Volta-Niger'},
+  tr: {'Albanian':'Arnavut','Armenian':'Ermeni','Baltic':'Baltık','Bantu':'Bantu','Celtic':'Kelt','Chadic':'Çadik','Cushitic':'Kuşitik','Finnic':'Fin','Germanic':'Germen','Hellenic':'Helen','Indo-Aryan':'Hint-Aryan','Iranian':'İran','Isolate':'İzole','Japonic':'Japon','Karluk':'Karluk','Kartvelian':'Kartvel','Khmeric':'Kmer','Kipchak':'Kıpçak','Koreanic':'Kore','Malayo-Polynesian':'Malayo-Polinezya','Mongolic':'Moğol','Oghuz':'Oğuz','Quechuan':'Keçuva','Romance':'Roman','Sami':'Sami','Semitic':'Sami dilleri','Sinitic':'Sinit','Slavic':'Slav','South-Central Dravidian':'Güney-Orta Dravid','Southern Dravidian':'Güney Dravid','Tai':'Tai','Tibeto-Burman':'Tibet-Burma','Tupi-Guarani':'Tupi-Guarani','Ugric':'Ugric','Vietic':'Viet','Volta-Niger':'Volta-Niger'},
+  ru: {'Albanian':'Албанская','Armenian':'Армянская','Baltic':'Балтийская','Bantu':'Банту','Celtic':'Кельтская','Chadic':'Чадская','Cushitic':'Кушитская','Finnic':'Финская','Germanic':'Германская','Hellenic':'Эллинская','Indo-Aryan':'Индоарийская','Iranian':'Иранская','Isolate':'Изолят','Japonic':'Японская','Karluk':'Карлукская','Kartvelian':'Картвельская','Khmeric':'Кхмерская','Kipchak':'Кипчакская','Koreanic':'Корейская','Malayo-Polynesian':'Малайско-полинезийская','Mongolic':'Монгольская','Oghuz':'Огузская','Quechuan':'Кечуанская','Romance':'Романская','Sami':'Саамская','Semitic':'Семитская','Sinitic':'Синитская','Slavic':'Славянская','South-Central Dravidian':'Южно-центральная дравидийская','Southern Dravidian':'Южная дравидийская','Tai':'Тайская','Tibeto-Burman':'Тибето-бирманская','Tupi-Guarani':'Тупи-гуарани','Ugric':'Угорская','Vietic':'Вьетская','Volta-Niger':'Вольта-нигерская'},
+};
+
 const CEFR_WEIGHTS = { A1: 0.10, A2: 0.30, B1: 0.50, B2: 0.70, C1: 0.85, C2: 1.00 };
 
 const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
@@ -731,6 +834,7 @@ function app() {
     geoReady: false,
     mapLoading: false,
     geoError: false,
+    tooltip: { visible: false, x: 0, y: 0, flag: '', country: '', status: '' },
     isDark: document.documentElement.classList.contains('dark'),
     currentLang: (function() {
       const s = localStorage.getItem('lb-lang');
@@ -754,6 +858,20 @@ function app() {
     langName(code) {
       const names = LANG_NAMES[this.currentLang];
       return (names && names[code]) ? names[code] : DATA.languages[code].name;
+    },
+
+    familyName(code) {
+      const fam = DATA.languages[code]?.family;
+      if (!fam) return '';
+      const t = FAMILY_NAMES[this.currentLang];
+      return (t && t[fam]) ? t[fam] : fam;
+    },
+
+    branchName(code) {
+      const br = DATA.languages[code]?.branch;
+      if (!br) return '';
+      const t = BRANCH_NAMES[this.currentLang];
+      return (t && t[br]) ? t[br] : br;
     },
 
     toggleTheme() {
@@ -813,21 +931,33 @@ function app() {
 
     buildMapSvg(code) {
       if (!this.geoReady || !this.geoData) return '';
-      const sd = SPEAKER_DATA[code];
-      const nums = new Set((sd ? sd.official : []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+      // Recommended language countries
+      const recSd = SPEAKER_DATA[code];
+      const recA2s = new Set(recSd ? recSd.official : []);
+      const recNums = new Set([...recA2s].map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+      // Known languages countries
+      const knownA2s = new Set();
+      for (const spk of this.speakers) {
+        const spkSd = SPEAKER_DATA[spk];
+        if (spkSd) for (const a2 of spkSd.official) knownA2s.add(a2);
+      }
+      const knownNums = new Set([...knownA2s].map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
       const W = 960, H = 480;
       let paths = '';
       for (const f of this.geoData) {
         if (!f.geometry) continue;
-        const hi = nums.has(+f.id);
-        const cls = hi ? 'country highlighted' : 'country';
+        const id = +f.id;
+        const isRec = recNums.has(id), isKnown = knownNums.has(id);
+        const cls = isRec && isKnown ? 'country overlap'
+                  : isRec            ? 'country recommended'
+                  : isKnown          ? 'country known'
+                  :                    'country';
         let d = '';
         const geom = f.geometry;
         const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
         for (const poly of polys) for (const ring of poly) d += this._geoRing(ring, W, H);
-        if (d) paths += '<path class="' + cls + '" d="' + d + '"/>';
+        if (d) paths += '<path class="' + cls + '" data-cid="' + id + '" d="' + d + '"/>';
       }
-      // Ocean background + border mesh
       return '<svg class="lang-map-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
         + '<rect width="' + W + '" height="' + H + '" class="ocean"/>'
         + paths + '</svg>';
@@ -839,6 +969,76 @@ function app() {
       if (n >= 1)    return n.toFixed(n < 10 ? 1 : 0).replace(/\.0$/, '') + 'M';
       return Math.round(n * 1000) + 'K';
     },
+    // bounding-box pixel area of a GeoJSON feature (equirectangular projection)
+    _bboxArea(f, W, H) {
+      let minLon = 180, maxLon = -180, minLat = 90, maxLat = -90;
+      const geom = f.geometry;
+      const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+      for (const poly of polys) {
+        if (!poly[0]) continue;
+        for (const [lon, lat] of poly[0]) {
+          if (lon < minLon) minLon = lon; if (lon > maxLon) maxLon = lon;
+          if (lat < minLat) minLat = lat; if (lat > maxLat) maxLat = lat;
+        }
+      }
+      return ((maxLon - minLon) / 360 * W) * ((maxLat - minLat) / 180 * H);
+    },
+
+    // Returns array of small/invisible highlighted countries for callout list
+    smallCountries(code) {
+      if (!this.geoReady || !this.geoData) return [];
+      const recSd = SPEAKER_DATA[code];
+      if (!recSd || !recSd.official.length) return [];
+      const recA2s = new Set(recSd.official);
+      const W = 960, H = 480;
+      const numToA2 = getNumToA2();
+      const seenA2 = new Set();
+      const result = [];
+      // Check features that exist in topojson
+      for (const f of this.geoData) {
+        if (!f.geometry) continue;
+        const a2 = numToA2[+f.id];
+        if (!a2 || !recA2s.has(a2)) continue;
+        seenA2.add(a2);
+        if (this._bboxArea(f, W, H) < 16) {
+          result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
+        }
+      }
+      // Also catch official countries with NO feature in 110m topojson (too tiny)
+      for (const a2 of recSd.official) {
+        if (!seenA2.has(a2) && ISO_A2_TO_NUM[a2]) {
+          result.push({ a2, flag: flagEmoji(a2), name: countryDisplayName(a2, this.currentLang) });
+        }
+      }
+      return result.sort((a, b) => a.name.localeCompare(b.name));
+    },
+
+    // Tooltip on SVG path hover
+    mapHover(event, code) {
+      const el = event.target;
+      if (el.tagName !== 'path' || !el.dataset || !el.dataset.cid) {
+        this.tooltip.visible = false; return;
+      }
+      const a2 = getNumToA2()[+el.dataset.cid];
+      if (!a2) { this.tooltip.visible = false; return; }
+      const recSd = SPEAKER_DATA[code];
+      const isRec = recSd && recSd.official.includes(a2);
+      const knownLang = this.speakers.find(s => SPEAKER_DATA[s] && SPEAKER_DATA[s].official.includes(a2));
+      // Status line: always English — it's a micro-tooltip
+      const parts = [];
+      if (isRec && knownLang)  parts.push(this.langName(code) + ' · Official  /  ' + this.langName(knownLang) + ' · You speak');
+      else if (isRec)          parts.push(this.langName(code) + ' · Official language');
+      else if (knownLang)      parts.push(this.langName(knownLang) + ' · You speak');
+      this.tooltip = {
+        visible: true,
+        x: event.clientX,
+        y: event.clientY,
+        flag: flagEmoji(a2),
+        country: countryDisplayName(a2, this.currentLang),
+        status: parts[0] || '',
+      };
+    },
+
     // ── end detail panel ─────────────────────────────────────────
 
     get weightDims() {
@@ -1036,9 +1236,9 @@ function app() {
     // ====== EXPLANATION GENERATOR ======
 
     explain(rec) {
-      const targetName = DATA.languages[rec.target].name;
+      const targetName = this.langName(rec.target);
       const hpd = rec.helpers_per_dim;
-      const helperName = h => h ? DATA.languages[h].name : '—';
+      const helperName = h => h ? this.langName(h) : '—';
       const s = rec.sub_scores;
       const parts = [];
 
@@ -1046,7 +1246,7 @@ function app() {
       if (s.genealogical === 1.0) parts.push(this.t('expSameSubbranch', {target: targetName, helper: genH}));
       else if (s.genealogical >= 0.7) parts.push(this.t('expSameBranch', {target: targetName, helper: genH}));
       else if (s.genealogical >= 0.4) {
-        const fam = DATA.languages[rec.target].family;
+        const fam = this.familyName(rec.target);
         parts.push(this.t('expSameFamily', {target: targetName, helper: genH, family: fam}));
       } else parts.push(this.t('expUnrelated', {target: targetName}));
 
