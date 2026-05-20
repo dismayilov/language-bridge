@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script defer src="https://cloud.umami.is/script.js" data-website-id="5a347a64-5145-4425-b6bf-4490c54be41a"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>MyNextLanguage</title>
 <meta name="description" content="Tell us what you speak. We'll show which languages will feel easiest to learn next, broken down by lexicon, grammar, phonology, and writing system.">
@@ -1967,6 +1968,15 @@ const CEFR_WEIGHTS = { A1: 0.10, A2: 0.30, B1: 0.50, B2: 0.70, C1: 0.85, C2: 1.0
 
 const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
 
+// ── Analytics: safe wrapper so ad-blockers never crash the app ─────────
+function umamiTrack(eventName, props) {
+  try {
+    if (typeof umami !== 'undefined' && typeof umami.track === 'function') {
+      umami.track(eventName, props || {});
+    }
+  } catch (_) {}
+}
+
 function app() {
   return {
     DATA,
@@ -2082,6 +2092,11 @@ function app() {
       if (saved === 'dark') { document.documentElement.classList.add('dark'); this.isDark = true; }
       else if (saved === 'light') { document.documentElement.classList.remove('dark'); this.isDark = false; }
       document.documentElement.lang = this.currentLang;
+      // BMC widget click tracking — fires once the widget iframe has mounted
+      document.addEventListener('click', function bmcClickHandler(e) {
+        const el = e.target.closest('#bmc-wbtn, [id^="bmc-"], .bmc-btn, a[href*="buymeacoffee.com"]');
+        if (el) umamiTrack('click_support_dev', { source: 'buy_me_a_coffee' });
+      });
     },
 
     toggleSpeaker(code) {
@@ -2093,6 +2108,10 @@ function app() {
       } else {
         this.speakers = [...this.speakers, code];
         this.proficiency = { ...this.proficiency, [code]: 'C2' };
+        umamiTrack('select_known_language', {
+          language_code: code,
+          language_name: this.langName(code),
+        });
       }
     },
 
@@ -2175,8 +2194,16 @@ function app() {
 
     // ── Detail panel ─────────────────────────────────────────────
     toggleCard(code) {
-      this.selectedCard = (this.selectedCard === code) ? null : code;
+      const opening = (this.selectedCard !== code);
+      this.selectedCard = opening ? code : null;
       if (this.selectedCard && !this.geoReady && !this.mapLoading) this.loadGeoData();
+      if (opening) {
+        umamiTrack('view_target_details', {
+          language_code: code,
+          language_name: this.langName(code),
+          score: +(this.recommendations.find(r => r.target === code)?.total || 0).toFixed(3),
+        });
+      }
     },
 
     async loadGeoData() {
