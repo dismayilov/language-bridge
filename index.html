@@ -176,6 +176,91 @@
   }
   .italki-cta-icon { flex-shrink: 0; width: 1.15rem; height: 1.15rem; }
   .italki-cta-ext  { flex-shrink: 0; opacity: 0.72; width: 0.9rem; height: 0.9rem; }
+
+  /* ── Phrase-bank fallback (Tier 2) ── */
+  .phrases-rom {
+    display: block; font-size: 0.64rem; font-style: italic;
+    color: #a8a29e; margin-top: 3px; line-height: 1.4;
+  }
+  .dark .phrases-rom { color: #78716c; }
+  .phrases-tier-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.6rem; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    padding: 2px 6px; border-radius: 4px;
+    background: #f5f0ff; color: #7c3aed; border: 1px solid #ddd6fe;
+  }
+  .dark .phrases-tier-badge { background: #1e1b4b; color: #a78bfa; border-color: #312e81; }
+
+  /* ── Newsletter signup ── */
+  .newsletter-wrap {
+    margin-top: 3rem;
+    padding: 2rem 2rem 1.75rem;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 60%, #eff6ff 100%);
+    border: 1.5px solid #d1fae5;
+    position: relative;
+    overflow: hidden;
+  }
+  .dark .newsletter-wrap {
+    background: linear-gradient(135deg, #052e16 0%, #0c1a14 60%, #0f172a 100%);
+    border-color: #14532d;
+  }
+  .newsletter-wrap::before {
+    content: '';
+    position: absolute; top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #6ee7b744 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .newsletter-heading {
+    font-size: 1.15rem; font-weight: 800;
+    color: #064e3b; margin-bottom: 0.35rem;
+  }
+  .dark .newsletter-heading { color: #6ee7b7; }
+  .newsletter-sub {
+    font-size: 0.82rem; color: #065f46; line-height: 1.55;
+    margin-bottom: 1.1rem; max-width: 42rem;
+  }
+  .dark .newsletter-sub { color: #a7f3d0; }
+  .newsletter-form {
+    display: flex; gap: 8px; flex-wrap: wrap; align-items: stretch;
+  }
+  .newsletter-input {
+    flex: 1 1 220px;
+    padding: 0.6rem 0.875rem;
+    border-radius: 8px;
+    border: 1.5px solid #6ee7b7;
+    background: #ffffff;
+    color: #1c1917;
+    font-size: 0.875rem;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    min-width: 0;
+  }
+  .dark .newsletter-input {
+    background: #0c1a14; color: #e7e5e4; border-color: #14532d;
+  }
+  .newsletter-input:focus { border-color: #059669; box-shadow: 0 0 0 3px #05966920; }
+  .newsletter-btn {
+    padding: 0.6rem 1.25rem;
+    border-radius: 8px; border: none; cursor: pointer;
+    font-size: 0.875rem; font-weight: 700;
+    color: #ffffff;
+    background: #059669;
+    transition: background 0.15s, transform 0.1s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+  .newsletter-btn:hover:not(:disabled) { background: #047857; transform: translateY(-1px); }
+  .newsletter-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .newsletter-msg {
+    margin-top: 0.65rem; font-size: 0.8rem; font-weight: 600;
+  }
+  .newsletter-msg.success { color: #059669; }
+  .newsletter-msg.error   { color: #dc2626; }
+  .dark .newsletter-msg.success { color: #34d399; }
+  .dark .newsletter-msg.error   { color: #f87171; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -476,29 +561,83 @@
                 </div>
               </div>
 
-              <!-- Linguistic Bridge in Action -->
+              <!-- Linguistic Bridge / Sample Phrases (Tier 1 = custom, Tier 2 = phrase-bank) -->
               <template x-if="parallelSentencesFor(rec.target)">
-                <div x-data="{ ps: parallelSentencesFor(rec.target) }" class="mb-4 p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700">
-                  <div class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-1" x-text="t('bridgeTitle')"></div>
-                  <p class="text-xs text-stone-500 dark:text-stone-400 mb-3 leading-relaxed"
-                     x-text="t('bridgeSubtitle').replace('{bridge}', langName(ps.bridge)).replace('{level}', proficiency[ps.bridge] || 'C2').replace('{target}', langName(rec.target))"></p>
+                <div x-data="{ ps: parallelSentencesFor(rec.target) }"
+                     class="mb-4 p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700">
+
+                  <!-- Header row: title + tier badge -->
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500"
+                         x-text="ps.tier === 1 ? t('bridgeTitle') : t('phrasesTitle')"></div>
+                    <template x-if="ps.tier === 2">
+                      <span class="phrases-tier-badge">sample phrases</span>
+                    </template>
+                  </div>
+
+                  <!-- Subtitle -->
+                  <p class="text-xs text-stone-500 dark:text-stone-400 mb-3 leading-relaxed">
+                    <template x-if="ps.tier === 1">
+                      <span x-text="t('bridgeSubtitle').replace('{bridge}', langName(ps.bridge)).replace('{level}', proficiency[ps.bridge] || 'C2').replace('{target}', langName(rec.target))"></span>
+                    </template>
+                    <template x-if="ps.tier === 2">
+                      <span x-text="t('phrasesSubtitle').replace('{bridge}', langName(ps.bridge)).replace('{target}', langName(rec.target))"></span>
+                    </template>
+                  </p>
+
+                  <!-- Sentence rows -->
                   <div class="space-y-3">
                     <template x-for="(sent, si) in ps.sentences" :key="si">
                       <div class="grid grid-cols-2 gap-2">
+
+                        <!-- Helper language column -->
                         <div class="bg-blue-50 dark:bg-blue-900/20 rounded-lg px-3 py-2">
-                          <div class="text-xs font-semibold text-blue-500 dark:text-blue-400 mb-1" x-text="langName(ps.bridge)"></div>
-                          <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
-                                x-html="markCognates(ps.reversed ? sent.t : sent.b, (ps.reversed ? sent.c.map(p=>p[1]) : sent.c.map(p=>p[0])))"></span>
+                          <div class="text-xs font-semibold text-blue-500 dark:text-blue-400 mb-1"
+                               x-text="langName(ps.bridge)"></div>
+                          <!-- Tier 1: cognate highlighting -->
+                          <template x-if="ps.tier === 1">
+                            <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
+                                  x-html="markCognates(ps.reversed ? sent.t : sent.b, (ps.reversed ? sent.c.map(p=>p[1]) : sent.c.map(p=>p[0])))"></span>
+                          </template>
+                          <!-- Tier 2: plain text + optional romanization -->
+                          <template x-if="ps.tier === 2">
+                            <span>
+                              <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug" x-text="sent.b"></span>
+                              <span class="phrases-rom" x-show="sent.rb" x-text="sent.rb"></span>
+                            </span>
+                          </template>
                         </div>
+
+                        <!-- Target language column -->
                         <div class="bg-emerald-50 dark:bg-emerald-900/20 rounded-lg px-3 py-2">
-                          <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1" x-text="langName(rec.target)"></div>
-                          <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
-                                x-html="markCognates(ps.reversed ? sent.b : sent.t, (ps.reversed ? sent.c.map(p=>p[0]) : sent.c.map(p=>p[1])))"></span>
+                          <div class="text-xs font-semibold text-emerald-600 dark:text-emerald-400 mb-1"
+                               x-text="langName(rec.target)"></div>
+                          <!-- Tier 1: cognate highlighting -->
+                          <template x-if="ps.tier === 1">
+                            <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug"
+                                  x-html="markCognates(ps.reversed ? sent.b : sent.t, (ps.reversed ? sent.c.map(p=>p[0]) : sent.c.map(p=>p[1])))"></span>
+                          </template>
+                          <!-- Tier 2: plain text + optional romanization -->
+                          <template x-if="ps.tier === 2">
+                            <span>
+                              <span class="text-sm text-stone-700 dark:text-stone-200 leading-snug" x-text="sent.t"></span>
+                              <span class="phrases-rom" x-show="sent.rt" x-text="sent.rt"></span>
+                            </span>
+                          </template>
                         </div>
+
                       </div>
                     </template>
                   </div>
-                  <p class="text-xs text-stone-400 dark:text-stone-500 mt-2 italic" x-text="t('bridgeLegend')"></p>
+
+                  <!-- Footer note -->
+                  <template x-if="ps.tier === 1">
+                    <p class="text-xs text-stone-400 dark:text-stone-500 mt-2 italic" x-text="t('bridgeLegend')"></p>
+                  </template>
+                  <template x-if="ps.tier === 2">
+                    <p class="text-xs text-stone-400 dark:text-stone-500 mt-2 italic" x-text="t('phrasesNote')"></p>
+                  </template>
+
                 </div>
               </template>
 
@@ -744,6 +883,39 @@
   <div x-show="tooltip.status" class="text-xs text-stone-500 dark:text-stone-400 mt-0.5 leading-snug" x-text="tooltip.status"></div>
 </div>
 
+  <!-- ── Newsletter Signup ── -->
+  <section class="newsletter-wrap">
+    <div class="newsletter-heading">📬 Get language learning insights</div>
+    <p class="newsletter-sub">
+      Occasional emails on language acquisition, tool updates, and new features — no spam, unsubscribe anytime.
+    </p>
+    <form class="newsletter-form" @submit.prevent="emailSubscribe()" novalidate>
+      <input
+        type="email"
+        class="newsletter-input"
+        x-model="emailInput"
+        placeholder="your@email.com"
+        :disabled="emailStatus === 'loading' || emailStatus === 'success'"
+        autocomplete="email"
+        aria-label="Email address"
+      />
+      <button
+        type="submit"
+        class="newsletter-btn"
+        :disabled="emailStatus === 'loading' || emailStatus === 'success'">
+        <span x-text="emailStatus === 'loading' ? 'Subscribing…' : emailStatus === 'success' ? 'Subscribed ✓' : 'Subscribe'"></span>
+      </button>
+    </form>
+    <p
+      class="newsletter-msg"
+      :class="emailStatus === 'success' ? 'success' : 'error'"
+      x-show="emailMsg"
+      x-text="emailMsg"
+      role="status"
+      aria-live="polite">
+    </p>
+  </section>
+
 <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400" x-text="t('footer')"></footer>
 </div>
 
@@ -801,6 +973,9 @@ const TRANSLATIONS = {
     bridgeTitle: "The Linguistic Bridge in Action",
     bridgeSubtitle: "Because you speak {bridge} (at {level}), you can already spot the patterns in {target}",
     bridgeLegend: "Highlighted words share roots or strong similarities across both languages.",
+    phrasesTitle: "Sample Phrases Side by Side",
+    phrasesSubtitle: "How {bridge} and {target} express three everyday sentences",
+    phrasesNote: "These universal sample phrases appear when no custom sentence pairs exist yet for this combination.",
   },
   de: {
     subtitle: "Sag uns, welche Sprachen du sprichst. Wir zeigen dir, welche du am leichtesten lernen könntest — und warum, aufgeschlüsselt nach Wortschatz, Grammatik, Aussprache und Schrift.",
@@ -854,6 +1029,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Die sprachliche Brücke in Aktion",
     bridgeSubtitle: "Da du {bridge} sprichst (Niveau {level}), kannst du die Muster in {target} bereits erkennen",
     bridgeLegend: "Hervorgehobene Wörter haben gemeinsame Wurzeln oder starke Ähnlichkeiten.",
+    phrasesTitle: "Beispielsätze im Vergleich",
+    phrasesSubtitle: "Wie {bridge} und {target} drei Alltagssätze ausdrücken",
+    phrasesNote: "Diese universellen Beispielsätze erscheinen, wenn noch keine maßgeschneiderten Satzpaare für diese Kombination vorhanden sind.",
   },
   fr: {
     subtitle: "Dites-nous quelles langues vous parlez. Nous vous montrerons lesquelles seront les plus faciles à apprendre — et pourquoi, en détaillant le vocabulaire, la grammaire, les sons et le système d’écriture.",
@@ -908,6 +1086,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Le pont linguistique en action",
     bridgeSubtitle: "Comme vous parlez {bridge} (niveau {level}), vous pouvez déjà repérer les structures en {target}",
     bridgeLegend: "Les mots surlignés partagent des racines ou de fortes similitudes entre les deux langues.",
+    phrasesTitle: "Exemples de phrases côte à côte",
+    phrasesSubtitle: "Comment {bridge} et {target} expriment trois phrases du quotidien",
+    phrasesNote: "Ces phrases universelles s'affichent quand aucune paire personnalisée n'existe encore pour cette combinaison.",
   },
   es: {
     subtitle: "Dínos qué idiomas hablas. Te mostraremos cuáles serán más fáciles de aprender — y por qué, desglosado en vocabulario, gramática, pronunciación y sistema de escritura.",
@@ -961,6 +1142,9 @@ const TRANSLATIONS = {
     bridgeTitle: "El puente lingüístico en acción",
     bridgeSubtitle: "Como hablas {bridge} (nivel {level}), ya puedes reconocer los patrones en {target}",
     bridgeLegend: "Las palabras resaltadas comparten raíces o similitudes entre ambas lenguas.",
+    phrasesTitle: "Frases de muestra en paralelo",
+    phrasesSubtitle: "Cómo {bridge} y {target} expresan tres frases cotidianas",
+    phrasesNote: "Estas frases universales aparecen cuando no existen pares de oraciones personalizados para esta combinación.",
   },
   it: {
     subtitle: "Dicci quali lingue parli. Ti mostreremo quali saranno più facili da imparare — e perché, suddivise in vocabolario, grammatica, suoni e sistema di scrittura.",
@@ -1015,6 +1199,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Il ponte linguistico in azione",
     bridgeSubtitle: "Poiché parli {bridge} (livello {level}), puoi già riconoscere i modelli in {target}",
     bridgeLegend: "Le parole evidenziate condividono radici o forti somiglianze tra le due lingue.",
+    phrasesTitle: "Frasi di esempio a confronto",
+    phrasesSubtitle: "Come {bridge} e {target} esprimono tre frasi quotidiane",
+    phrasesNote: "Queste frasi universali appaiono quando non esistono ancora coppie di frasi personalizzate per questa combinazione.",
   },
   pl: {
     subtitle: "Powiedz nam, jakie języki znasz. Pokażemy, które będą najłatwiejsze do nauczenia — i wyjaśnimy dlaczego, analizując słownictwo, gramatykę, wymowę i pismo.",
@@ -1068,6 +1255,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Lingwistyczny most w działaniu",
     bridgeSubtitle: "Ponieważ znasz {bridge} (poziom {level}), możesz już dostrzec wzorce w {target}",
     bridgeLegend: "Podświetlone słowa mają wspólne korzenie lub silne podobieństwa między oboma językami.",
+    phrasesTitle: "Przykładowe zdania obok siebie",
+    phrasesSubtitle: "Jak {bridge} i {target} wyrażają trzy codzienne zdania",
+    phrasesNote: "Te uniwersalne przykłady pojawiają się, gdy nie ma jeszcze niestandardowych par zdań dla tej kombinacji.",
   },
   tr: {
     subtitle: "Hangi dilleri konuştuğunuzu söyleyin. Hangi dillerin öğrenilmesi en kolay olacağını — ve neden, sözcük dağarcığı, dilbilgisi, sesler ve yazı sistemi bazında — gösterelim.",
@@ -1121,6 +1311,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Dilsel Köprü Eylemdeyken",
     bridgeSubtitle: "{bridge} bildiğiniz için ({level} seviyesinde), {target} dilindeki kalıpları zaten fark edebilirsiniz",
     bridgeLegend: "Vurgulanan kelimeler her iki dilde ortak kökler veya güçlü benzerlikler taşır.",
+    phrasesTitle: "Yan Yana Örnek Cümleler",
+    phrasesSubtitle: "{bridge} ve {target} dillerinin üç günlük cümleyi nasıl ifade ettiği",
+    phrasesNote: "Bu evrensel örnek cümleler, bu kombinasyon için henüz özel cümle çifti bulunmadığında görünür.",
   },
   ru: {
     subtitle: "Расскажите нам, какими языками вы владеете. Мы покажем, какие языки будет проще всего выучить — и объясним почему, анализируя словарный запас, грамматику, произношение и систему письма.",
@@ -1175,6 +1368,9 @@ const TRANSLATIONS = {
     bridgeTitle: "Мовний міст у дії",
     bridgeSubtitle: "Оскільки ви знаєте {bridge} (рівень {level}), ви вже можете помітити закономірності в {target}",
     bridgeLegend: "Виділені слова мають спільне коріння або сильну схожість між обома мовами.",
+    phrasesTitle: "Приклади речень поруч",
+    phrasesSubtitle: "Як {bridge} і {target} висловлюють три повсякденних речення",
+    phrasesNote: "Ці універсальні приклади з'являються, коли для цієї пари мов ще немає спеціальних речень.",
   },
 };
 
@@ -1646,6 +1842,169 @@ const LANG_GROUPS = [
   { id: 'other',         label: 'African, Caucasian & Other', codes: ['ka','sw','zu','yo','eu','qu','gn'] },
 ];
 
+const LANG_PHRASES = {
+  // Structure: { p: [greeting, learning-phrase, help-request], r: [romanizations] | null }
+  // r is null for Latin-script languages; an array of 3 romanized strings otherwise.
+
+  // ── Germanic ──────────────────────────────────────────────────────────────
+  en:  { p:["Hello! How are you?","I want to learn this language.","Can you help me, please?"], r:null },
+  de:  { p:["Hallo! Wie geht es dir?","Ich möchte diese Sprache lernen.","Kannst du mir bitte helfen?"], r:null },
+  nl:  { p:["Hallo! Hoe gaat het met je?","Ik wil deze taal leren.","Kun jij me helpen, alsjeblieft?"], r:null },
+  af:  { p:["Hallo! Hoe gaan dit met jou?","Ek wil hierdie taal leer.","Kan jy my asseblief help?"], r:null },
+  sv:  { p:["Hej! Hur mår du?","Jag vill lära mig det här språket.","Kan du hjälpa mig, tack?"], r:null },
+  no:  { p:["Hei! Hvordan har du det?","Jeg vil lære dette språket.","Kan du hjelpe meg, vær så snill?"], r:null },
+  da:  { p:["Hej! Hvordan har du det?","Jeg vil lære dette sprog.","Kan du hjælpe mig, venligst?"], r:null },
+  lb:  { p:["Moien! Wéi geet et dir?","Ech wëll dës Sprooch léieren.","Kanns du mir wannechgelift hëllefen?"], r:null },
+  is:  { p:["Halló! Hvernig hefur þú það?","Ég vil læra þetta tungumál.","Getur þú hjálpað mér, takk?"], r:null },
+  fo:  { p:["Hey! Hvussu hevur tú tað?","Eg vil læra hetta málið.","Kanst tú hjálpa mær, tilvisu?"], r:null },
+  yi:  { p:["שלום! ווי גייט עס?","איך וויל לערנען דעם שפּראַך.","קענסטו מיר העלפן, ביטע?"],
+         r:["Sholem! Vi geyt es?","Ikh vil lernen dem shprakh.","Kenstu mir helfn, bite?"] },
+
+  // ── Romance ───────────────────────────────────────────────────────────────
+  es:  { p:["¡Hola! ¿Cómo estás?","Quiero aprender este idioma.","¿Puedes ayudarme, por favor?"], r:null },
+  pt:  { p:["Olá! Como vai você?","Eu quero aprender esta língua.","Pode me ajudar, por favor?"], r:null },
+  fr:  { p:["Bonjour! Comment allez-vous?","Je veux apprendre cette langue.","Pouvez-vous m'aider, s'il vous plaît?"], r:null },
+  it:  { p:["Ciao! Come stai?","Voglio imparare questa lingua.","Puoi aiutarmi, per favore?"], r:null },
+  ro:  { p:["Bună! Ce mai faci?","Vreau să învăț această limbă.","Poți să mă ajuți, te rog?"], r:null },
+  ca:  { p:["Hola! Com estàs?","Vull aprendre aquesta llengua.","Em pots ajudar, si us plau?"], r:null },
+  gl:  { p:["Ola! Como estás?","Quero aprender esta lingua.","Podes axudarme, por favor?"], r:null },
+  oc:  { p:["Bonjorn! Cossí anatz?","Vòli aprendre aquesta lenga.","Podètz m'ajudar, se vos platz?"], r:null },
+  srd: { p:["Bona dies! Comente stas?","Chèrgio imparare custu limbàgiu.","Mi podides agiudare, pro piaghere?"], r:null },
+  sc:  { p:["Salutamu! Comu stai?","Vogghiu mparari sta lingua.","Mi poi aiutari, ppi favuri?"], r:null },
+  ht:  { p:["Bonjou! Kijan ou ye?","Mwen vle aprann lang sa a.","Èske ou ka ede m, tanpri?"], r:null },
+
+  // ── Slavic ────────────────────────────────────────────────────────────────
+  ru:  { p:["Привет! Как дела?","Я хочу выучить этот язык.","Ты можешь мне помочь, пожалуйста?"],
+         r:["Privet! Kak dela?","Ya khochu vyuchit' etot yazyk.","Ty mozhesh' mne pomoch', pozhaluysta?"] },
+  uk:  { p:["Привіт! Як справи?","Я хочу вивчити цю мову.","Чи можеш ти мені допомогти, будь ласка?"],
+         r:["Pryvit! Yak spravy?","Ya khochu vyvchyty tsyu movu.","Chy mozhesh ty meni dopomohty, bud' laska?"] },
+  be:  { p:["Прывіт! Як справы?","Я хачу вывучыць гэту мову.","Ці можаш ты мне дапамагчы, калі ласка?"],
+         r:["Pryvit! Yak spravy?","Ya khachu vyvuchysts' hetuyu movu.","Tsi mozhash ty mne dapamahtsy, kali laska?"] },
+  pl:  { p:["Cześć! Jak się masz?","Chcę nauczyć się tego języka.","Czy możesz mi pomóc, proszę?"], r:null },
+  cs:  { p:["Ahoj! Jak se máš?","Chci se naučit tento jazyk.","Můžeš mi pomoci, prosím?"], r:null },
+  sk:  { p:["Ahoj! Ako sa máš?","Chcem sa naučiť tento jazyk.","Môžeš mi pomôcť, prosím?"], r:null },
+  bg:  { p:["Здравей! Как си?","Искам да науча този език.","Можеш ли да ми помогнеш, моля?"],
+         r:["Zdravey! Kak si?","Iskam da naucha tozi ezik.","Mozhesh li da mi pomognesh, molya?"] },
+  mk:  { p:["Здраво! Kako си?","Сакам да го научам овој јазик.","Можеш ли да ми помогнеш, те молам?"],
+         r:["Zdravo! Kako si?","Sakam da go naučam ovoj jazik.","Možeš li da mi pomognesh, te molam?"] },
+  hr:  { p:["Bok! Kako si?","Želim naučiti ovaj jezik.","Možeš li mi pomoći, molim?"], r:null },
+  sl:  { p:["Živjo! Kako si?","Rad bi se naučil tega jezika.","Lahko mi pomagaš, prosim?"], r:null },
+  sr:  { p:["Здраво! Kako си?","Желим да научим овај језик.","Можеш ли ми помоћи, молим?"],
+         r:["Zdravo! Kako si?","Želim da naučim ovaj jezik.","Možeš li mi pomoći, molim?"] },
+
+  // ── Other Indo-European ───────────────────────────────────────────────────
+  el:  { p:["Γεια σου! Πώς είσαι;","Θέλω να μάθω αυτή τη γλώσσα.","Μπορείς να με βοηθήσεις, παρακαλώ;"],
+         r:["Yia sou! Pos eisai?","Thelo na matho afti ti glossa.","Boreis na me voithiseis, parakalo?"] },
+  sq:  { p:["Përshëndetje! Si jeni?","Dua të mësoj këtë gjuhë.","Mund të më ndihmoni, ju lutem?"], r:null },
+  hy:  { p:["Բարև! Ինչպե՞ս ես;","Ուզում եմ սովորել այս լեզուն։","Կարո՞ղ ես ինձ օգնել, խնդրեմ;"],
+         r:["Barev! Inchpes es?","Uzum em sovoren ays lezun.","Karogh es indz ognel, khndrem?"] },
+  lv:  { p:["Sveiki! Kā jums klājas?","Es vēlos iemācīties šo valodu.","Vai jūs varat man palīdzēt, lūdzu?"], r:null },
+  lt:  { p:["Labas! Kaip sekasi?","Noriu išmokti šią kalbą.","Ar galite man padėti, prašom?"], r:null },
+  ga:  { p:["Dia dhuit! Conas atá tú?","Ba mhaith liom an teanga seo a fhoghlaim.","An féidir leat cabhrú liom, le do thoil?"], r:null },
+  cy:  { p:["Helo! Sut wyt ti?","Rydw i eisiau dysgu'r iaith hon.","Allwch chi fy helpu, os gwelwch yn dda?"], r:null },
+  hi:  { p:["नमस्ते! आप कैसे हैं?","मैं यह भाषा सीखना चाहता हूँ।","क्या आप मेरी मदद कर सकते हैं, कृपया?"],
+         r:["Namaste! Aap kaise hain?","Main yah bhasha seekhna chahta hun.","Kya aap meri madad kar sakte hain, kripaya?"] },
+  ur:  { p:["السلام علیکم! آپ کیسے ہیں؟","میں یہ زبان سیکھنا چاہتا ہوں۔","کیا آپ میری مدد کر سکتے ہیں، براہ کرم؟"],
+         r:["Assalamu alaikum! Aap kaise hain?","Main yeh zaban seekhna chahta hun.","Kya aap meri madad kar sakte hain, barahkaram?"] },
+  bn:  { p:["নমস্কার! আপনি কেমন আছেন?","আমি এই ভাষা শিখতে চাই।","আপনি কি আমাকে সাহায্য করতে পারবেন, দয়া করে?"],
+         r:["Namaskar! Apni kemon achhen?","Ami ei bhasha shikhte chai.","Apni ki amake shahajjo korte parben, daya kore?"] },
+  pa:  { p:["ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?","ਮੈਂ ਇਹ ਭਾਸ਼ਾ ਸਿੱਖਣਾ ਚਾਹੁੰਦਾ ਹਾਂ।","ਕੀ ਤੁਸੀਂ ਮੇਰੀ ਮਦਦ ਕਰ ਸਕਦੇ ਹੋ, ਕਿਰਪਾ ਕਰਕੇ?"],
+         r:["Sat Sri Akal! Tusi kive ho?","Main ih bhasha sikhna chahunda han.","Ki tusi meri madad kar sakte ho, kirpa karke?"] },
+  mr:  { p:["नमस्कार! तुम्ही कसे आहात?","मला ही भाषा शिकायची आहे।","तुम्ही मला मदद करू शकता का, कृपया?"],
+         r:["Namaskar! Tumhi kase ahat?","Mala hi bhasha shikaichi aahe.","Tumhi mala madad karu shakta ka, kripaya?"] },
+  gu:  { p:["નમસ્તે! તમે કેવા છો?","હું આ ભાષા શીખવા માગું છું.","શું તમે મને મદદ કરી શકો, કૃપા કરીને?"],
+         r:["Namaste! Tame keva chho?","Hun aa bhasha sheekhva magun chhun.","Shu tame mane madad kari shako, krupa karine?"] },
+  ne:  { p:["नमस्ते! तपाईं कस्तो हुनुहुन्छ?","म यो भाषा सिक्न चाहन्छु।","के तपाईं मलाई मद्दत गर्न सक्नुहुन्छ, कृपया?"],
+         r:["Namaste! Tapain kasto hunuhunchha?","Ma yo bhasa sikna chahanchhu.","Ke tapain malai maddat garna saknuhunchha, kripaya?"] },
+  si:  { p:["ආයුබෝවන්! ඔබ කෙසේ ද?","මට මෙම භාෂාව ඉගෙනීමට අවශ්‍යයි.","ඔබට මට උදව් කළ හැකිද, කරුණාකර?"],
+         r:["Ayubowan! Oba kese da?","Mata mema bhasawa igenimata awasyi.","Obata mata udaw kala hekida, karunakara?"] },
+  fa:  { p:["سلام! حال شما چطور است؟","می‌خواهم این زبان را یاد بگیرم.","می‌توانید به من کمک کنید، لطفاً؟"],
+         r:["Salam! Hale shoma chetour ast?","Mikhaaham in zaban ra yad begiram.","Mitavanid be man komak konid, lotfan?"] },
+  ku:  { p:["Silav! Tu çawa yî?","Ez dixwazim vê zimanî fêr bibim.","Tu dikarî alîkariya min bikî, ji kerema xwe?"], r:null },
+  ps:  { p:["سلام! تاسو څنګه یاست؟","زه غواړم دا ژبه زده کړم.","ایا تاسو کولی شئ زما سره مرسته وکړئ، مهرباني؟"],
+         r:["Salam! Taso tsanga yast?","Za ghwaram da zba zda kram.","Aya taso kawaly she zma sara mrasta wakray, mehrbani?"] },
+  tg:  { p:["Салом! Шумо чӣ хел ҳастед?","Ман мехоҳам ин забонро ёд гирам.","Шумо метавонед ба ман кӯмак кунед, лутфан?"],
+         r:["Salom! Shumo chi khel khastad?","Man mekhokham in zaboron yod giram.","Shumo metavoned ba man kumak kuned, lutfan?"] },
+
+  // ── Turkic & Uralic ───────────────────────────────────────────────────────
+  tr:  { p:["Merhaba! Nasılsın?","Bu dili öğrenmek istiyorum.","Bana yardım edebilir misin, lütfen?"], r:null },
+  az:  { p:["Salam! Necəsiniz?","Mən bu dili öyrənmək istəyirəm.","Mənə kömək edə bilərsinizmi, xahiş edirəm?"], r:null },
+  kk:  { p:["Сәлем! Қалайсыз?","Мен бұл тілді үйренгім келеді.","Маған көмектесе аласыз ба, өтінемін?"],
+         r:["Sälem! Qalaısyz?","Men bul tildi üyrenkim keledi.","Mağan kömektese alasyz ba, ötinemin?"] },
+  uz:  { p:["Salom! Qandaysiz?","Men bu tilni o'rganmoqchiman.","Menga yordam bera olasizmi, iltimos?"], r:null },
+  ky:  { p:["Саламатсызбы! Кандайсыз?","Мен бул тилди үйрөнгүм келет.","Мага жардам бере аласызбы, өтүнөм?"],
+         r:["Salamatsyzby! Kandaysyz?","Men bul tildi üyrönküm kelet.","Maga jardam bere alasyzby, ötünöm?"] },
+  tk:  { p:["Salam! Nähilisiniz?","Men bu dili öwrenmek isleýärin.","Maňa kömek edip bilersiňizmi, haýyş?"], r:null },
+  tt:  { p:["Сәлам! Ничек яшисез?","Мин бу телне өйрәнергә телим.","Сез миңа ярдәм итә аласызмы, зинһар?"],
+         r:["Säläm! Nichek yaşisez?","Min bu telne öyrengä telim.","Sez minja yardäm itä alasızmı, zinhar?"] },
+  ug:  { p:["ياخشىمۇسىز! قانداق يۈرۈۋاتىسىز؟","مەن بۇ تىلنى ئۆگەنمەكچى.","سىز ماڭا ياردەم بەرەلەمسىز، خاھىش؟"],
+         r:["Yaxshimusiz! Qandaq yürüwatisiz?","Men bu tilni ögenimekchi.","Siz manga yardem berelamsiz, xahish?"] },
+  fi:  { p:["Hei! Kuinka voit?","Haluan oppia tätä kieltä.","Voitko auttaa minua, kiitos?"], r:null },
+  hu:  { p:["Szia! Hogy vagy?","Szeretném megtanulni ezt a nyelvet.","Meg tudsz segíteni, kérem?"], r:null },
+  et:  { p:["Tere! Kuidas läheb?","Tahan seda keelt õppida.","Kas saad mind aidata, palun?"], r:null },
+  se:  { p:["Bures! Mo don leat?","Mun dáhttán oahppat dán giela.","Sáhtátgo veahkehit mu, gieđasvuođain?"], r:null },
+
+  // ── Semitic & Afro-Asiatic ────────────────────────────────────────────────
+  ar:  { p:["السلام عليكم! كيف حالك؟","أريد أن أتعلم هذه اللغة.","هل يمكنك مساعدتي، من فضلك؟"],
+         r:["As-salamu alaykum! Kayfa halak?","Urid an ata'allam hadhihi al-lugha.","Hal yumkinuka musa'adati, min fadlak?"] },
+  he:  { p:["שלום! מה שלומך?","אני רוצה ללמוד את השפה הזאת.","האם אתה יכול לעזור לי, בבקשה?"],
+         r:["Shalom! Ma shlomkha?","Ani rotze lilmod et hasafa hazot.","Ha'im ata yakhol la'azor li, bevakasha?"] },
+  am:  { p:["ሰላም! እንዴት ነዎት?","ይህን ቋንቋ መማር እፈልጋለሁ።","እባክዎ ልረዱኝ ይችላሉ?"],
+         r:["Selam! Indet newot?","Yihin kwankwa memar ifelgalehu.","Ibakih liridunyi yichilalu?"] },
+  ti:  { p:["ሰላም! ከምይ ኣሎኹም?","ነዚ ቋንቋ ክምሃሮ እደሊ።","ሓጊዝኩምኒ ትኽእሉ ዶ, ብኽብረትኩም?"],
+         r:["Selam! Kemiy alokum?","Nezi kwankwa kimiharo ideli.","Hagizkunmni tikhe'ilu do, bikhibretkum?"] },
+  mt:  { p:["Bongu! Kif int?","Irrid nitgħallem din il-lingwa.","Tista' tgħini, jekk jogħġbok?"], r:null },
+  ha:  { p:["Sannu! Yaya kake?","Ina so in koyi wannan harshe.","Zaka iya taimaka mani, don Allah?"], r:null },
+  so:  { p:["Salaan! Sideed tahay?","Waxaan rabaa in aan barato luqaddan.","Ma awood kartaa inaad i caawiso, fadlan?"], r:null },
+
+  // ── East Asian ────────────────────────────────────────────────────────────
+  zh:  { p:["你好！你好吗？","我想学这门语言。","请问你能帮助我吗？"],
+         r:["Nǐ hǎo! Nǐ hǎo ma?","Wǒ xiǎng xué zhè mén yǔyán.","Qǐngwèn nǐ néng bāngzhù wǒ ma?"] },
+  yue: { p:["你好！你好冇？","我想學呢門語言。","你可唔可以幫我啊，唔該？"],
+         r:["Néih hóu! Néih hóu móu?","Ngóh séung hohk nī mùhn yúhyìhn.","Néih hó m̀h hóyíh bōng ngóh a, m̀hgōi?"] },
+  ja:  { p:["こんにちは！お元気ですか？","この言語を学びたいです。","手伝っていただけますか、お願いします。"],
+         r:["Konnichiwa! O-genki desu ka?","Kono gengo o manabitai desu.","Tetsudatte itadakemasu ka, onegai shimasu."] },
+  ko:  { p:["안녕하세요! 어떻게 지내세요?","저는 이 언어를 배우고 싶습니다.","도와주실 수 있나요, 부탁드립니다?"],
+         r:["Annyeonghaseyo! Eotteoke jinaeseyo?","Jeoneun i eoneo-reul baeugu sipseumnida.","Dowajusil su innayo, butakdeurimnida?"] },
+  mn:  { p:["Сайн байна уу! Та яаж байна вэ?","Би энэ хэлийг сурахыг хүсч байна.","Надад тусалж чадах уу, гуйя?"],
+         r:["Sain baina uu! Ta yaaj baina ve?","Bi ene khelig surakhyg khüsch baina.","Nadad tusalj chadakh uu, guiya?"] },
+  bo:  { p:["བཀྲ་ཤིས་བདེ་ལེགས།","ང་ད་ལྟ་ཤེས་སྐད་འདི་སྦྱོང་བར་འདོད།","ཁྱེད་ངར་རོགས་རམ་བྱས་ཐུབ་བམ། གུས་ཞུ།"],
+         r:["Tashi Delek!","Nga dalta shes khe 'di byong bar dod.","Khyed ngar rogs ram byas thub bam? Guzu."] },
+
+  // ── South & Southeast Asian ───────────────────────────────────────────────
+  ta:  { p:["வணக்கம்! நீங்கள் எப்படி இருக்கிறீர்கள்?","நான் இந்த மொழியை கற்க விரும்புகிறேன்.","நீங்கள் என்னை உதவ முடியுமா, தயவுசெய்து?"],
+         r:["Vanakkam! Ningal eppadi irukkirirkal?","Nan inda moziyai karka virumpukiren.","Ningal ennai udava mudiyuma, tayavuseidu?"] },
+  te:  { p:["నమస్కారం! మీరు ఎలా ఉన్నారు?","నేను ఈ భాషను నేర్చుకోవాలనుకుంటున్నాను.","మీరు నన్ను సహాయం చేయగలరా, దయచేసి?"],
+         r:["Namaskaram! Miru ela unnaru?","Nenu i bhasanu nerchukovalanikuntunnanu.","Miru nannu sahayam cheyaghana, dayachesi?"] },
+  kn:  { p:["ನಮಸ್ಕಾರ! ನೀವು ಹೇಗಿದ್ದೀರಿ?","ನಾನು ಈ ಭಾಷೆಯನ್ನು ಕಲಿಯಲು ಬಯಸುತ್ತೇನೆ.","ನೀವು ನನಗೆ ಸಹಾಯ ಮಾಡಬಹುದೇ, ದಯವಿಟ್ಟು?"],
+         r:["Namaskara! Nivu hegidhiri?","Nanu i bhasheyanu kaliyalu bayasuttene.","Nivu nanage sahaya madabahude, dayavittu?"] },
+  ml:  { p:["നമസ്കാരം! സുഖമാണോ?","ഞാൻ ഈ ഭാഷ പഠിക്കാൻ ആഗ്രഹിക്കുന്നു.","നിങ്ങൾക്ക് എന്നെ സഹായിക്കാൻ കഴിയുമോ, ദയവായി?"],
+         r:["Namaskaram! Sukhamano?","Njan i bhasha pathikkan agrahikkunnu.","Ningalku enne sahayikkam kazhiyumo, dayavay?"] },
+  my:  { p:["မင်္ဂလာပါ! ကျန်းမာပါသလား?","ကျွန်တော် ဒီဘာသာစကားကို သင်ယူလိုပါတယ်။","ကူညီနိုင်မလား, ကျေးဇူးပြုပါ?"],
+         r:["Mingalarbar! Kyanmar pa thalar?","Kyuntaw di badha zakha ko thinyulopatay.","Kunyi nain malar, kyezu pyu pa?"] },
+  vi:  { p:["Xin chào! Bạn có khỏe không?","Tôi muốn học ngôn ngữ này.","Bạn có thể giúp tôi được không, làm ơn?"], r:null },
+  km:  { p:["ជំរាបសួរ! អ្នកសុខសប្បាយទេ?","ខ្ញុំចង់រៀនភាសានេះ។","អ្នកអាចជួយខ្ញុំបានទេ, សូម?"],
+         r:["Chum reap sour! Anak sokh sabay te?","Khnhom chong rien phiasa nih.","Anak ach chuoy khnhom ban te, som?"] },
+  th:  { p:["สวัสดี! สบายดีไหม?","ฉันอยากเรียนภาษานี้","คุณช่วยฉันได้ไหม กรุณา?"],
+         r:["Sawatdi! Sa-bai-di mai?","Chan yak rian phasa ni.","Khun chuay chan dai mai, garuna?"] },
+  lo:  { p:["ສະບາຍດີ! ເຈົ້າສະບາຍດີບໍ?","ຂ້ອຍຢາກຮຽນພາສານີ້.","ເຈົ້າຊ່ວຍຂ້ອຍໄດ້ບໍ, ກະລຸນາ?"],
+         r:["Sabaidee! Jao sabaidee bo?","Khoi yak hian phasa ni.","Jao suay khoi dai bo, kaluna?"] },
+  id:  { p:["Halo! Apa kabar?","Saya ingin belajar bahasa ini.","Bisakah Anda membantu saya, tolong?"], r:null },
+  ms:  { p:["Helo! Apa khabar?","Saya ingin belajar bahasa ini.","Bolehkah anda membantu saya, tolong?"], r:null },
+  tl:  { p:["Kumusta! Kamusta ka?","Gusto kong matuto ng wikang ito.","Maaari mo ba akong tulungan, pakisuyo?"], r:null },
+  jv:  { p:["Sugeng rawuh! Panjenengan sehat?","Kula kepengin sinau basa iki.","Panjenengan saged mbantu kula, mangga?"], r:null },
+
+  // ── African, Caucasian & Other ────────────────────────────────────────────
+  ka:  { p:["გამარჯობა! როგორ ხარ?","მე მინდა ვისწავლო ეს ენა.","შეგიძლია დამეხმარო, გთხოვ?"],
+         r:["Gamarjoba! Rogor khar?","Me minda vists'avlo es ena.","Shegidzlia damekhmaro, gtkhov?"] },
+  sw:  { p:["Habari! Habari yako?","Ninataka kujifunza lugha hii.","Je, unaweza kunisaidia, tafadhali?"], r:null },
+  zu:  { p:["Sawubona! Unjani?","Ngifuna ukufunda lulimi lolu.","Ungangisiza, ngiyacela?"], r:null },
+  yo:  { p:["Ẹ káàbọ̀! Báwo ni?","Mo fẹ́ kọ èdè yìí.","Ṣé o lè ràn mí lọ́wọ́, jọ̀ọ́?"], r:null },
+  eu:  { p:["Kaixo! Nola zaude?","Hizkuntza hau ikasi nahi dut.","Lagun diezadakezu, mesedez?"], r:null },
+  qu:  { p:["Napaykullayki! Imaynallan kashanki?","Kay simita yachakuyta munani.","Yanapawankichu, ama hina kaspa?"], r:null },
+  gn:  { p:["Mba'éichapa! Mba'éichaitepiko reiko?","Che rohayhu ko ñe'ẽ oñembo'e haguã.","Eikotevẽ peẽ che pytyvõme, mba'eichagua?"], r:null },
+};
+
 const PARALLEL_SENTENCES = {
   'en|de': [
     { b: "My brother and sister live in the old house near the water.", t: "Mein Bruder und meine Schwester leben in dem alten Haus nahe dem Wasser.", c: [["brother","Bruder"],["sister","Schwester"],["old","alten"],["house","Haus"],["water","Wasser"]] },
@@ -2056,6 +2415,9 @@ function app() {
     reverseSearch: '',
     sharing: false,
     sharingCard: null,
+    emailInput: '',
+    emailStatus: 'idle',   // 'idle' | 'loading' | 'success' | 'error'
+    emailMsg: '',
     tooltip: { visible: false, x: 0, y: 0, flag: '', country: '', status: '' },
     isDark: document.documentElement.classList.contains('dark'),
     currentLang: (function() {
@@ -2232,18 +2594,40 @@ function app() {
     },
     parallelSentencesFor(code) {
       if (!this.speakers.length) return null;
-      // Rank all known languages by raw similarity to target, try each until a pair is found
+      // Rank all known languages by composite similarity to target
       const ranked = [...this.speakers].map(spk => ({
         spk,
         score: (this.lexicalSimilarity(spk, code) + this.genealogical(spk, code) +
           this.grammatical(spk, code) + this.phonological(spk, code) + this.writingSystem(spk, code)) / 5
       })).sort((a, b) => b.score - a.score);
+
+      // ── Tier 1: custom curated parallel sentences ──────────────────────────
       for (const { spk } of ranked) {
         const key1 = spk + '|' + code;
         const key2 = code + '|' + spk;
-        if (PARALLEL_SENTENCES[key1]) return { sentences: PARALLEL_SENTENCES[key1], bridge: spk, reversed: false };
-        if (PARALLEL_SENTENCES[key2]) return { sentences: PARALLEL_SENTENCES[key2], bridge: spk, reversed: true };
+        if (PARALLEL_SENTENCES[key1]) return { sentences: PARALLEL_SENTENCES[key1], bridge: spk, reversed: false, tier: 1 };
+        if (PARALLEL_SENTENCES[key2]) return { sentences: PARALLEL_SENTENCES[key2], bridge: spk, reversed: true,  tier: 1 };
       }
+
+      // ── Tier 2: universal phrase-bank fallback (100% coverage) ────────────
+      const bestSpk = ranked[0]?.spk;
+      if (bestSpk && LANG_PHRASES[bestSpk] && LANG_PHRASES[code]) {
+        const helperPhrases = LANG_PHRASES[bestSpk];
+        const targetPhrases = LANG_PHRASES[code];
+        return {
+          sentences: helperPhrases.p.map((ph, i) => ({
+            b:  ph,
+            rb: helperPhrases.r ? helperPhrases.r[i] : null,
+            t:  (targetPhrases.p[i] || ''),
+            rt: targetPhrases.r  ? targetPhrases.r[i]  : null,
+            c:  []
+          })),
+          bridge: bestSpk,
+          reversed: false,
+          tier: 2
+        };
+      }
+
       return null;
     },
     markCognates(text, words) {
@@ -2907,14 +3291,14 @@ function app() {
 
       // Footer
       ctx.fillStyle = '#334155'; ctx.font = '11px Inter,system-ui,sans-serif';
-      ctx.textAlign = 'center'; ctx.fillText('mynextlanguage.github.io', W / 2, H - 18); ctx.textAlign = 'left';
+      ctx.textAlign = 'center'; ctx.fillText('mynextlanguage.org', W / 2, H - 18); ctx.textAlign = 'left';
 
       // Export
       canvas.toBlob(async blob => {
         this.sharing = false;
         const file = new File([blob], 'my-top5-languages.png', { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: 'My top 5 languages to learn next!' }); } catch (_) {}
+          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: 'My top 5 languages to learn next! 🌍 Find yours at mynextlanguage.org', url: 'https://mynextlanguage.org/' }); } catch (_) {}
         } else {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob); a.download = 'my-top5-languages.png'; a.click();
@@ -3006,7 +3390,7 @@ function app() {
 
       // URL
       ctx.fillStyle = '#334155'; ctx.font = '11px Inter,system-ui,sans-serif';
-      ctx.fillText('mynextlanguage.github.io', 32, H - 18);
+      ctx.fillText('mynextlanguage.org', 32, H - 18);
 
       // World map (right panel)
       const mapX = LW + 8, mapY = 12, mapW = W - mapX - 12, mapH = H - 50;
@@ -3032,7 +3416,7 @@ function app() {
         const name = this.langName(code).toLowerCase().replace(/\s+/g, '-');
         const file = new File([blob], `mynextlanguage-${name}.png`, { type: 'image/png' });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: `I\'m learning ${this.langName(code)} next!` }); } catch (_) {}
+          try { await navigator.share({ files: [file], title: 'MyNextLanguage', text: `I'm learning ${this.langName(code)} next! 🌍 Find yours at mynextlanguage.org`, url: 'https://mynextlanguage.org/' }); } catch (_) {}
         } else {
           const a = document.createElement('a');
           a.href = URL.createObjectURL(blob); a.download = `mynextlanguage-${name}.png`; a.click();
@@ -3040,6 +3424,38 @@ function app() {
       }, 'image/png');
     },
 
+
+    // ── Newsletter Signup ─────────────────────────────────────────────────────
+    async emailSubscribe() {
+      const email = (this.emailInput || '').trim();
+      if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+        this.emailStatus = 'error';
+        this.emailMsg = 'Please enter a valid email address.';
+        return;
+      }
+      this.emailStatus = 'loading';
+      this.emailMsg = '';
+      umamiTrack('subscribe_newsletter', { email_domain: email.split('@')[1] || '' });
+      try {
+        const body = new URLSearchParams({ email });
+        const res = await fetch(
+          'https://buttondown.com/api/emails/embed-subscribe/mynextlanguage',
+          { method: 'POST', body, headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+        );
+        if (res.ok || res.status === 201) {
+          this.emailStatus = 'success';
+          this.emailMsg = '🎉 You\'re in! Check your inbox to confirm.';
+          this.emailInput = '';
+        } else {
+          const data = await res.json().catch(() => ({}));
+          this.emailStatus = 'error';
+          this.emailMsg = data?.email?.[0] || 'Something went wrong. Please try again.';
+        }
+      } catch (e) {
+        this.emailStatus = 'error';
+        this.emailMsg = 'Network error — please try again.';
+      }
+    },
 
     // ====== EXPLANATION GENERATOR ======
 
@@ -3139,4 +3555,4 @@ function app() {
 </script>
 </body>
 </html>
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
