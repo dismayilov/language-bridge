@@ -26,6 +26,17 @@
   :root { --radar-grid: #e7e5e4; --radar-label: #78716c; --radar-fill: #0F6E56; }
   .dark { --radar-grid: #44403c; --radar-label: #a8a29e; --radar-fill: #34d399; }
   .dark input[type=range] { accent-color: #34d399; }
+  /* CEFR dropdown: native options must not inherit white chip text */
+  .chip.selected select option { color: #1c1917; background-color: #ffffff; }
+  .dark .chip.selected select option { color: #f5f5f4; background-color: #292524; }
+  /* World map */
+  .lang-map-svg { width: 100%; height: auto; display: block; }
+  .lang-map-svg .country { fill: #e7e5e4; stroke: #ffffff; stroke-width: 0.3; }
+  .dark .lang-map-svg .country { fill: #44403c; stroke: #1c1917; stroke-width: 0.3; }
+  .lang-map-svg .country.highlighted { fill: #0F6E56; }
+  .dark .lang-map-svg .country.highlighted { fill: #34d399; }
+  .lang-map-svg .ocean { fill: #dbeafe; }
+  .dark .lang-map-svg .ocean { fill: #1e3a5f; }
 </style>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
@@ -160,35 +171,96 @@
     </h2>
 
     <template x-for="(rec, idx) in recommendations" :key="rec.target">
-      <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-4 md:p-5">
-        <div class="flex flex-col md:flex-row md:items-start md:gap-5">
+      <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden transition-shadow"
+           :class="selectedCard === rec.target ? 'ring-2 ring-emerald-500 dark:ring-emerald-400' : 'hover:shadow-md'">
 
-          <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
-            <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
-            <div>
-              <div class="font-medium text-stone-900 dark:text-stone-100" x-text="DATA.languages[rec.target].name"></div>
-              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' \xb7 ' + DATA.languages[rec.target].family"></div>
+        <!-- Clickable summary row -->
+        <div class="p-4 md:p-5 cursor-pointer" @click="toggleCard(rec.target)">
+          <div class="flex flex-col md:flex-row md:items-start md:gap-5">
+
+            <div class="flex items-center gap-3 md:w-56 mb-3 md:mb-0">
+              <div class="flex items-center justify-center w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 text-sm font-medium" x-text="idx+1"></div>
+              <div>
+                <div class="font-medium text-stone-900 dark:text-stone-100" x-text="DATA.languages[rec.target].name"></div>
+                <div class="text-xs text-stone-500 dark:text-stone-400" x-text="DATA.languages[rec.target].branch + ' · ' + DATA.languages[rec.target].family"></div>
+              </div>
+              <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
             </div>
-            <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-          </div>
 
-          <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
+            <div class="hidden md:block w-32 h-32 flex-shrink-0" x-html="radarSvg(rec)"></div>
 
-          <div class="flex-1">
-            <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
-            <div class="flex flex-wrap gap-2 text-xs">
-              <template x-for="dim in subscoreDims" :key="dim.key">
-                <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
-                  <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
-                  <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
-                </div>
-              </template>
+            <div class="flex-1">
+              <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
+              <div class="flex flex-wrap gap-2 text-xs">
+                <template x-for="dim in subscoreDims" :key="dim.key">
+                  <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+                    <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
+                    <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
+                  </div>
+                </template>
+              </div>
+            </div>
+
+            <div class="hidden md:flex flex-col items-end ml-3 flex-shrink-0">
+              <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
+              <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
+            </div>
+
+            <!-- Chevron -->
+            <div class="hidden md:flex items-center ml-2 flex-shrink-0 text-stone-400 dark:text-stone-500 self-center">
+              <svg class="w-5 h-5 transition-transform duration-200" :class="selectedCard === rec.target ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
             </div>
           </div>
+        </div>
 
-          <div class="hidden md:flex flex-col items-end ml-3">
-            <div class="text-3xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
-            <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
+        <!-- Detail panel -->
+        <div x-show="selectedCard === rec.target"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0"
+             x-transition:enter-end="opacity-100"
+             class="border-t border-stone-200 dark:border-stone-700 px-4 md:px-5 pb-5 pt-4">
+
+          <!-- Speaker stats -->
+          <template x-if="SPEAKER_DATA[rec.target]">
+            <div class="flex flex-wrap gap-6 mb-4">
+              <div>
+                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('nativeSpeakers')"></div>
+                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums" x-text="fmtM(SPEAKER_DATA[rec.target].native)"></div>
+              </div>
+              <div>
+                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('totalSpeakers')"></div>
+                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums" x-text="fmtM(SPEAKER_DATA[rec.target].total)"></div>
+              </div>
+              <div>
+                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="t('officialIn')"></div>
+                <div class="text-2xl font-light text-stone-900 dark:text-stone-100 tabular-nums"
+                     x-text="SPEAKER_DATA[rec.target].official.length > 0 ? SPEAKER_DATA[rec.target].official.length + ' ' + t('countries') : t('noOfficialStatus')"></div>
+              </div>
+            </div>
+          </template>
+
+          <!-- World map -->
+          <div class="rounded-lg overflow-hidden bg-stone-100 dark:bg-stone-800">
+            <template x-if="mapLoading">
+              <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500">
+                <svg class="animate-spin w-5 h-5 mr-2 text-emerald-500" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                <span x-text="t('mapLoading')"></span>
+              </div>
+            </template>
+            <template x-if="!mapLoading && geoError">
+              <div class="flex flex-col items-center justify-center py-10 gap-2">
+                <span class="text-sm text-stone-400">Map could not load.</span>
+                <button @click.stop="geoError=false; loadGeoData()" class="text-xs px-3 py-1.5 rounded bg-stone-200 dark:bg-stone-700 hover:bg-stone-300 dark:hover:bg-stone-600">Retry</button>
+              </div>
+            </template>
+            <template x-if="!mapLoading && !geoError && geoReady">
+              <div x-html="buildMapSvg(rec.target)"></div>
+            </template>
+            <template x-if="!mapLoading && !geoError && !geoReady">
+              <div class="flex items-center justify-center py-10 text-sm text-stone-400 dark:text-stone-500" x-text="t('mapLoading')"></div>
+            </template>
           </div>
         </div>
       </div>
@@ -223,6 +295,7 @@ const TRANSLATIONS = {
     langSelector: "Select interface language",
     cefrTitle: "CEFR proficiency level",
     removeLanguage: "Remove",
+    nativeSpeakers: "Native speakers", totalSpeakers: "Total speakers", officialIn: "Official in", countries: "countries", noOfficialStatus: "No official status", mapLoading: "Loading map…",
     expSameSubbranch: "{target} is in the same subbranch as {helper}, so the core grammar will feel native.",
     expSameBranch: "{target} is a close cousin of {helper} within the same branch.",
     expSameFamily: "{target} shares deep {family} roots with {helper} but in a different branch.",
@@ -261,6 +334,7 @@ const TRANSLATIONS = {
     langSelector: "Sprache der Benutzeroberfläche wählen",
     cefrTitle: "CEFR-Sprachniveau",
     removeLanguage: "Entfernen",
+    nativeSpeakers: "Muttersprachler", totalSpeakers: "Sprecher gesamt", officialIn: "Amtssprache in", countries: "Ländern", noOfficialStatus: "Kein offizieller Status", mapLoading: "Karte wird geladen…",
     expSameSubbranch: "{target} gehört zum gleichen Unterzweig wie {helper} — die Kerngrammatik wird sich sofort vertraut anfühlen.",
     expSameBranch: "{target} ist ein naher Verwandter von {helper} im gleichen Zweig.",
     expSameFamily: "{target} teilt tiefe {family}-Wurzeln mit {helper}, gehört aber einem anderen Zweig an.",
@@ -299,6 +373,7 @@ const TRANSLATIONS = {
     langSelector: "Choisir la langue de l’interface",
     cefrTitle: "Niveau CECRL",
     removeLanguage: "Supprimer",
+    nativeSpeakers: "Locuteurs natifs", totalSpeakers: "Locuteurs totaux", officialIn: "Officielle en", countries: "pays", noOfficialStatus: "Pas de statut officiel", mapLoading: "Chargement de la carte…",
     expSameSubbranch: "{target} appartient au même sous-groupe que {helper} — la grammaire de base semblera naturelle.",
     expSameBranch: "{target} est un proche cousin de {helper} dans la même branche.",
     expSameFamily: "{target} partage de profondes racines {family} avec {helper} mais dans une branche différente.",
@@ -337,6 +412,7 @@ const TRANSLATIONS = {
     langSelector: "Seleccionar idioma de la interfaz",
     cefrTitle: "Nivel MCER",
     removeLanguage: "Eliminar",
+    nativeSpeakers: "Hablantes nativos", totalSpeakers: "Hablantes totales", officialIn: "Oficial en", countries: "países", noOfficialStatus: "Sin estado oficial", mapLoading: "Cargando mapa…",
     expSameSubbranch: "{target} está en la misma subrama que {helper} — la gramática central te resultará nativa.",
     expSameBranch: "{target} es un primo cercano de {helper} dentro de la misma rama.",
     expSameFamily: "{target} comparte raíces {family} profundas con {helper} pero en una rama diferente.",
@@ -375,6 +451,7 @@ const TRANSLATIONS = {
     langSelector: "Seleziona la lingua dell’interfaccia",
     cefrTitle: "Livello QCER",
     removeLanguage: "Rimuovi",
+    nativeSpeakers: "Madrelingua", totalSpeakers: "Parlanti totali", officialIn: "Ufficiale in", countries: "paesi", noOfficialStatus: "Nessuno stato ufficiale", mapLoading: "Caricamento mappa…",
     expSameSubbranch: "{target} appartiene allo stesso sottoramo di {helper} — la grammatica di base sembrerà naturale.",
     expSameBranch: "{target} è un cugino stretto di {helper} nello stesso ramo.",
     expSameFamily: "{target} condivide radici {family} profonde con {helper} ma in un ramo diverso.",
@@ -413,6 +490,7 @@ const TRANSLATIONS = {
     langSelector: "Wybierz język interfejsu",
     cefrTitle: "Poziom CEFR",
     removeLanguage: "Usuń",
+    nativeSpeakers: "Rodzimi mówcy", totalSpeakers: "Wszyscy mówiący", officialIn: "Oficjalny w", countries: "krajach", noOfficialStatus: "Brak statusu oficjalnego", mapLoading: "Ładowanie mapy…",
     expSameSubbranch: "{target} należy do tej samej podgałęzi co {helper} — gramatyka będzie od razu znajoma.",
     expSameBranch: "{target} jest bliskim krewnym {helper} w tej samej gałęzi.",
     expSameFamily: "{target} ma wspólne korzenie {family} z {helper}, ale należy do innej gałęzi.",
@@ -451,6 +529,7 @@ const TRANSLATIONS = {
     langSelector: "Arayüz dilini seçin",
     cefrTitle: "CEFR yeterlilik düzeyi",
     removeLanguage: "Kaldır",
+    nativeSpeakers: "Anadıl konuşanlar", totalSpeakers: "Toplam konuşanlar", officialIn: "Resmi dil", countries: "ülke", noOfficialStatus: "Resmi statüsü yok", mapLoading: "Harita yükleniyor…",
     expSameSubbranch: "{target}, {helper} ile aynı alt dalda — temel dilbilgisi hemen tanıdık gelecek.",
     expSameBranch: "{target}, aynı dal içinde {helper}’in yakın akrabasıdır.",
     expSameFamily: "{target}, farklı bir dalda olsa da {helper} ile derin {family} köklerini paylaşır.",
@@ -490,6 +569,7 @@ const TRANSLATIONS = {
     langSelector: "Выбрать язык интерфейса",
     cefrTitle: "Уровень CEFR",
     removeLanguage: "Удалить",
+    nativeSpeakers: "Носители", totalSpeakers: "Всего говорящих", officialIn: "Официальный в", countries: "странах", noOfficialStatus: "Нет официального статуса", mapLoading: "Загрузка карты…",
     expSameSubbranch: "{target} принадлежит той же подветви, что и {helper} — основная грамматика покажется родной.",
     expSameBranch: "{target} — близкий родственник {helper} в той же ветви.",
     expSameFamily: "{target} разделяет глубокие корни {family} с {helper}, но относится к другой ветви.",
@@ -521,6 +601,119 @@ const LANG_NAMES = {
   tr: {"de": "Almanca", "nl": "Flemenkçe", "en": "İngilizce", "af": "Afrikaanca", "yi": "Yidiş", "lb": "Lüksemburgca", "sv": "İsveççe", "no": "Norveççe", "da": "Danimarkaca", "is": "İzlandaca", "fo": "Faroece", "es": "İspanyolca", "pt": "Portekizce", "gl": "Galiçyaca", "fr": "Fransızca", "it": "İtalyanca", "ro": "Rumence", "ca": "Katalanca", "oc": "Oksitanca", "sc": "Sicilyaca", "srd": "Sarduca", "ht": "Haiti Kreolü", "ru": "Rusça", "uk": "Ukraynaca", "be": "Belarusça", "pl": "Lehçe", "cs": "Çekçe", "sk": "Slovakça", "bg": "Bulgarca", "mk": "Makedonyaca", "hr": "Hırvatça/Sırpça", "sl": "Slovence", "el": "Yunanca", "sq": "Arnavutça", "hy": "Ermenice", "lv": "Letonca", "lt": "Litvanca", "ga": "İrlandaca", "cy": "Galce", "fa": "Farsça", "tg": "Tacikçe", "ku": "Kürtçe", "ps": "Peştuca", "hi": "Hintçe", "ur": "Urduca", "bn": "Bengalce", "pa": "Pencapça", "mr": "Marathice", "gu": "Gujaratice", "ne": "Nepalce", "si": "Sinhalaca", "fi": "Fince", "et": "Estonca", "hu": "Macarca", "se": "Kuzey Laponcası", "tr": "Türkçe", "az": "Azerbaycanca", "tk": "Türkmence", "kk": "Kazakça", "ky": "Kırgızca", "tt": "Tatarca", "uz": "Özbekçe", "ug": "Uygurca", "mn": "Moğolca", "ar": "Arapça (Standart)", "he": "İbranice", "mt": "Maltaca", "am": "Amharca", "ti": "Tigrinya", "ha": "Hausaca", "so": "Somalice", "ka": "Gürcüce", "ta": "Tamilce", "te": "Teluguca", "kn": "Kannada", "ml": "Malayalam", "zh": "Mandarin Çincesi", "yue": "Kantonca", "my": "Birmanca", "bo": "Tibetçe", "ja": "Japonca", "ko": "Korece", "vi": "Vietnamca", "km": "Kmerce", "th": "Tayca", "lo": "Laosça", "id": "Endonezce", "ms": "Malayca", "tl": "Tagalogca", "jv": "Cava Dili", "sw": "Swahilice", "zu": "Zuluca", "yo": "Yorubaca", "qu": "Keçuvaca", "gn": "Guaranice", "eu": "Baskça"},
   ru: {"de": "Немецкий", "nl": "Нидерландский", "en": "Английский", "af": "Африкаанс", "yi": "Идиш", "lb": "Люксембургский", "sv": "Шведский", "no": "Норвежский", "da": "Датский", "is": "Исландский", "fo": "Фарерский", "es": "Испанский", "pt": "Португальский", "gl": "Галисийский", "fr": "Французский", "it": "Итальянский", "ro": "Румынский", "ca": "Каталанский", "oc": "Окситанский", "sc": "Сицилийский", "srd": "Сардинский", "ht": "Гаитянский креольский", "ru": "Русский", "uk": "Украинский", "be": "Белорусский", "pl": "Польский", "cs": "Чешский", "sk": "Словацкий", "bg": "Болгарский", "mk": "Македонский", "hr": "Хорватский/Сербский", "sl": "Словенский", "el": "Греческий", "sq": "Албанский", "hy": "Армянский", "lv": "Латышский", "lt": "Литовский", "ga": "Ирландский", "cy": "Валлийский", "fa": "Персидский (фарси)", "tg": "Таджикский", "ku": "Курдский", "ps": "Пушту", "hi": "Хинди", "ur": "Урду", "bn": "Бенгальский", "pa": "Панджабский", "mr": "Маратхи", "gu": "Гуджарати", "ne": "Непальский", "si": "Сингальский", "fi": "Финский", "et": "Эстонский", "hu": "Венгерский", "se": "Северносаамский", "tr": "Турецкий", "az": "Азербайджанский", "tk": "Туркменский", "kk": "Казахский", "ky": "Киргизский", "tt": "Татарский", "uz": "Узбекский", "ug": "Уйгурский", "mn": "Монгольский", "ar": "Арабский (литературный)", "he": "Иврит", "mt": "Мальтийский", "am": "Амхарский", "ti": "Тигринья", "ha": "Хауса", "so": "Сомалийский", "ka": "Грузинский", "ta": "Тамильский", "te": "Телугу", "kn": "Каннада", "ml": "Малаялам", "zh": "Мандаринский китайский", "yue": "Кантонский", "my": "Бирманский", "bo": "Тибетский", "ja": "Японский", "ko": "Корейский", "vi": "Вьетнамский", "km": "Кхмерский", "th": "Тайский", "lo": "Лаосский", "id": "Индонезийский", "ms": "Малайский", "tl": "Тагальский", "jv": "Яванский", "sw": "Суахили", "zu": "Зулу", "yo": "Йоруба", "qu": "Кечуа", "gn": "Гуарани", "eu": "Баскский"},
 };
+const SPEAKER_DATA = {
+  de:  { native: 76,   total: 134,  official: ['DE','AT','CH','LU','LI','BE'] },
+  nl:  { native: 24,   total: 30,   official: ['NL','BE','SR'] },
+  en:  { native: 380,  total: 1500, official: ['US','GB','CA','AU','NZ','IE','ZA','IN','NG','PH','SG','KE','GH','PK','JM','TT','BB','BS','BZ','GY','MW','MT','NA','PG','RW','SB','SC','SL','SS','SZ','TZ','UG','ZM','ZW','FJ','KI','MH','FM','NR','PW','WS','TO','TV','VU','AG','DM','GD','KN','LC','VC','BW','LS','MU','CM','GM'] },
+  fr:  { native: 77,   total: 310,  official: ['FR','BE','CH','CA','LU','MC','SN','CI','CM','MG','CD','ML','BF','NE','TG','BJ','GA','CF','CG','DJ','KM','MU','SC','RW','BI','HT','VU'] },
+  es:  { native: 485,  total: 560,  official: ['MX','CO','ES','AR','PE','VE','CL','EC','GT','CU','BO','DO','HN','PY','SV','NI','CR','PA','UY','GQ','PR'] },
+  pt:  { native: 236,  total: 280,  official: ['BR','PT','AO','MZ','GW','ST','CV','TL'] },
+  it:  { native: 68,   total: 85,   official: ['IT','CH','SM','VA'] },
+  pl:  { native: 44,   total: 55,   official: ['PL'] },
+  ru:  { native: 150,  total: 260,  official: ['RU','BY','KZ','KG'] },
+  uk:  { native: 33,   total: 45,   official: ['UA'] },
+  cs:  { native: 11,   total: 13,   official: ['CZ'] },
+  sk:  { native: 5,    total: 7,    official: ['SK'] },
+  sl:  { native: 2.5,  total: 3,    official: ['SI'] },
+  hr:  { native: 5.5,  total: 7,    official: ['HR','BA'] },
+  bs:  { native: 3,    total: 3.5,  official: ['BA'] },
+  sr:  { native: 9,    total: 12,   official: ['RS','BA','ME'] },
+  mk:  { native: 2,    total: 2.5,  official: ['MK'] },
+  bg:  { native: 8,    total: 9,    official: ['BG'] },
+  ro:  { native: 26,   total: 34,   official: ['RO','MD'] },
+  hu:  { native: 13,   total: 15,   official: ['HU','RS'] },
+  fi:  { native: 5,    total: 6,    official: ['FI'] },
+  et:  { native: 1.1,  total: 1.2,  official: ['EE'] },
+  lv:  { native: 1.5,  total: 2,    official: ['LV'] },
+  lt:  { native: 3,    total: 4,    official: ['LT'] },
+  sv:  { native: 10,   total: 13,   official: ['SE','FI'] },
+  no:  { native: 5,    total: 6,    official: ['NO'] },
+  da:  { native: 6,    total: 7,    official: ['DK'] },
+  is:  { native: 0.37, total: 0.4,  official: ['IS'] },
+  af:  { native: 7,    total: 17,   official: ['ZA','NA'] },
+  cy:  { native: 0.9,  total: 1,    official: ['GB'] },
+  ga:  { native: 0.17, total: 2,    official: ['IE'] },
+  el:  { native: 13,   total: 14,   official: ['GR','CY'] },
+  tr:  { native: 80,   total: 88,   official: ['TR','CY'] },
+  az:  { native: 10,   total: 12,   official: ['AZ'] },
+  kk:  { native: 13,   total: 18,   official: ['KZ'] },
+  uz:  { native: 30,   total: 35,   official: ['UZ'] },
+  ky:  { native: 4.5,  total: 5,    official: ['KG'] },
+  tk:  { native: 7,    total: 8,    official: ['TM'] },
+  mn:  { native: 5,    total: 6,    official: ['MN'] },
+  ka:  { native: 3.7,  total: 4.5,  official: ['GE'] },
+  hy:  { native: 6,    total: 8,    official: ['AM'] },
+  ar:  { native: 310,  total: 420,  official: ['DZ','BH','KM','DJ','EG','IQ','JO','KW','LB','LY','MR','MA','OM','QA','SA','SO','SD','SY','TN','AE','YE','ER','SS','PS'] },
+  he:  { native: 5,    total: 9,    official: ['IL'] },
+  fa:  { native: 70,   total: 110,  official: ['IR','AF','TJ'] },
+  ur:  { native: 70,   total: 170,  official: ['PK'] },
+  hi:  { native: 600,  total: 700,  official: ['IN'] },
+  bn:  { native: 235,  total: 270,  official: ['BD','IN'] },
+  pa:  { native: 148,  total: 160,  official: ['IN'] },
+  gu:  { native: 56,   total: 60,   official: ['IN'] },
+  mr:  { native: 83,   total: 90,   official: ['IN'] },
+  si:  { native: 17,   total: 19,   official: ['LK'] },
+  ne:  { native: 17,   total: 25,   official: ['NP','IN'] },
+  ta:  { native: 78,   total: 90,   official: ['IN','LK','SG'] },
+  te:  { native: 83,   total: 95,   official: ['IN'] },
+  kn:  { native: 44,   total: 50,   official: ['IN'] },
+  ml:  { native: 38,   total: 42,   official: ['IN'] },
+  my:  { native: 33,   total: 43,   official: ['MM'] },
+  th:  { native: 20,   total: 60,   official: ['TH'] },
+  lo:  { native: 7,    total: 30,   official: ['LA'] },
+  km:  { native: 16,   total: 18,   official: ['KH'] },
+  vi:  { native: 85,   total: 95,   official: ['VN'] },
+  id:  { native: 43,   total: 200,  official: ['ID'] },
+  ms:  { native: 20,   total: 80,   official: ['MY','BN','SG'] },
+  tl:  { native: 28,   total: 90,   official: ['PH'] },
+  zh:  { native: 920,  total: 1200, official: ['CN','TW','SG'] },
+  yue: { native: 85,   total: 90,   official: ['HK','MO'] },
+  ja:  { native: 125,  total: 128,  official: ['JP'] },
+  ko:  { native: 77,   total: 82,   official: ['KR','KP'] },
+  sw:  { native: 16,   total: 200,  official: ['TZ','KE','UG','RW','CD'] },
+  am:  { native: 32,   total: 57,   official: ['ET'] },
+  ha:  { native: 50,   total: 70,   official: ['NG','NE','GH'] },
+  yo:  { native: 45,   total: 50,   official: [] },
+  ig:  { native: 27,   total: 30,   official: [] },
+  zu:  { native: 12,   total: 27,   official: ['ZA'] },
+  xh:  { native: 8,    total: 19,   official: ['ZA'] },
+  st:  { native: 6,    total: 8,    official: ['ZA','LS'] },
+  tn:  { native: 5,    total: 8,    official: ['ZA','BW'] },
+  so:  { native: 21,   total: 25,   official: ['SO','ET','DJ','KE'] },
+  om:  { native: 39,   total: 45,   official: ['ET'] },
+  ti:  { native: 9,    total: 10,   official: ['ET','ER'] },
+  sq:  { native: 7,    total: 8,    official: ['AL','MK','XK'] },
+  eu:  { native: 0.7,  total: 1,    official: ['ES'] },
+  ca:  { native: 4,    total: 10,   official: ['AD'] },
+  gl:  { native: 2.4,  total: 4,    official: ['ES'] },
+  be:  { native: 5,    total: 10,   official: ['BY'] },
+  lb:  { native: 0.4,  total: 0.6,  official: ['LU'] },
+  mt:  { native: 0.5,  total: 0.6,  official: ['MT'] },
+};
+
+const ISO_A2_TO_NUM = {
+  AD:20,AE:784,AF:4,AG:28,AL:8,AM:51,AO:24,AR:32,AT:40,AU:36,AZ:31,
+  BA:70,BB:52,BD:50,BE:56,BF:854,BG:100,BH:48,BI:108,BJ:204,BN:96,
+  BO:68,BR:76,BS:44,BT:64,BW:72,BY:112,BZ:84,CA:124,CD:180,CF:140,
+  CG:178,CH:756,CI:384,CL:152,CM:120,CN:156,CO:170,CR:188,CU:192,CV:132,
+  CY:196,CZ:203,DE:276,DJ:262,DK:208,DM:212,DO:214,DZ:12,EC:218,EE:233,
+  EG:818,ER:232,ES:724,ET:231,FI:246,FJ:242,FR:250,GA:266,GB:826,GD:308,
+  GE:268,GH:288,GM:270,GN:324,GQ:226,GR:300,GT:320,GW:624,GY:328,HK:344,
+  HN:340,HR:191,HT:332,HU:348,ID:360,IE:372,IL:376,IN:356,IQ:368,IR:364,
+  IS:352,IT:380,JM:388,JO:400,JP:392,KE:404,KG:417,KH:116,KI:296,KM:174,
+  KN:659,KP:408,KR:410,KW:414,KZ:398,LA:418,LB:422,LC:662,LI:438,LK:144,
+  LR:430,LS:426,LT:440,LU:442,LV:428,LY:434,MA:504,MC:492,MD:498,ME:499,
+  MG:450,MH:584,MK:807,ML:466,MM:104,MN:496,MO:446,MR:478,MT:470,MU:480,
+  MV:462,MW:454,MX:484,MY:458,MZ:508,NA:516,NE:562,NG:566,NI:558,NL:528,
+  NO:578,NP:524,NR:520,NZ:554,OM:512,PA:591,PE:604,PG:598,PH:608,PK:586,
+  PL:616,PS:275,PT:620,PW:585,PY:600,QA:634,RO:642,RS:688,RU:643,RW:646,
+  SA:682,SB:90,SC:690,SD:729,SE:752,SG:702,SI:705,SK:703,SL:694,SM:674,
+  SN:686,SO:706,SR:740,SS:728,ST:678,SV:222,SY:760,SZ:748,TD:148,TG:768,
+  TH:764,TJ:762,TL:626,TM:795,TN:788,TO:776,TR:792,TT:780,TV:798,TW:158,
+  TZ:834,UA:804,UG:800,US:840,UY:858,UZ:860,VA:336,VC:670,VE:862,VN:704,
+  VU:548,WS:882,XK:383,YE:887,ZA:710,ZM:894,ZW:716,
+};
+
 const CEFR_WEIGHTS = { A1: 0.10, A2: 0.30, B1: 0.50, B2: 0.70, C1: 0.85, C2: 1.00 };
 
 const DEFAULT_WEIGHTS = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
@@ -533,6 +726,11 @@ function app() {
     weights: {...DEFAULT_WEIGHTS},
     topN: 15,
     proficiency: {},
+    selectedCard: null,
+    geoData: null,
+    geoReady: false,
+    mapLoading: false,
+    geoError: false,
     isDark: document.documentElement.classList.contains('dark'),
     currentLang: (function() {
       const s = localStorage.getItem('lb-lang');
@@ -568,6 +766,80 @@ function app() {
         localStorage.setItem('lb-theme', 'light');
       }
     },
+
+    // ── Detail panel ─────────────────────────────────────────────
+    toggleCard(code) {
+      this.selectedCard = (this.selectedCard === code) ? null : code;
+      if (this.selectedCard && !this.geoReady && !this.mapLoading) this.loadGeoData();
+    },
+
+    async loadGeoData() {
+      this.mapLoading = true;
+      this.geoError = false;
+      try {
+        // Only topojson-client needed — no d3 dependency
+        if (!window._topoLoaded) {
+          await new Promise((res, rej) => {
+            const s = document.createElement('script');
+            s.src = 'https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js';
+            s.onload = res; s.onerror = rej;
+            document.head.appendChild(s);
+          });
+          window._topoLoaded = true;
+        }
+        const r = await fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json');
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const topo = await r.json();
+        // Pre-convert to GeoJSON features once and cache
+        this.geoData = topojson.feature(topo, topo.objects.countries).features;
+        this.geoReady = true;
+      } catch(e) {
+        console.error('Map load failed:', e);
+        this.geoError = true;
+      }
+      this.mapLoading = false;
+    },
+
+    // Pure-JS equirectangular projection — no d3 needed
+    _geoRing(ring, W, H) {
+      let d = '';
+      for (let i = 0; i < ring.length; i++) {
+        const x = ((ring[i][0] + 180) / 360 * W).toFixed(1);
+        const y = ((90 - ring[i][1]) / 180 * H).toFixed(1);
+        d += (i === 0 ? 'M' : 'L') + x + ',' + y;
+      }
+      return d + 'Z';
+    },
+
+    buildMapSvg(code) {
+      if (!this.geoReady || !this.geoData) return '';
+      const sd = SPEAKER_DATA[code];
+      const nums = new Set((sd ? sd.official : []).map(a2 => ISO_A2_TO_NUM[a2]).filter(Boolean));
+      const W = 960, H = 480;
+      let paths = '';
+      for (const f of this.geoData) {
+        if (!f.geometry) continue;
+        const hi = nums.has(+f.id);
+        const cls = hi ? 'country highlighted' : 'country';
+        let d = '';
+        const geom = f.geometry;
+        const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.type === 'MultiPolygon' ? geom.coordinates : [];
+        for (const poly of polys) for (const ring of poly) d += this._geoRing(ring, W, H);
+        if (d) paths += '<path class="' + cls + '" d="' + d + '"/>';
+      }
+      // Ocean background + border mesh
+      return '<svg class="lang-map-svg" viewBox="0 0 ' + W + ' ' + H + '" xmlns="http://www.w3.org/2000/svg">'
+        + '<rect width="' + W + '" height="' + H + '" class="ocean"/>'
+        + paths + '</svg>';
+    },
+
+    fmtM(n) {
+      if (n == null) return '?';
+      if (n >= 1000) return (n/1000).toFixed(1).replace(/\.0$/, '') + 'B';
+      if (n >= 1)    return n.toFixed(n < 10 ? 1 : 0).replace(/\.0$/, '') + 'M';
+      return Math.round(n * 1000) + 'K';
+    },
+    // ── end detail panel ─────────────────────────────────────────
 
     get weightDims() {
       return [
