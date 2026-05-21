@@ -377,6 +377,24 @@
   .newsletter-msg.error   { color: #dc2626; }
   .dark .newsletter-msg.success { color: #34d399; }
   .dark .newsletter-msg.error   { color: #f87171; }
+
+  /* ── Comparison feature ──────────────────────────────────────────────────── */
+  .compare-btn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 6px;
+    border: 1px solid #d6d3d1; color: #a8a29e; transition: all .15s;
+  }
+  .compare-btn:hover { border-color: #a8a29e; color: #059669; }
+  .compare-btn.is-comparing { background: #ecfdf5; border-color: #059669; color: #065f46; }
+  .dark .compare-btn { border-color: #44403c; color: #57534e; }
+  .dark .compare-btn:hover  { border-color: #57534e; color: #34d399; }
+  .dark .compare-btn.is-comparing { background: #052e16; border-color: #10b981; color: #6ee7b7; }
+  .compare-panel {
+    background: #f8fafc; border: 1px solid #d1fae5; border-radius: 12px; padding: 1rem;
+  }
+  .dark .compare-panel { background: #1c1917; border-color: #14532d; }
+  .compare-dim-win { color: #059669; font-weight: 600; }
+  .dark .compare-dim-win { color: #34d399; }
 </style>
 
 <!-- ── Service Worker registration (PWA / offline support) ──────────────── -->
@@ -718,6 +736,118 @@
           </div>
         </template>
 
+        <!-- ── Compare panel ─────────────────────────────────────────────── -->
+        <template x-if="compareSlots.length > 0">
+          <div class="compare-panel">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-sm font-semibold text-stone-700 dark:text-stone-300 flex items-center gap-1.5">
+                <svg class="w-4 h-4 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
+                </svg>
+                Side-by-side comparison
+              </span>
+              <button @click="compareSlots = []"
+                      class="text-xs text-stone-400 hover:text-stone-600 dark:hover:text-stone-300 transition-colors px-2 py-1 rounded hover:bg-stone-100 dark:hover:bg-stone-800">
+                Clear all
+              </button>
+            </div>
+
+            <!-- One slot filled: prompt for second pick -->
+            <template x-if="compareSlots.length === 1">
+              <div class="flex items-center gap-3 flex-wrap">
+                <div class="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-50 dark:bg-emerald-950 border border-emerald-200 dark:border-emerald-800 text-sm font-medium text-emerald-800 dark:text-emerald-200">
+                  <span x-text="langName(compareSlots[0])"></span>
+                  <button @click.stop="compareSlots = []" class="text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 leading-none">✕</button>
+                </div>
+                <span class="text-stone-300 dark:text-stone-600 font-bold text-sm">vs</span>
+                <div class="px-3 py-2 rounded-lg border border-dashed border-stone-300 dark:border-stone-700 text-sm text-stone-400 dark:text-stone-500 italic">
+                  Click <svg class="w-3.5 h-3.5 inline-block mx-0.5 -mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/></svg> on another language to compare
+                </div>
+              </div>
+            </template>
+
+            <!-- Two slots: full side-by-side comparison -->
+            <template x-if="compareSlots.length === 2">
+              <div class="grid grid-cols-[1fr_28px_1fr] gap-x-3 items-start">
+
+                <!-- ── Left column ── -->
+                <div class="min-w-0">
+                  <div class="flex items-start justify-between mb-1">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-stone-900 dark:text-stone-100 truncate text-sm" x-text="langName(compareSlots[0])"></div>
+                      <div class="text-xs text-stone-400 dark:text-stone-500 truncate" x-text="branchName(compareSlots[0]) + ' · ' + familyName(compareSlots[0])"></div>
+                    </div>
+                    <button @click.stop="compareSlots = compareSlots.filter(c => c !== compareSlots[0])"
+                            class="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 text-xs flex items-center justify-center leading-none">✕</button>
+                  </div>
+                  <div class="w-24 h-24 mx-auto my-1" x-html="radarSvg(recForCode(compareSlots[0]))"></div>
+                  <div class="text-center mb-2">
+                    <span class="text-xl font-light tabular-nums"
+                          :class="compareWinner('total', compareSlots[0], compareSlots[1]) === 'a' ? 'compare-dim-win' : 'text-stone-500 dark:text-stone-400'"
+                          x-text="recForCode(compareSlots[0]).total.toFixed(2)"></span>
+                    <span class="text-xs text-stone-400 dark:text-stone-500 block" x-text="t('scorelabel')"></span>
+                  </div>
+                  <template x-for="dim in subscoreDims" :key="dim.key">
+                    <div class="flex items-center justify-between py-0.5 border-b border-stone-100 dark:border-stone-800 text-xs">
+                      <span class="text-stone-400 dark:text-stone-500 truncate" x-text="dim.label"></span>
+                      <span class="ml-1 tabular-nums"
+                            :class="compareWinner(dim.key, compareSlots[0], compareSlots[1]) === 'a' ? 'compare-dim-win' : 'text-stone-600 dark:text-stone-400'"
+                            x-text="formatSub(recForCode(compareSlots[0]), dim.key)"></span>
+                    </div>
+                  </template>
+                  <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span class="fsi-badge" :class="fsiLabel(compareSlots[0]).cls" x-text="fsiLabel(compareSlots[0]).label"></span>
+                    <template x-if="speakers.includes('en')">
+                      <span class="text-xs text-stone-400 dark:text-stone-500" x-text="fsiHours(compareSlots[0])"></span>
+                    </template>
+                  </div>
+                </div>
+
+                <!-- ── VS divider ── -->
+                <div class="flex items-center justify-center pt-10 self-stretch">
+                  <span class="text-xs font-bold text-stone-300 dark:text-stone-600 tracking-widest [writing-mode:vertical-lr]">VS</span>
+                </div>
+
+                <!-- ── Right column ── -->
+                <div class="min-w-0">
+                  <div class="flex items-start justify-between mb-1">
+                    <div class="min-w-0">
+                      <div class="font-semibold text-stone-900 dark:text-stone-100 truncate text-sm" x-text="langName(compareSlots[1])"></div>
+                      <div class="text-xs text-stone-400 dark:text-stone-500 truncate" x-text="branchName(compareSlots[1]) + ' · ' + familyName(compareSlots[1])"></div>
+                    </div>
+                    <button @click.stop="compareSlots = compareSlots.filter(c => c !== compareSlots[1])"
+                            class="ml-1 flex-shrink-0 w-5 h-5 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 text-xs flex items-center justify-center leading-none">✕</button>
+                  </div>
+                  <div class="w-24 h-24 mx-auto my-1" x-html="radarSvg(recForCode(compareSlots[1]))"></div>
+                  <div class="text-center mb-2">
+                    <span class="text-xl font-light tabular-nums"
+                          :class="compareWinner('total', compareSlots[0], compareSlots[1]) === 'b' ? 'compare-dim-win' : 'text-stone-500 dark:text-stone-400'"
+                          x-text="recForCode(compareSlots[1]).total.toFixed(2)"></span>
+                    <span class="text-xs text-stone-400 dark:text-stone-500 block" x-text="t('scorelabel')"></span>
+                  </div>
+                  <template x-for="dim in subscoreDims" :key="dim.key">
+                    <div class="flex items-center justify-between py-0.5 border-b border-stone-100 dark:border-stone-800 text-xs">
+                      <span class="text-stone-400 dark:text-stone-500 truncate" x-text="dim.label"></span>
+                      <span class="ml-1 tabular-nums"
+                            :class="compareWinner(dim.key, compareSlots[0], compareSlots[1]) === 'b' ? 'compare-dim-win' : 'text-stone-600 dark:text-stone-400'"
+                            x-text="formatSub(recForCode(compareSlots[1]), dim.key)"></span>
+                    </div>
+                  </template>
+                  <div class="mt-2 flex items-center gap-1.5 flex-wrap">
+                    <span class="fsi-badge" :class="fsiLabel(compareSlots[1]).cls" x-text="fsiLabel(compareSlots[1]).label"></span>
+                    <template x-if="speakers.includes('en')">
+                      <span class="text-xs text-stone-400 dark:text-stone-500" x-text="fsiHours(compareSlots[1])"></span>
+                    </template>
+                  </div>
+                </div>
+
+              </div>
+            </template>
+          </div>
+        </template>
+
         <template x-for="(rec, idx) in displayRecommendations" :key="rec.target">
           <div class="bg-white dark:bg-stone-900 rounded-xl border overflow-hidden transition-shadow"
                :class="[
@@ -765,8 +895,16 @@
                   <div class="text-xs text-stone-500 dark:text-stone-400" x-text="t('scorelabel')"></div>
                 </div>
 
-                <!-- Pin button + Chevron -->
+                <!-- Compare + Pin + Chevron -->
                 <div class="hidden md:flex items-center gap-1 ml-2 flex-shrink-0 self-center">
+                  <!-- Compare button -->
+                  <button @click.stop="toggleCompare(rec.target)"
+                          :class="compareSlots.includes(rec.target) ? 'compare-btn is-comparing' : 'compare-btn'"
+                          :title="compareSlots.includes(rec.target) ? 'Remove from comparison' : compareSlots.length === 2 ? 'Swap oldest comparison slot' : 'Compare side by side'">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <rect x="3" y="3" width="7" height="18" rx="1"/><rect x="14" y="3" width="7" height="18" rx="1"/>
+                    </svg>
+                  </button>
                   <button @click.stop="togglePin(rec.target)"
                           :class="pinned.includes(rec.target) ? 'pin-btn is-pinned' : 'pin-btn'"
                           :title="pinned.includes(rec.target) ? 'Remove bookmark' : 'Bookmark this language'">
@@ -2823,6 +2961,7 @@ function app() {
     emailMsg: '',
     pinned: [],            // bookmarked target language codes
     pinnedOnly: false,     // filter recommendations to pinned only
+    compareSlots: [],      // up to 2 language codes for side-by-side comparison
     fsiMaxTier: 0,         // 0 = all tiers; 1 = Cat I; 2 = Cat I–II; 3 = Cat I–III
     savedToast: false,     // transient "profile saved" toast
     _toastTimer: null,
@@ -3459,6 +3598,39 @@ function app() {
       // FSI classroom-hour estimates to ILR-3 / CEFR C1 professional proficiency
       const map = { 1: '~600 hrs', 2: '~900 hrs', 3: '~1,100 hrs', 4: '~2,200 hrs' };
       return map[FSI_TIER[code] || 3];
+    },
+
+    // ── Comparison feature ────────────────────────────────────────────────────
+
+    toggleCompare(code) {
+      if (this.compareSlots.includes(code)) {
+        // Deselect
+        this.compareSlots = this.compareSlots.filter(c => c !== code);
+      } else if (this.compareSlots.length < 2) {
+        this.compareSlots = [...this.compareSlots, code];
+      } else {
+        // Both slots full: drop the oldest, add the new pick
+        this.compareSlots = [this.compareSlots[1], code];
+      }
+    },
+
+    recForCode(code) {
+      // Returns the scored rec object for any language code
+      return this.recommendations.find(r => r.target === code)
+          || this.combinedScore(code);
+    },
+
+    compareWinner(dimKey, codeA, codeB) {
+      // Returns 'a', 'b', or 'tie'
+      const recA = this.recForCode(codeA);
+      const recB = this.recForCode(codeB);
+      const val = (rec, k) =>
+        k === 'total'   ? rec.total :
+        k === 'lexical' ? rec.lexical_with_contact_bonus :
+                          rec.sub_scores[k];
+      const vA = val(recA, dimKey), vB = val(recB, dimKey);
+      if (Math.abs(vA - vB) < 0.005) return 'tie';
+      return vA > vB ? 'a' : 'b';
     },
 
 
