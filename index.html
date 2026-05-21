@@ -1803,6 +1803,200 @@
     </p>
   </section>
 
+<!-- ── FAQ Section ─────────────────────────────────────────────────────────── -->
+<section class="mt-12" aria-labelledby="faq-heading">
+  <h2 id="faq-heading" class="text-xl font-semibold text-stone-900 dark:text-stone-100 mb-5">Frequently asked questions</h2>
+
+  <div class="space-y-2"
+       x-data="{ open: null }">
+
+    <!-- Q1 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 1 ? null : 1"
+              :aria-expanded="open === 1">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          What is the easiest language to learn for English speakers?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 1 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 1"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        For native English speakers, the easiest languages to learn are typically those in the Germanic and Romance families. Languages like Dutch, Norwegian, Swedish, and Afrikaans share the most vocabulary and grammar structure with English. Spanish, Portuguese, French, and Italian are also considered relatively easy due to vast shared Latin-root vocabulary. MyNextLanguage scores all 96 languages across lexical similarity, grammar distance, phonology, and writing system to give you a personalised ranking based on every language you already know.
+      </div>
+    </div>
+
+    <!-- Q2 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 2 ? null : 2"
+              :aria-expanded="open === 2">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          How long does it take to learn a new language?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 2 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 2"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        The Foreign Service Institute (FSI) groups languages into four difficulty tiers for English speakers. <strong class="text-stone-700 dark:text-stone-300">Category I</strong> languages (Spanish, French, Dutch) take roughly 600–750 classroom hours to reach professional working proficiency. <strong class="text-stone-700 dark:text-stone-300">Category II</strong> (German, Indonesian) takes about 900 hours. <strong class="text-stone-700 dark:text-stone-300">Category III</strong> (Russian, Hebrew, Thai) takes around 1,100 hours. <strong class="text-stone-700 dark:text-stone-300">Category IV</strong> languages (Arabic, Chinese, Japanese, Korean) take approximately 2,200 hours. MyNextLanguage displays the FSI tier and hour estimate on every language card.
+      </div>
+    </div>
+
+    <!-- Q3 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 3 ? null : 3"
+              :aria-expanded="open === 3">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          How does MyNextLanguage calculate language difficulty?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 3 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 3"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        MyNextLanguage scores each candidate language across five weighted dimensions: <strong class="text-stone-700 dark:text-stone-300">lexical similarity</strong> (shared vocabulary and cognates), <strong class="text-stone-700 dark:text-stone-300">grammatical distance</strong> (morphology and syntax), <strong class="text-stone-700 dark:text-stone-300">phonological similarity</strong> (shared sounds), <strong class="text-stone-700 dark:text-stone-300">writing system difficulty</strong>, and <strong class="text-stone-700 dark:text-stone-300">genealogical distance</strong> (position in the language family tree). Each dimension is weighted by your CEFR proficiency level in each language you already know — so the more advanced you are, the more transfer benefit you get. The five scores are combined into a single 0–1 composite score. You can adjust the dimension weights using the sliders above the results.
+      </div>
+    </div>
+
+    <!-- Q4 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 4 ? null : 4"
+              :aria-expanded="open === 4">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          Which language should I learn after Spanish?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 4 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 4"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        After Spanish, the closest languages are Portuguese, Italian, Catalan, Romanian, and French — all Romance languages sharing a large Latin vocabulary base. Portuguese is often cited as the single easiest step from Spanish due to near-identical grammar and 89% lexical overlap. MyNextLanguage lets you select Spanish (and any other languages you speak) and instantly ranks all 96 languages by how easy each will be for you specifically — factoring in your exact proficiency level.
+      </div>
+    </div>
+
+    <!-- Q5 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 5 ? null : 5"
+              :aria-expanded="open === 5">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          What languages are most similar to each other?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 5 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 5"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        The most mutually intelligible language pairs include Serbian and Croatian (near-identical at a colloquial level), Norwegian and Swedish, Spanish and Portuguese, Czech and Slovak, and Malay and Indonesian. Within the Romance family, all six major languages (Spanish, Portuguese, French, Italian, Romanian, Catalan) share significant vocabulary. MyNextLanguage's <strong class="text-stone-700 dark:text-stone-300">comparison mode</strong> lets you place any two languages side-by-side to see their lexical, grammatical, phonological, and writing system scores at a glance.
+      </div>
+    </div>
+
+    <!-- Q6 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 6 ? null : 6"
+              :aria-expanded="open === 6">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          Is MyNextLanguage free to use?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 6 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 6"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        Yes — MyNextLanguage is completely free, ad-free, and runs entirely in your browser with no account or installation required. It covers 96 world languages across 17 language families and works offline as a Progressive Web App (PWA) once installed. Your speaker profile and bookmarked languages are saved locally in your browser.
+      </div>
+    </div>
+
+    <!-- Q7 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 7 ? null : 7"
+              :aria-expanded="open === 7">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          How many languages does MyNextLanguage cover?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 7 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 7"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        MyNextLanguage currently covers <strong class="text-stone-700 dark:text-stone-300">96 world languages</strong> spanning 17 language families — from major global languages like English, Mandarin, Spanish, and Arabic to smaller languages like Icelandic, Swahili, Tagalog, and Welsh. Each language has lexical similarity data, grammar distance scores, phonological profiles, FSI difficulty tier, speaker population data, and regional distribution maps. We're continually working to expand coverage and improve data accuracy.
+      </div>
+    </div>
+
+    <!-- Q8 -->
+    <div class="bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 overflow-hidden">
+      <button class="w-full flex items-center justify-between gap-4 px-5 py-4 text-left"
+              @click="open = open === 8 ? null : 8"
+              :aria-expanded="open === 8">
+        <span class="font-medium text-stone-900 dark:text-stone-100 text-sm md:text-base">
+          Can I compare two languages side by side?
+        </span>
+        <svg class="w-5 h-5 flex-shrink-0 text-stone-400 dark:text-stone-500 transition-transform duration-200"
+             :class="open === 8 ? 'rotate-180' : ''"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </button>
+      <div x-show="open === 8"
+           x-transition:enter="transition ease-out duration-150"
+           x-transition:enter-start="opacity-0 -translate-y-1"
+           x-transition:enter-end="opacity-100 translate-y-0"
+           class="px-5 pb-5 text-sm text-stone-600 dark:text-stone-400 leading-relaxed border-t border-stone-100 dark:border-stone-800 pt-4">
+        Yes. Click the <strong class="text-stone-700 dark:text-stone-300">⊞ compare button</strong> on any recommendation card to add it to the comparison panel. Add a second language and you'll see a radar chart and dimension-by-dimension breakdown side by side — showing which language scores better on vocabulary, grammar, pronunciation, writing system, and family distance. The comparison can be shared via URL.
+      </div>
+    </div>
+
+  </div>
+</section>
+
 <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-500 dark:text-stone-400">
   <p x-text="t('footer')"></p>
   <p class="mt-3">
