@@ -22,8 +22,9 @@ const CACHE_FIRST_HOSTS = [
 
 // ── Install ──────────────────────────────────────────────────────────────────
 self.addEventListener('install', event => {
-  // Activate immediately — don't wait for old SW to die
-  self.skipWaiting();
+  // Do NOT call skipWaiting() automatically — the page will send a
+  // SKIP_WAITING message when the user clicks "Update now" in the banner.
+  // This lets the update banner detect reg.waiting and prompt the user.
 
   event.waitUntil(
     caches.open(CACHE_VERSION).then(async cache => {
@@ -42,6 +43,13 @@ self.addEventListener('install', event => {
       );
     })
   );
+});
+
+// ── Message: page requests skip-waiting (triggered by the update banner) ────
+self.addEventListener('message', event => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // ── Activate ─────────────────────────────────────────────────────────────────
