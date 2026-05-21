@@ -1,0 +1,38 @@
+{
+  "name": "MyNextLanguage",
+  "short_name": "MyNextLang",
+  "description": "Find your easiest next language to learn — scored across 96 languages by lexicon, grammar, phonology, and writing system.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0F6E56",
+  "orientation": "any",
+  "lang": "en",
+  "categories": ["education", "utilities"],
+  "icons": [
+    {
+      "src": "/icon_test_2.1.jpeg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/icon_test_2.1.jpeg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "form_factor": "wide",
+      "label": "MyNextLanguage — language similarity recommendations"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Find my next language",
+      "short_name": "Recommend",
+      "url": "/",
+      "description": "Get personalised language recommendations"
+    }
+  ]
+}
