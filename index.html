@@ -424,6 +424,66 @@
   /* Keep tip inside viewport on far-left chips */
   .score-chip:first-child .score-tip { left: 0; transform: none; }
   .score-chip:first-child .score-tip::after { left: 24px; }
+
+  /* ── Print styles ────────────────────────────────────────────────────────── */
+  @media print {
+    /* Page margins */
+    @page { margin: 18mm 15mm; }
+
+    /* Print header watermark */
+    body::before {
+      content: "MyNextLanguage.org — Language Recommendations";
+      display: block;
+      font-size: 11pt;
+      font-weight: 700;
+      color: #0c4a36;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1pt solid #ccc;
+    }
+
+    /* White background everywhere */
+    * { background: #fff !important; color: #1c1917 !important; box-shadow: none !important; }
+
+    /* Hide UI chrome that doesn't print usefully */
+    [data-name="BMC-Widget"], #__bmc-wbtn,
+    .newsletter-wrap,
+    .italki-cta-wrap,
+    .fsi-filter-bar,
+    .saved-toast,
+    .hidden.md\:flex,
+    footer { display: none !important; }
+
+    /* Hide the tab switcher row and share buttons */
+    .flex.items-center.gap-2.flex-wrap:first-child { display: none !important; }
+
+    /* Hide compare button, pin button, chevron toggle */
+    .compare-btn, .pin-btn, .text-stone-400.dark\:text-stone-500 svg.transition-transform { display: none !important; }
+
+    /* Cards: compact borders, avoid page breaks mid-card */
+    .bg-white.rounded-xl, .rounded-xl.border { border: 1pt solid #ccc !important; break-inside: avoid; margin-bottom: 8pt; }
+
+    /* Hide score tooltips */
+    .score-tip { display: none !important; }
+
+    /* Radar: reduce size for print */
+    .w-32.h-32 { width: 60pt !important; height: 60pt !important; }
+
+    /* Hide the world map — too complex to print usefully */
+    .relative.rounded-lg.border.border-stone-200 { display: none !important; }
+
+    /* Remove fixed/sticky elements (SW banner, tooltip) */
+    .fixed { display: none !important; }
+
+    /* FSI badges: print-safe */
+    .fsi-t1 { background: #e6f4ea !important; color: #1a5c35 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fsi-t2 { background: #dde8f8 !important; color: #1a3a7a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fsi-t3 { background: #fef5dc !important; color: #7a4a00 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .fsi-t4 { background: #fde8e8 !important; color: #7a1a1a !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    /* Full width */
+    .max-w-5xl { max-width: 100% !important; }
+  }
 </style>
 
 <!-- ── Service Worker registration (PWA / offline support) ──────────────── -->
@@ -1609,7 +1669,78 @@
 
   </section>
 
-  <p x-show="speakers.length === 0" class="text-stone-500 dark:text-stone-400 text-sm py-12 text-center" x-text="t('noSelection')"></p>
+  <!-- ── Quick-start chips (shown when no speakers selected) ── -->
+  <div x-show="speakers.length === 0" class="py-10">
+    <p class="text-stone-500 dark:text-stone-400 text-sm text-center mb-6" x-text="t('noSelection')"></p>
+
+    <div class="max-w-xl mx-auto">
+      <p class="text-xs font-semibold uppercase tracking-wide text-stone-400 dark:text-stone-500 text-center mb-3">Quick start — try a popular profile</p>
+      <div class="flex flex-wrap justify-center gap-2">
+        <!-- Each chip sets speakers + proficiency in one click -->
+        <button
+          @click="speakers=['en']; proficiency={'en':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇬🇧 English speaker
+        </button>
+        <button
+          @click="speakers=['es']; proficiency={'es':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇪🇸 Spanish speaker
+        </button>
+        <button
+          @click="speakers=['fr']; proficiency={'fr':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇫🇷 French speaker
+        </button>
+        <button
+          @click="speakers=['de']; proficiency={'de':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇩🇪 German speaker
+        </button>
+        <button
+          @click="speakers=['zh']; proficiency={'zh':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇨🇳 Mandarin speaker
+        </button>
+        <button
+          @click="speakers=['ar']; proficiency={'ar':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇸🇦 Arabic speaker
+        </button>
+        <button
+          @click="speakers=['ru']; proficiency={'ru':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇷🇺 Russian speaker
+        </button>
+        <button
+          @click="speakers=['pt']; proficiency={'pt':'C2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 text-sm text-stone-700 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all shadow-sm">
+          🇧🇷 Portuguese speaker
+        </button>
+        <!-- Multilingual combos -->
+        <button
+          @click="speakers=['en','es']; proficiency={'en':'C2','es':'B2'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 text-sm text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 transition-all shadow-sm">
+          🇬🇧+🇪🇸 English &amp; Spanish
+        </button>
+        <button
+          @click="speakers=['en','fr']; proficiency={'en':'C2','fr':'B1'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 text-sm text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 transition-all shadow-sm">
+          🇬🇧+🇫🇷 English &amp; French
+        </button>
+        <button
+          @click="speakers=['en','de']; proficiency={'en':'C2','de':'B1'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 text-sm text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 transition-all shadow-sm">
+          🇬🇧+🇩🇪 English &amp; German
+        </button>
+        <button
+          @click="speakers=['en','ja']; proficiency={'en':'C2','ja':'B1'}; persistProfile(); syncToUrl()"
+          class="flex items-center gap-1.5 px-3 py-2 rounded-full border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950 text-sm text-emerald-700 dark:text-emerald-300 hover:border-emerald-500 transition-all shadow-sm">
+          🇬🇧+🇯🇵 English &amp; Japanese
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Global floating tooltip (position:fixed, lives outside card overflow) -->
 <div x-show="tooltip.visible"

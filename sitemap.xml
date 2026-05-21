@@ -20,4 +20,20 @@
     <priority>0.8</priority>
   </url>
 
+  <!-- Language similarity comparisons (Portuguese vs Spanish, German vs Dutch, etc.) -->
+  <url>
+    <loc>https://mynextlanguage.org/compare.html</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Language difficulty guide (Japanese, Mandarin, Arabic, Korean, Russian) -->
+  <url>
+    <loc>https://mynextlanguage.org/difficulty.html</loc>
+    <lastmod>2026-05-21</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
 </urlset>
