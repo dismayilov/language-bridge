@@ -395,6 +395,35 @@
   .dark .compare-panel { background: #1c1917; border-color: #14532d; }
   .compare-dim-win { color: #059669; font-weight: 600; }
   .dark .compare-dim-win { color: #34d399; }
+
+  /* ── Learning status badges ─────────────────────────────────────────────── */
+  .status-badge { display: inline-flex; align-items: center; gap: 3px; padding: 2px 7px; border-radius: 999px; font-size: 10px; font-weight: 600; letter-spacing: .02em; cursor: pointer; border: 1px solid transparent; transition: opacity .15s; }
+  .status-badge:hover { opacity: .8; }
+  .status-interested { background: #fef9c3; color: #854d0e; border-color: #fde68a; }
+  .dark .status-interested { background: #422006; color: #fcd34d; border-color: #78350f; }
+  .status-studying { background: #dbeafe; color: #1e40af; border-color: #93c5fd; }
+  .dark .status-studying { background: #1e3a5f; color: #93c5fd; border-color: #1d4ed8; }
+  .status-done { background: #dcfce7; color: #166534; border-color: #86efac; }
+  .dark .status-done { background: #052e16; color: #86efac; border-color: #166534; }
+
+  /* ── Score tooltips ──────────────────────────────────────────────────────── */
+  .score-chip { position: relative; cursor: default; }
+  .score-chip .score-tip {
+    display: none; position: absolute; bottom: calc(100% + 6px); left: 50%;
+    transform: translateX(-50%); width: 200px; padding: 8px 10px;
+    background: #1c1917; color: #e7e5e4; font-size: 11px; line-height: 1.5;
+    border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.35);
+    pointer-events: none; z-index: 20; white-space: normal; text-align: left;
+  }
+  .score-chip .score-tip::after {
+    content: ''; position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+    border: 5px solid transparent; border-top-color: #1c1917;
+  }
+  .score-chip:hover .score-tip,
+  .score-chip:focus-within .score-tip { display: block; }
+  /* Keep tip inside viewport on far-left chips */
+  .score-chip:first-child .score-tip { left: 0; transform: none; }
+  .score-chip:first-child .score-tip::after { left: 24px; }
 </style>
 
 <!-- ── Service Worker registration (PWA / offline support) ──────────────── -->
@@ -746,7 +775,21 @@
         </div>
         <span class="text-stone-400 dark:text-stone-500 text-sm" x-text="t('tapExpand')"></span>
       </summary>
-      <div class="mt-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+      <!-- Weight presets -->
+      <div class="mt-4 flex flex-wrap gap-2">
+        <span class="text-xs text-stone-400 dark:text-stone-500 self-center mr-1">Presets:</span>
+        <template x-for="preset in weightPresets" :key="preset.label">
+          <button @click="weights = { ...preset.w }"
+                  :class="JSON.stringify(weights) === JSON.stringify(preset.w)
+                    ? 'px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-600 text-white'
+                    : 'px-2.5 py-1 rounded-full text-xs font-medium border border-stone-300 dark:border-stone-600 text-stone-600 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors'"
+                  :title="preset.desc"
+                  x-text="preset.label">
+          </button>
+        </template>
+      </div>
+
+      <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
         <template x-for="dim in weightDims" :key="dim.key">
           <label class="flex items-center gap-3">
             <span class="w-32 text-sm text-stone-700 dark:text-stone-300" x-text="dim.label"></span>
@@ -760,7 +803,9 @@
   </section>
 
   <!-- Results -->
-  <section x-show="speakers.length > 0" class="space-y-4">
+  <section x-show="speakers.length > 0" class="space-y-4"
+           @keydown.arrow-down.window.prevent="$el.contains(document.activeElement) || true"
+           x-data>
 
     <!-- Tab bar + Share button -->
     <div class="flex items-center gap-2 flex-wrap">
@@ -840,6 +885,15 @@
         Moderate
         <span class="opacity-50 font-normal">~1100h</span>
       </button>
+    </div>
+
+    <!-- Keyboard hint (desktop only) -->
+    <div x-show="viewMode==='recommendations' && displayRecommendations.length > 0"
+         class="hidden md:flex items-center gap-1.5 text-xs text-stone-400 dark:text-stone-600">
+      <kbd class="px-1.5 py-0.5 rounded border border-stone-200 dark:border-stone-700 font-mono text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800">↑↓</kbd>
+      navigate
+      <kbd class="px-1.5 py-0.5 rounded border border-stone-200 dark:border-stone-700 font-mono text-stone-400 dark:text-stone-500 bg-stone-50 dark:bg-stone-800">Esc</kbd>
+      close
     </div>
 
     <!-- Search filter (recommendations mode only) -->
@@ -1007,6 +1061,7 @@
 
         <template x-for="(rec, idx) in displayRecommendations" :key="rec.target">
           <div class="bg-white dark:bg-stone-900 rounded-xl border overflow-hidden transition-shadow"
+               :data-card="rec.target"
                :class="[
                  selectedCard === rec.target ? 'ring-2 ring-emerald-500 dark:ring-emerald-400' : 'hover:shadow-md',
                  pinned.includes(rec.target)
@@ -1028,11 +1083,23 @@
                       </template>
                     </div>
                     <div class="text-xs text-stone-500 dark:text-stone-400" x-text="branchName(rec.target) + ' · ' + familyName(rec.target)"></div>
-                    <div class="mt-0.5">
+                    <div class="mt-0.5 flex items-center gap-1.5 flex-wrap">
                       <span class="fsi-badge"
                             :class="fsiLabel(rec.target).cls"
                             x-text="fsiLabel(rec.target).label"
                             :title="speakers.includes('en') ? 'FSI Category ' + fsiLabel(rec.target).tier + ' · ' + fsiHours(rec.target) + ' to proficiency from English (fsi.state.gov)' : 'FSI difficulty category — hours are measured from English'"></span>
+                      <!-- Learning status badge (click to cycle) -->
+                      <template x-if="learningStatusMeta(rec.target)">
+                        <span @click.stop="cycleStatus(rec.target)"
+                              :class="learningStatusMeta(rec.target).cls"
+                              x-text="learningStatusMeta(rec.target).label"
+                              :title="learningStatusMeta(rec.target).next ? 'Click to advance status' : 'Click to clear status'"></span>
+                      </template>
+                      <template x-if="!learningStatusMeta(rec.target)">
+                        <button @click.stop="cycleStatus(rec.target)"
+                                class="text-stone-300 dark:text-stone-700 hover:text-amber-400 dark:hover:text-amber-500 transition-colors text-xs"
+                                title="Mark as Interested">＋ track</button>
+                      </template>
                     </div>
                   </div>
                   <div class="ml-auto md:hidden text-2xl font-light tabular-nums" x-text="rec.total.toFixed(2)"></div>
@@ -1044,9 +1111,18 @@
                   <p class="text-sm text-stone-700 dark:text-stone-300 leading-relaxed mb-3" x-text="explain(rec)"></p>
                   <div class="flex flex-wrap gap-2 text-xs">
                     <template x-for="dim in subscoreDims" :key="dim.key">
-                      <div class="px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
+                      <div class="score-chip px-2 py-1 rounded bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700">
                         <span class="text-stone-500 dark:text-stone-400" x-text="dim.label + ': '"></span>
-                        <span class="font-medium" x-text="formatSub(rec, dim.key)"></span>
+                        <span class="font-medium"
+                              :class="scoreTier(formatSub(rec,dim.key)*1).cls"
+                              x-text="formatSub(rec, dim.key)"></span>
+                        <div class="score-tip">
+                          <div class="font-semibold mb-1" x-text="dim.label"></div>
+                          <div x-text="dim.tip"></div>
+                          <div class="mt-1.5 font-semibold"
+                               :class="scoreTier(formatSub(rec,dim.key)*1).cls"
+                               x-text="scoreTier(formatSub(rec,dim.key)*1).label + ' similarity'"></div>
+                        </div>
                       </div>
                     </template>
                   </div>
@@ -3203,6 +3279,7 @@ function app() {
     emailMsg: '',
     pinned: [],            // bookmarked target language codes
     pinnedNotes: {},       // { [langCode]: string } personal notes per pinned language
+    learningStatus: {},    // { [langCode]: 'interested'|'studying'|'done' }
     pinnedOnly: false,     // filter recommendations to pinned only
     compareSlots: [],      // up to 2 language codes for side-by-side comparison
     recSearch: '',         // live search filter on recommendations list
@@ -3287,12 +3364,23 @@ function app() {
       const q = this.reverseSearch.trim().toLowerCase();
       const all = Object.keys(DATA.languages).filter(c => !this.speakers.includes(c));
       if (!q) return all.sort((a,b)=>this.langName(a).localeCompare(this.langName(b))).slice(0,12);
+      const matches = c => {
+        if (c === q) return true;
+        if (this.langName(c).toLowerCase().includes(q)) return true;
+        if (DATA.languages[c].name.toLowerCase().includes(q)) return true;
+        if ((LANG_NATIVE[c] || '').toLowerCase().includes(q)) return true;
+        if ((DATA.languages[c].family || '').toLowerCase().includes(q)) return true;
+        if ((DATA.languages[c].branch || '').toLowerCase().includes(q)) return true;
+        return false;
+      };
       return all
-        .filter(c => this.langName(c).toLowerCase().includes(q) || DATA.languages[c].name.toLowerCase().includes(q))
+        .filter(matches)
         .sort((a,b)=>{
-          const ia = this.langName(a).toLowerCase().indexOf(q);
-          const ib = this.langName(b).toLowerCase().indexOf(q);
-          return ia !== ib ? ia - ib : this.langName(a).localeCompare(this.langName(b));
+          // Exact ISO or starts-with sorts to top
+          const startA = this.langName(a).toLowerCase().startsWith(q) ? 0 : 1;
+          const startB = this.langName(b).toLowerCase().startsWith(q) ? 0 : 1;
+          if (startA !== startB) return startA - startB;
+          return this.langName(a).localeCompare(this.langName(b));
         })
         .slice(0,10);
     },
@@ -3319,6 +3407,8 @@ function app() {
           if (pi) this.pinned = JSON.parse(pi).filter(c => c in DATA.languages);
           const pn = localStorage.getItem('lb-pinned-notes');
           if (pn) this.pinnedNotes = JSON.parse(pn);
+          const ls = localStorage.getItem('lb-status');
+          if (ls) this.learningStatus = JSON.parse(ls);
         } catch (_) {}
       }
 
@@ -3333,6 +3423,47 @@ function app() {
       // or listen for the custom event fired by the registration script
       if (window.__swWaiting) this.swUpdateReady = true;
       document.addEventListener('sw-update-ready', () => { this.swUpdateReady = true; });
+
+      // Keyboard navigation for recommendation cards
+      document.addEventListener('keydown', (e) => {
+        // Only active when recommendations tab is visible and no input is focused
+        if (this.viewMode !== 'recommendations') return;
+        const tag = document.activeElement?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+
+        const recs = this.displayRecommendations;
+        if (!recs.length) return;
+
+        if (e.key === 'Escape') {
+          if (this.selectedCard) { this.selectedCard = null; e.preventDefault(); }
+          return;
+        }
+        if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+          e.preventDefault();
+          const cur = recs.findIndex(r => r.target === this.selectedCard);
+          let next;
+          if (cur === -1) {
+            next = e.key === 'ArrowDown' ? 0 : recs.length - 1;
+          } else {
+            next = e.key === 'ArrowDown'
+              ? Math.min(cur + 1, recs.length - 1)
+              : Math.max(cur - 1, 0);
+          }
+          this.selectedCard = recs[next].target;
+          // Scroll card into view
+          this.$nextTick(() => {
+            const el = document.querySelector(`[data-card="${recs[next].target}"]`);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+          });
+        }
+        if (e.key === 'Enter' && this.selectedCard) {
+          // Toggle open/close
+          const cur = this.selectedCard;
+          this.selectedCard = null;
+          this.$nextTick(() => { if (this.selectedCard === null) {} });
+          // Re-open if pressing Enter on a closed card — handled by toggleCard on click
+        }
+      });
 
       // BMC widget click tracking — fires once the widget iframe has mounted
       document.addEventListener('click', function bmcClickHandler(e) {
@@ -3373,12 +3504,17 @@ function app() {
     },
 
     get filteredLanguages() {
-      const q = this.search.toLowerCase();
+      const q = this.search.toLowerCase().trim();
       if (!q) return Object.keys(DATA.languages);
-      return Object.keys(DATA.languages).filter(code =>
-        DATA.languages[code].name.toLowerCase().includes(q) ||
-        (LANG_NAMES[this.currentLang]?.[code] || '').toLowerCase().includes(q)
-      );
+      return Object.keys(DATA.languages).filter(code => {
+        if (code === q) return true;                                              // exact ISO match
+        if (DATA.languages[code].name.toLowerCase().includes(q)) return true;    // English name
+        if ((LANG_NAMES[this.currentLang]?.[code] || '').toLowerCase().includes(q)) return true; // UI lang
+        if ((LANG_NATIVE[code] || '').toLowerCase().includes(q)) return true;    // native script
+        if ((DATA.languages[code].family || '').toLowerCase().includes(q)) return true; // family
+        if ((DATA.languages[code].branch || '').toLowerCase().includes(q)) return true; // branch
+        return false;
+      });
     },
 
     get weightDims() {
@@ -3391,14 +3527,62 @@ function app() {
       ];
     },
 
+    get weightPresets() {
+      return [
+        { label: 'Balanced',
+          desc: 'Default weighting across all five dimensions',
+          w: { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 } },
+        { label: 'Vocabulary-first',
+          desc: 'Maximise shared words — great for readers and passive learners',
+          w: { lexical: 55, grammatical: 15, phonological: 10, writing_system: 5,  genealogical: 15 } },
+        { label: 'Grammar-first',
+          desc: 'Prioritise structural similarity — ideal for analytical learners',
+          w: { lexical: 20, grammatical: 50, phonological: 10, writing_system: 5,  genealogical: 15 } },
+        { label: 'Sound-first',
+          desc: 'Favour phonological closeness — for oral/conversational learners',
+          w: { lexical: 20, grammatical: 15, phonological: 45, writing_system: 5,  genealogical: 15 } },
+        { label: 'Script-first',
+          desc: 'Heavily weight writing system — minimise time learning a new alphabet',
+          w: { lexical: 20, grammatical: 15, phonological: 10, writing_system: 40, genealogical: 15 } },
+      ];
+    },
+
     get subscoreDims() {
       return [
-        { key: 'lexical',         label: this.t('subLex') },
-        { key: 'grammatical',     label: this.t('subGram') },
-        { key: 'phonological',    label: this.t('subPhon') },
-        { key: 'writing_system',  label: this.t('subScript') },
-        { key: 'genealogical',    label: this.t('subFamily') },
+        { key: 'lexical',        label: this.t('subLex'),
+          tip: 'Shared vocabulary — cognates, loanwords, and recognisable roots. Higher = more words you already half-know.' },
+        { key: 'grammatical',    label: this.t('subGram'),
+          tip: 'Grammar distance — word order, morphology, and syntax similarity. Higher = fewer structural surprises.' },
+        { key: 'phonological',   label: this.t('subPhon'),
+          tip: 'Sound system overlap — shared phonemes and prosody. Higher = pronunciation will feel more natural from day one.' },
+        { key: 'writing_system', label: this.t('subScript'),
+          tip: 'Writing system difficulty — script familiarity and orthographic complexity. Higher = less time learning to read.' },
+        { key: 'genealogical',   label: this.t('subFamily'),
+          tip: 'Language family closeness — how recently the two languages shared a common ancestor. Higher = deeper structural kinship.' },
       ];
+    },
+
+    scoreTier(v) {
+      if (v >= 0.70) return { label: 'High',   cls: 'text-emerald-600 dark:text-emerald-400' };
+      if (v >= 0.40) return { label: 'Medium', cls: 'text-amber-500  dark:text-amber-400'   };
+      return                 { label: 'Low',    cls: 'text-stone-400  dark:text-stone-500'    };
+    },
+
+    learningStatusMeta(code) {
+      const s = this.learningStatus[code];
+      if (s === 'interested') return { label: '★ Interested', cls: 'status-badge status-interested', next: 'studying' };
+      if (s === 'studying')   return { label: '📖 Studying',  cls: 'status-badge status-studying',   next: 'done'      };
+      if (s === 'done')       return { label: '✓ Done',       cls: 'status-badge status-done',        next: null        };
+      return null;
+    },
+
+    cycleStatus(code) {
+      const cur = this.learningStatus[code];
+      const next = cur === 'interested' ? 'studying' : cur === 'studying' ? 'done' : cur === 'done' ? null : 'interested';
+      const updated = { ...this.learningStatus };
+      if (next === null) delete updated[code]; else updated[code] = next;
+      this.learningStatus = updated;
+      try { localStorage.setItem('lb-status', JSON.stringify(this.learningStatus)); } catch(_) {}
     },
 
     // ── Linguistic bridge helpers ─────────────────────────────────
@@ -4374,6 +4558,8 @@ function app() {
         }
         const pn = localStorage.getItem('lb-pinned-notes');
         if (pn) this.pinnedNotes = JSON.parse(pn);
+        const ls = localStorage.getItem('lb-status');
+        if (ls) this.learningStatus = JSON.parse(ls);
       } catch (_) {}
     },
 
@@ -4383,6 +4569,7 @@ function app() {
         localStorage.setItem('lb-proficiency',   JSON.stringify(this.proficiency));
         localStorage.setItem('lb-pinned',        JSON.stringify(this.pinned));
         localStorage.setItem('lb-pinned-notes',  JSON.stringify(this.pinnedNotes));
+        localStorage.setItem('lb-status',        JSON.stringify(this.learningStatus));
       } catch (_) {}
       this.showSavedToast();
     },
