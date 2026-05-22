@@ -883,6 +883,275 @@
     #graph-container * { transition: none !important; animation: none !important; }
   }
 
+  /* ── v3 additions: view-mode bar, side panel (shortest path + surprising),
+     tree / matrix / geo visuals, glossary popover, tour overlay, export menu ── */
+
+  /* Top bar with view modes */
+  #graph-container .lsg-viewbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    padding: 8px 12px; margin-bottom: 10px;
+    background: var(--lsg-panel); border: 1px solid var(--lsg-border);
+    border-radius: 10px;
+  }
+  #graph-container .lsg-viewbar .lsg-chip-row { gap: 4px; }
+  #graph-container .lsg-view-label {
+    font-size: 0.7rem; font-weight: 600; color: var(--lsg-text-dim);
+    letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap;
+  }
+  #graph-container .lsg-spacer { flex: 1 1 auto; }
+
+  /* Side panel — shortest path widget + surprising connections */
+  #graph-container .lsg-sidepanel {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  @media (max-width: 720px) {
+    #graph-container .lsg-sidepanel { grid-template-columns: 1fr; }
+  }
+  #graph-container .lsg-card {
+    background: var(--lsg-panel); border: 1px solid var(--lsg-border);
+    border-radius: 10px; padding: 10px 12px;
+  }
+  #graph-container .lsg-card-title {
+    font-size: 0.72rem; font-weight: 700; color: var(--lsg-text-dim);
+    letter-spacing: 0.05em; text-transform: uppercase;
+    margin-bottom: 8px; display: flex; align-items: center; gap: 8px;
+  }
+  #graph-container .lsg-card-title .lsg-dot { width:7px; height:7px; border-radius:999px; }
+
+  /* Shortest-path widget */
+  #graph-container .lsg-path-row {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+  }
+  #graph-container .lsg-path-row select,
+  #graph-container .lsg-path-row input {
+    flex: 1 1 110px; min-width: 0;
+    background: var(--lsg-bg); color: var(--lsg-text);
+    border: 1px solid var(--lsg-border); border-radius: 6px;
+    padding: 4px 8px; font-size: 0.78rem; outline: none;
+  }
+  #graph-container .lsg-path-row select:focus,
+  #graph-container .lsg-path-row input:focus { border-color: var(--lsg-accent); }
+  #graph-container .lsg-path-result {
+    margin-top: 8px; font-size: 0.78rem; line-height: 1.5;
+    color: var(--lsg-text-dim);
+    max-height: 140px; overflow-y: auto;
+  }
+  #graph-container .lsg-path-result .lsg-path-empty { font-style: italic; color: var(--lsg-text-mute); }
+  #graph-container .lsg-path-result .lsg-path-step {
+    display: inline-flex; align-items: center; gap: 4px;
+    margin: 2px 4px 2px 0;
+    padding: 3px 7px; border-radius: 999px;
+    background: color-mix(in srgb, var(--lsg-accent) 14%, var(--lsg-panel));
+    color: var(--lsg-text); font-weight: 600;
+    border: 1px solid color-mix(in srgb, var(--lsg-accent) 40%, transparent);
+  }
+  #graph-container .lsg-path-arrow { color: var(--lsg-text-mute); margin: 0 2px; }
+  #graph-container .lsg-path-meta { color: var(--lsg-text-mute); font-size: 0.7rem; margin-top: 4px; }
+
+  /* Surprising connections card */
+  #graph-container .lsg-surprising-list {
+    display: flex; flex-direction: column; gap: 6px;
+    max-height: 200px; overflow-y: auto;
+  }
+  #graph-container .lsg-surprising-item {
+    background: var(--lsg-bg); border: 1px solid var(--lsg-border);
+    border-radius: 8px; padding: 6px 9px; font-size: 0.74rem;
+    color: var(--lsg-text); cursor: pointer;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    transition: border-color .15s, background .15s;
+  }
+  #graph-container .lsg-surprising-item:hover {
+    border-color: var(--lsg-accent);
+    background: color-mix(in srgb, var(--lsg-accent) 8%, var(--lsg-bg));
+  }
+  #graph-container .lsg-surprising-pair { font-weight: 600; }
+  #graph-container .lsg-surprising-fams { color: var(--lsg-text-mute); font-size: 0.66rem; }
+  #graph-container .lsg-surprising-dist {
+    font-variant-numeric: tabular-nums; font-weight: 700; color: var(--lsg-accent);
+  }
+
+  /* Cognate examples inside edge tooltip */
+  #graph-container .lsg-edge-tip .lsg-cognates {
+    margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--lsg-border);
+  }
+  #graph-container .lsg-edge-tip .lsg-cognates-title {
+    font-size: 0.65rem; color: var(--lsg-text-mute);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 3px; font-weight: 600;
+  }
+  #graph-container .lsg-edge-tip .lsg-cognate-row {
+    display: flex; gap: 6px; align-items: baseline; font-size: 0.7rem;
+    color: var(--lsg-text); margin: 1px 0;
+  }
+  #graph-container .lsg-edge-tip .lsg-cognate-gloss {
+    color: var(--lsg-text-mute); font-size: 0.62rem;
+    min-width: 50px; text-transform: lowercase;
+  }
+  #graph-container .lsg-edge-tip .lsg-cognate-words { font-weight: 600; }
+  #graph-container .lsg-edge-tip .lsg-cognate-sep { color: var(--lsg-text-mute); margin: 0 4px; }
+  #graph-container .lsg-edge-tip .lsg-data-flag {
+    margin-top: 6px; padding: 3px 6px; border-radius: 4px;
+    background: color-mix(in srgb, #fbbf24 18%, transparent);
+    color: #fbbf24; font-size: 0.62rem; font-weight: 600;
+    display: inline-block;
+  }
+
+  /* Glossary term link inside tooltips */
+  #graph-container .lsg-gloss-term {
+    text-decoration: underline; text-decoration-style: dotted;
+    text-decoration-color: var(--lsg-accent-2);
+    cursor: help; color: var(--lsg-text);
+  }
+  #graph-container .lsg-gloss-popover {
+    position: absolute; z-index: 60;
+    max-width: 260px; padding: 8px 10px;
+    background: var(--lsg-panel); color: var(--lsg-text);
+    border: 1px solid var(--lsg-accent-2); border-radius: 8px;
+    box-shadow: var(--lsg-shadow);
+    font-size: 0.74rem; line-height: 1.4;
+    opacity: 0; transform: translateY(2px); transition: opacity .15s, transform .15s;
+  }
+  #graph-container .lsg-gloss-popover[hidden] { display: none; }
+  #graph-container .lsg-gloss-popover.is-open { opacity: 1; transform: translateY(0); }
+  #graph-container .lsg-gloss-popover-title { font-weight: 700; margin-bottom: 3px; color: var(--lsg-accent-2); }
+
+  /* TREE VIEW */
+  #graph-container .lsg-tree-node circle {
+    fill: var(--lsg-panel); stroke: var(--lsg-text-dim);
+    stroke-width: 1; r: 2;
+  }
+  #graph-container .lsg-tree-leaf circle { stroke-width: 1.5; }
+  #graph-container .lsg-tree-link {
+    fill: none; stroke: var(--lsg-link); stroke-width: 1; stroke-opacity: 0.6;
+  }
+  #graph-container .lsg-tree-label {
+    font-size: 9px; fill: var(--lsg-text);
+    paint-order: stroke; stroke: var(--lsg-panel); stroke-width: 3px;
+    stroke-linejoin: round; user-select: none;
+  }
+  #graph-container .lsg-tree-label.lsg-known { fill: #fbbf24; font-weight: 700; }
+
+  /* MATRIX VIEW */
+  #graph-container .lsg-matrix-cell { stroke: none; cursor: pointer; }
+  #graph-container .lsg-matrix-cell:hover { stroke: var(--lsg-text); stroke-width: 1; }
+  #graph-container .lsg-matrix-rowlabel,
+  #graph-container .lsg-matrix-collabel {
+    font-size: 7px; fill: var(--lsg-text-dim); user-select: none;
+  }
+  #graph-container .lsg-matrix-rowlabel.lsg-known,
+  #graph-container .lsg-matrix-collabel.lsg-known {
+    fill: #fbbf24; font-weight: 700;
+  }
+  #graph-container .lsg-matrix-fambar {
+    pointer-events: none;
+  }
+
+  /* GEO VIEW */
+  #graph-container .lsg-geo-grid {
+    stroke: var(--lsg-border); stroke-width: 0.4; fill: none;
+  }
+  #graph-container .lsg-geo-eq, #graph-container .lsg-geo-pm {
+    stroke: var(--lsg-border); stroke-width: 0.6; fill: none; stroke-dasharray: 3,3;
+  }
+  #graph-container .lsg-geo-label {
+    font-size: 8px; fill: var(--lsg-text-mute); user-select: none;
+  }
+
+  /* Permalink for matrix/tree views — no zoom transform, just static SVG */
+  #graph-container.lsg-view-tree .lsg-svg,
+  #graph-container.lsg-view-matrix .lsg-svg { cursor: default; }
+  #graph-container.lsg-view-tree .lsg-svg:active,
+  #graph-container.lsg-view-matrix .lsg-svg:active { cursor: default; }
+
+  /* Path highlight overlay on the network */
+  #graph-container .lsg-path-link {
+    stroke: var(--lsg-accent); stroke-width: 4; fill: none;
+    stroke-opacity: 0.9; stroke-linecap: round;
+    filter: drop-shadow(0 0 5px color-mix(in srgb, var(--lsg-accent) 60%, transparent));
+  }
+  #graph-container .lsg-path-node circle {
+    stroke: var(--lsg-accent); stroke-width: 3.5;
+  }
+
+  /* Export menu — small popover */
+  #graph-container .lsg-export-menu {
+    position: absolute; z-index: 40;
+    background: var(--lsg-panel); border: 1px solid var(--lsg-border);
+    border-radius: 8px; box-shadow: var(--lsg-shadow);
+    padding: 4px; min-width: 180px;
+    display: flex; flex-direction: column;
+    opacity: 0; transform: translateY(-4px);
+    transition: opacity .15s, transform .15s;
+    pointer-events: none;
+  }
+  #graph-container .lsg-export-menu[hidden] { display: none; }
+  #graph-container .lsg-export-menu.is-open { opacity: 1; transform: translateY(0); pointer-events: auto; }
+  #graph-container .lsg-export-menu button {
+    background: transparent; border: none; cursor: pointer;
+    padding: 7px 10px; text-align: left;
+    font-size: 0.78rem; color: var(--lsg-text); border-radius: 6px;
+  }
+  #graph-container .lsg-export-menu button:hover {
+    background: color-mix(in srgb, var(--lsg-accent) 12%, transparent);
+  }
+
+  /* Tour overlay */
+  #lsg-tour-backdrop {
+    position: fixed; inset: 0; z-index: 9998;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
+    opacity: 0; transition: opacity .25s;
+    pointer-events: none;
+  }
+  #lsg-tour-backdrop[hidden] { display: none; }
+  #lsg-tour-backdrop.is-open { opacity: 1; pointer-events: auto; }
+  #lsg-tour-spotlight {
+    position: fixed; z-index: 9999;
+    border: 2px solid #34d399; border-radius: 10px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.6);
+    pointer-events: none;
+    transition: top .3s, left .3s, width .3s, height .3s;
+  }
+  #lsg-tour-popover {
+    position: fixed; z-index: 10000;
+    max-width: 320px; background: #1c1917; color: #f5f5f4;
+    border: 1px solid #34d399; border-radius: 10px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+    padding: 14px 16px; font-size: 0.85rem; line-height: 1.45;
+  }
+  #lsg-tour-popover .lsg-tour-title { font-weight: 700; margin-bottom: 6px; font-size: 0.95rem; color: #34d399; }
+  #lsg-tour-popover .lsg-tour-body { color: #d6d3d1; }
+  #lsg-tour-popover .lsg-tour-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 12px; gap: 8px;
+  }
+  #lsg-tour-popover .lsg-tour-counter { font-size: 0.7rem; color: #78716c; }
+  #lsg-tour-popover .lsg-tour-btn {
+    background: #292524; border: 1px solid #44403c; color: #f5f5f4;
+    padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.78rem; font-weight: 600;
+  }
+  #lsg-tour-popover .lsg-tour-btn:hover { border-color: #34d399; }
+  #lsg-tour-popover .lsg-tour-btn.lsg-tour-primary {
+    background: #34d399; color: #052e16; border-color: #34d399;
+  }
+  #lsg-tour-popover .lsg-tour-skip {
+    background: none; border: none; color: #78716c; cursor: pointer; font-size: 0.74rem;
+  }
+  #lsg-tour-popover .lsg-tour-skip:hover { color: #f5f5f4; }
+
+  /* Tour intro button (?) in header */
+  #graph-container .lsg-help-btn {
+    width: 26px; height: 26px; border-radius: 999px;
+    border: 1px solid var(--lsg-border); background: var(--lsg-panel);
+    color: var(--lsg-text-dim); cursor: pointer; font-weight: 700;
+    font-size: 0.85rem; line-height: 1;
+    display: inline-flex; align-items: center; justify-content: center;
+    margin-right: 4px;
+  }
+  #graph-container .lsg-help-btn:hover { color: var(--lsg-text); border-color: var(--lsg-accent); }
+
 </style>
 
 <!-- ── Service Worker registration (PWA / offline support) ──────────────── -->
@@ -2196,23 +2465,47 @@
       </div>
 
       <div class="flex items-center gap-2 flex-wrap">
+        <button type="button" class="lsg-help-btn" id="lsg-help-btn"
+                title="Take the tour" aria-label="Take the tour">?</button>
         <span class="lsg-meta-pill" id="lsg-stat-nodes">
-          <b id="lsg-stat-nodes-val">0</b> nodes
+          <b id="lsg-stat-nodes-val">0</b> <span data-i18n="nodes">nodes</span>
         </span>
         <span class="lsg-meta-pill" id="lsg-stat-links">
-          <b id="lsg-stat-links-val">0</b> links
+          <b id="lsg-stat-links-val">0</b> <span data-i18n="links">links</span>
         </span>
         <button type="button" class="lsg-btn" id="lsg-copy-link"
-                title="Copy a shareable link to this exact view (threshold, metric, focused node, zoom)">
+                data-i18n="copyLink"
+                title="Copy a shareable link to this exact view">
           Copy link
         </button>
         <button type="button" class="lsg-btn" id="lsg-reset-zoom"
+                data-i18n="resetView"
                 title="Reset zoom and re-centre the simulation">
           Reset view
         </button>
       </div>
     </div>
 
+    <div class="lsg-viewbar">
+      <span class="lsg-view-label" data-i18n="title">View</span>
+      <div class="lsg-chip-row" id="lsg-view-row" role="group" aria-label="View mode">
+        <button type="button" class="lsg-chip is-active" data-view="network" data-i18n="network">Network</button>
+        <button type="button" class="lsg-chip" data-view="tree"    data-i18n="tree">Tree</button>
+        <button type="button" class="lsg-chip" data-view="matrix"  data-i18n="matrix">Matrix</button>
+        <button type="button" class="lsg-chip" data-view="geo"     data-i18n="geo">Geographic</button>
+      </div>
+      <span class="lsg-spacer"></span>
+      <button type="button" class="lsg-btn" id="lsg-export-btn"
+              data-i18n-title="exportPng"
+              title="Export current view">
+        Export ▾
+      </button>
+      <div class="lsg-export-menu" id="lsg-export-menu" hidden>
+        <button type="button" data-export="png" data-i18n="exportPng">Export PNG</button>
+        <button type="button" data-export="svg" data-i18n="exportSvg">Export SVG</button>
+        <button type="button" data-export="embed" data-i18n="embed">Copy embed code</button>
+      </div>
+    </div>
     <div class="lsg-controls">
       <div class="lsg-control">
         <label for="lsg-threshold">Distance&nbsp;≤</label>
@@ -2286,6 +2579,31 @@
     </div>
 
     <div class="lsg-legend" id="lsg-legend" aria-label="Family colour legend — click to toggle"></div>
+    <div class="lsg-sidepanel">
+      <div class="lsg-card" id="lsg-path-card">
+        <div class="lsg-card-title">
+          <span class="lsg-dot" style="background:var(--lsg-accent)"></span>
+          <span data-i18n="findPath">Shortest learning path</span>
+        </div>
+        <div class="lsg-path-row">
+          <select id="lsg-path-from" aria-label="From language"></select>
+          <span class="lsg-path-arrow">→</span>
+          <select id="lsg-path-to" aria-label="To language"></select>
+          <button type="button" class="lsg-btn" id="lsg-path-find" data-i18n="findPath">Find path</button>
+          <button type="button" class="lsg-btn" id="lsg-path-clear" data-i18n="clearPath">Clear</button>
+        </div>
+        <div class="lsg-path-result" id="lsg-path-result">
+          <span class="lsg-path-empty">Pick two languages and click <b>Find path</b>.</span>
+        </div>
+      </div>
+      <div class="lsg-card" id="lsg-surprising-card">
+        <div class="lsg-card-title">
+          <span class="lsg-dot" style="background:var(--lsg-accent-2)"></span>
+          <span data-i18n="surprising">Surprising cross-family connections</span>
+        </div>
+        <div class="lsg-surprising-list" id="lsg-surprising-list"></div>
+      </div>
+    </div>
   </section>
 
   <!-- ── Newsletter Signup ── -->
@@ -5567,22 +5885,549 @@ function app() {
 </script>
 
 <!-- ─────────────────────────────────────────────────────────────────────────
-     LANGUAGE SIMILARITY GRAPH — engine v2
-     v1 features (force sim, zoom, drag, hover, click, threshold slider) plus:
-       • per-dimension metric switcher (Composite + 5 dims)
-       • edge hover tooltip with sub-score breakdown
-       • search box with live filter and zoom-to-node
-       • Alpine bridge: known-language outline + recommendation halo
-       • "Compare" button in tooltip → wires to Alpine compareSlots
-       • zoom-aware label visibility (hub-only at low zoom)
-       • translucent family convex hulls (d3.polygonHull)
-       • curved-arc links (quadratic Bezier)
-       • asymmetric "Learning view" with arrowheads, scored from each speaker
-       • keyboard navigation (arrows + Enter + Esc)
-       • prefers-reduced-motion → stable family-grouped ring layout
-       • permalink: encode state in URL hash + copy to clipboard
-     Self-contained: reads but does not mutate the Alpine app's reactive
-     state (except via the explicit Compare action, by user choice).
+     LANGUAGE SIMILARITY GRAPH — v3 datasets
+     Cognate exemplars, glossary, country centroids, translations.
+     Loaded ahead of the engine so the engine can read these as globals.
+     ─────────────────────────────────────────────────────────────────────── -->
+<script>
+/* ═══════════════════════════════════════════════════════════════════════════
+   LSG_COGNATES — keyed by sorted pairKey ("a|b" where a<b).
+   Each value is an array of {gloss, a, b} triples. Cognates only (not loans).
+   Hand-curated showcase set — covers core Romance, Germanic, Slavic, Indo-
+   Iranian, Sino, Semitic, Turkic clusters where the link is most pedagogical.
+   ═════════════════════════════════════════════════════════════════════════ */
+window.LSG_COGNATES = {
+  /* ─── Romance ─── */
+  'es|pt': [
+    { gloss:'night',  a:'noche',   b:'noite'   },
+    { gloss:'water',  a:'agua',    b:'água'    },
+    { gloss:'house',  a:'casa',    b:'casa'    },
+    { gloss:'friend', a:'amigo',   b:'amigo'   }
+  ],
+  'es|it': [
+    { gloss:'night', a:'noche', b:'notte' },
+    { gloss:'milk',  a:'leche', b:'latte' },
+    { gloss:'eight', a:'ocho',  b:'otto'  },
+    { gloss:'eye',   a:'ojo',   b:'occhio'}
+  ],
+  'es|fr': [
+    { gloss:'night',  a:'noche', b:'nuit'  },
+    { gloss:'water',  a:'agua',  b:'eau'   },
+    { gloss:'mother', a:'madre', b:'mère'  },
+    { gloss:'father', a:'padre', b:'père'  }
+  ],
+  'es|ca': [
+    { gloss:'night',  a:'noche',  b:'nit'   },
+    { gloss:'house',  a:'casa',   b:'casa'  },
+    { gloss:'eight',  a:'ocho',   b:'vuit'  },
+    { gloss:'water',  a:'agua',   b:'aigua' }
+  ],
+  'es|ro': [
+    { gloss:'night',  a:'noche',  b:'noapte' },
+    { gloss:'water',  a:'agua',   b:'apă'    },
+    { gloss:'eight',  a:'ocho',   b:'opt'    },
+    { gloss:'milk',   a:'leche',  b:'lapte'  }
+  ],
+  'es|gl': [
+    { gloss:'night',  a:'noche',  b:'noite'  },
+    { gloss:'water',  a:'agua',   b:'auga'   },
+    { gloss:'mother', a:'madre',  b:'nai'    },
+    { gloss:'friend', a:'amigo',  b:'amigo'  }
+  ],
+  'fr|it': [
+    { gloss:'night', a:'nuit',  b:'notte' },
+    { gloss:'eye',   a:'œil',   b:'occhio' },
+    { gloss:'water', a:'eau',   b:'acqua' },
+    { gloss:'milk',  a:'lait',  b:'latte' }
+  ],
+  'fr|pt': [
+    { gloss:'night', a:'nuit', b:'noite' },
+    { gloss:'water', a:'eau',  b:'água'  },
+    { gloss:'milk',  a:'lait', b:'leite' }
+  ],
+  'it|pt': [
+    { gloss:'night', a:'notte', b:'noite' },
+    { gloss:'water', a:'acqua', b:'água'  },
+    { gloss:'milk',  a:'latte', b:'leite' },
+    { gloss:'eight', a:'otto',  b:'oito'  }
+  ],
+  'ca|it': [
+    { gloss:'night', a:'nit',  b:'notte' },
+    { gloss:'water', a:'aigua',b:'acqua' },
+    { gloss:'milk',  a:'llet', b:'latte' }
+  ],
+  /* ─── Germanic ─── */
+  'de|en': [
+    { gloss:'water',  a:'Wasser', b:'water'  },
+    { gloss:'mother', a:'Mutter', b:'mother' },
+    { gloss:'father', a:'Vater',  b:'father' },
+    { gloss:'fish',   a:'Fisch',  b:'fish'   },
+    { gloss:'three',  a:'drei',   b:'three'  }
+  ],
+  'de|nl': [
+    { gloss:'water',  a:'Wasser', b:'water'  },
+    { gloss:'house',  a:'Haus',   b:'huis'   },
+    { gloss:'milk',   a:'Milch',  b:'melk'   },
+    { gloss:'good',   a:'gut',    b:'goed'   }
+  ],
+  'en|nl': [
+    { gloss:'water',  a:'water', b:'water' },
+    { gloss:'house',  a:'house', b:'huis'  },
+    { gloss:'milk',   a:'milk',  b:'melk'  },
+    { gloss:'mother', a:'mother',b:'moeder'}
+  ],
+  'en|sv': [
+    { gloss:'water',  a:'water',  b:'vatten' },
+    { gloss:'house',  a:'house',  b:'hus'    },
+    { gloss:'mother', a:'mother', b:'mor'    },
+    { gloss:'three',  a:'three',  b:'tre'    }
+  ],
+  'no|sv': [
+    { gloss:'water', a:'vann', b:'vatten' },
+    { gloss:'house', a:'hus',  b:'hus'    },
+    { gloss:'milk',  a:'melk', b:'mjölk'  },
+    { gloss:'eight', a:'åtte', b:'åtta'   }
+  ],
+  'da|no': [
+    { gloss:'water', a:'vand', b:'vann' },
+    { gloss:'house', a:'hus',  b:'hus'  },
+    { gloss:'milk',  a:'mælk', b:'melk' }
+  ],
+  'af|nl': [
+    { gloss:'water', a:'water', b:'water' },
+    { gloss:'house', a:'huis',  b:'huis'  },
+    { gloss:'milk',  a:'melk',  b:'melk'  },
+    { gloss:'good',  a:'goed',  b:'goed'  }
+  ],
+  'de|sv': [
+    { gloss:'water',  a:'Wasser', b:'vatten' },
+    { gloss:'house',  a:'Haus',   b:'hus'    },
+    { gloss:'father', a:'Vater',  b:'far'    }
+  ],
+  /* ─── Slavic ─── */
+  'pl|ru': [
+    { gloss:'water',  a:'woda',   b:'вода (voda)'   },
+    { gloss:'house',  a:'dom',    b:'дом (dom)'     },
+    { gloss:'milk',   a:'mleko',  b:'молоко (moloko)' },
+    { gloss:'brother',a:'brat',   b:'брат (brat)'   }
+  ],
+  'cs|pl': [
+    { gloss:'water', a:'voda',   b:'woda'  },
+    { gloss:'house', a:'dům',    b:'dom'   },
+    { gloss:'milk',  a:'mléko',  b:'mleko' },
+    { gloss:'brother',a:'bratr', b:'brat'  }
+  ],
+  'cs|sk': [
+    { gloss:'water', a:'voda', b:'voda' },
+    { gloss:'milk',  a:'mléko',b:'mlieko' },
+    { gloss:'house', a:'dům', b:'dom' }
+  ],
+  'ru|uk': [
+    { gloss:'water',  a:'вода (voda)', b:'вода (voda)' },
+    { gloss:'house',  a:'дом (dom)',   b:'дім (dim)'   },
+    { gloss:'father', a:'отец (otets)',b:'батько (batko)' },
+    { gloss:'brother',a:'брат (brat)', b:'брат (brat)' }
+  ],
+  'be|ru': [
+    { gloss:'water', a:'вада (vada)', b:'вода (voda)' },
+    { gloss:'house', a:'дом (dom)',   b:'дом (dom)'   }
+  ],
+  'bg|mk': [
+    { gloss:'water', a:'вода (voda)', b:'вода (voda)' },
+    { gloss:'house', a:'къща (kǎšta)', b:'куќа (kuḱa)' }
+  ],
+  'hr|sr': [
+    { gloss:'water', a:'voda', b:'вода (voda)' },
+    { gloss:'house', a:'kuća', b:'кућа (kuća)' }
+  ],
+  'pl|uk': [
+    { gloss:'water', a:'woda', b:'вода (voda)' },
+    { gloss:'house', a:'dom',  b:'дім (dim)'   }
+  ],
+  /* ─── Indic / Iranian ─── */
+  'hi|ur': [
+    { gloss:'water', a:'पानी (pānī)',     b:'پانی (pānī)' },
+    { gloss:'house', a:'घर (ghar)',       b:'گھر (ghar)'  },
+    { gloss:'milk',  a:'दूध (dūdh)',      b:'دودھ (dūdh)' }
+  ],
+  'hi|bn': [
+    { gloss:'water', a:'पानी (pānī)',  b:'পানি (pani)'   },
+    { gloss:'mother',a:'माँ (māṃ)',    b:'মা (ma)'        },
+    { gloss:'fire',  a:'आग (āg)',      b:'আগুন (agun)'    }
+  ],
+  'fa|tg': [
+    { gloss:'water', a:'آب (āb)',  b:'об (ob)'  },
+    { gloss:'house', a:'خانه (xāne)', b:'хона (xona)' }
+  ],
+  'fa|ur': [
+    { gloss:'water', a:'آب (āb)', b:'پانی (pānī)' },
+    { gloss:'book',  a:'کتاب (ketāb)', b:'کتاب (kitāb)' }
+  ],
+  /* ─── Sino-Tibetan ─── */
+  'zh|yue': [
+    { gloss:'one',   a:'一 (yī)',   b:'一 (yāt)' },
+    { gloss:'two',   a:'二 (èr)',   b:'二 (yi6)' },
+    { gloss:'water', a:'水 (shuǐ)', b:'水 (séui)' },
+    { gloss:'person',a:'人 (rén)',  b:'人 (jàn)'  }
+  ],
+  /* ─── Semitic ─── */
+  'ar|he': [
+    { gloss:'peace',  a:'سلام (salām)',  b:'שלום (shalom)' },
+    { gloss:'father', a:'أب (ab)',       b:'אב (av)'       },
+    { gloss:'house',  a:'بيت (bayt)',    b:'בית (bayit)'   }
+  ],
+  'am|ti': [
+    { gloss:'water', a:'ውሃ (wǝha)',  b:'ማይ (may)'   },
+    { gloss:'house', a:'ቤት (bet)',   b:'ቤት (bet)'   }
+  ],
+  /* ─── Turkic ─── */
+  'tr|az': [
+    { gloss:'water', a:'su',   b:'su'   },
+    { gloss:'house', a:'ev',   b:'ev'   },
+    { gloss:'milk',  a:'süt',  b:'süd'  },
+    { gloss:'three', a:'üç',   b:'üç'   }
+  ],
+  'tr|uz': [
+    { gloss:'water', a:'su',  b:'suv' },
+    { gloss:'house', a:'ev',  b:'uy'  }
+  ],
+  'kk|ky': [
+    { gloss:'water', a:'су (su)',  b:'суу (suu)' },
+    { gloss:'house', a:'үй (üy)',  b:'үй (üy)'   }
+  ],
+  /* ─── Uralic ─── */
+  'fi|et': [
+    { gloss:'water', a:'vesi',   b:'vesi'  },
+    { gloss:'house', a:'talo',   b:'maja'  },
+    { gloss:'two',   a:'kaksi',  b:'kaks'  }
+  ],
+  /* ─── Cross-family deep cognates (Indo-European) ─── */
+  'en|hi': [
+    { gloss:'mother', a:'mother', b:'माता (mātā)' },
+    { gloss:'father', a:'father', b:'पिता (pitā)' },
+    { gloss:'three',  a:'three',  b:'तीन (tīn)'   }
+  ],
+  'en|fa': [
+    { gloss:'mother', a:'mother', b:'مادر (mādar)' },
+    { gloss:'father', a:'father', b:'پدر (pedar)'  },
+    { gloss:'brother',a:'brother',b:'برادر (barādar)' }
+  ],
+  'en|el': [
+    { gloss:'mother',  a:'mother', b:'μητέρα (mētéra)' },
+    { gloss:'father',  a:'father', b:'πατέρα (patéra)' }
+  ],
+  'la|en': [],
+  'es|en': [
+    { gloss:'family', a:'familia', b:'family' },  /* via Latin */
+    { gloss:'animal', a:'animal',  b:'animal' }
+  ]
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LSG_GLOSSARY — definitions for linguistic terms surfaced in the edge
+   tooltip / tour. Click underlined term → small popover with the definition.
+   ═════════════════════════════════════════════════════════════════════════ */
+window.LSG_GLOSSARY = {
+  'fusional': 'A morphological type where a single suffix bundles several meanings (number, case, gender at once). Latin and Russian are fusional.',
+  'agglutinative': 'A morphological type where each meaning is expressed by its own clearly separable suffix, stacked in sequence. Turkish and Finnish are agglutinative.',
+  'analytic': 'A morphological type that relies on separate words and word order rather than inflection. Chinese and Vietnamese are highly analytic.',
+  'V2': 'Verb-second word order — the finite verb always lands in the second position of a main clause regardless of what comes first. German and Dutch are V2.',
+  'SOV': 'Subject-Object-Verb word order. Japanese, Korean, Turkish, and Hindi are SOV.',
+  'SVO': 'Subject-Verb-Object word order. English, Spanish, and Mandarin are SVO.',
+  'vowel harmony': 'A constraint where vowels within a word must share certain features (e.g. all front or all back). Common in Turkic, Uralic, and Mongolic.',
+  'pitch accent': 'A system where the meaningful prominence on a syllable is realised as a pitch movement rather than a stress, used in Japanese and Swedish.',
+  'tone': 'When pitch contour distinguishes word meaning (Mandarin mā/má/mǎ/mà = mother/hemp/horse/scold). Common in Sino-Tibetan and Niger-Congo.',
+  'cognate': 'A word in two languages that descends from the same ancestor word, e.g. English "night" and Spanish "noche" both from Latin nox.',
+  'loanword': 'A word borrowed from another language during contact, not inherited. "Sushi" in English is a loan from Japanese.',
+  'sprachbund': 'A group of geographically adjacent but unrelated languages that share structural features through long contact (e.g. the Balkan sprachbund).',
+  'sub-branch': 'A finer subdivision below a branch. West Germanic is a sub-branch of the Germanic branch.',
+  'branch': 'A first-level subdivision of a language family. Germanic, Romance, Slavic are branches of Indo-European.',
+  'family': 'The largest grouping of demonstrably related languages, sharing a common ancestor (proto-language).',
+  'phoneme': 'A meaningfully distinct sound in a language. English /p/ and /b/ are different phonemes because they distinguish "pat" from "bat".',
+  'morphology': 'The system of word internal structure — how words are built from smaller meaningful pieces (roots, affixes, etc.).',
+  'orthography': 'The writing system and spelling conventions used to represent a language.',
+  'lexical similarity': 'How much of two languages’ core vocabularies look the same — usually measured by counting shared cognates in basic word-lists.',
+  'genealogical distance': 'How far back in time the most recent common ancestor of two languages lived; measured by branching depth in the family tree.',
+  'Latin script': 'The writing system used by English and most of Western Europe; descended from Roman alphabets.',
+  'Cyrillic script': 'The writing system used by Russian and most Slavic Orthodox-tradition languages; descended from Greek.',
+  'creole': 'A stable contact language that emerged from a pidgin, with a fully developed grammar of its own. Haitian Creole and Tok Pisin are creoles.',
+  'isolate': 'A language with no known living relatives. Basque, Burushaski, and Korean (debated) are isolates.'
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LSG_CENTROIDS — approximate primary-country centroids (lat, lng) for the
+   Geographic view. Keyed by ISO 3166-1 alpha-2. Covers every country present
+   in SPEAKER_DATA[*].official across the 96-language set.
+   ═════════════════════════════════════════════════════════════════════════ */
+window.LSG_CENTROIDS = {
+  AD:[42.5,1.5],   AF:[33.9,67.7],  AL:[41.2,20.2],  AM:[40.1,45.0],  AO:[-11.2,17.9],
+  AR:[-38.4,-63.6],AT:[47.5,14.5],  AU:[-25.3,133.8],AZ:[40.1,47.6],  BA:[43.9,17.7],
+  BD:[23.7,90.4],  BE:[50.5,4.5],   BG:[42.7,25.5],  BH:[26.0,50.6],  BJ:[9.3,2.3],
+  BN:[4.5,114.7],  BO:[-16.3,-63.6],BR:[-14.2,-51.9],BT:[27.5,90.4],  BW:[-22.3,24.7],
+  BY:[53.7,27.9],  CA:[56.1,-106.3],CD:[-4.0,21.8],  CG:[-0.2,15.8],  CH:[46.8,8.2],
+  CI:[7.5,-5.5],   CL:[-35.7,-71.5],CM:[7.4,12.4],   CN:[35.9,104.2], CO:[4.6,-74.3],
+  CR:[9.7,-83.8],  CU:[21.5,-77.8], CV:[16.0,-24.0], CY:[35.1,33.4],  CZ:[49.8,15.5],
+  DE:[51.2,10.4],  DJ:[11.8,42.6],  DK:[56.3,9.5],   DO:[19.0,-70.2], DZ:[28.0,1.7],
+  EC:[-1.8,-78.2], EE:[58.6,25.0],  EG:[26.8,30.8],  ER:[15.2,39.8],  ES:[40.5,-3.7],
+  ET:[9.1,40.5],   FI:[61.9,25.7],  FJ:[-17.7,178.1],FO:[62.0,-6.8],  FR:[46.2,2.2],
+  GA:[-0.8,11.6],  GB:[55.4,-3.4],  GE:[42.3,43.4],  GH:[7.9,-1.0],   GN:[9.9,-9.7],
+  GQ:[1.6,10.3],   GR:[39.1,21.8],  GT:[15.8,-90.2], GW:[11.8,-15.2], GY:[4.9,-58.9],
+  HK:[22.3,114.2], HN:[15.2,-86.2], HR:[45.1,15.2],  HT:[18.9,-72.3], HU:[47.2,19.5],
+  ID:[-0.8,113.9], IE:[53.4,-8.2],  IL:[31.0,34.9],  IN:[20.6,78.9],  IQ:[33.2,43.7],
+  IR:[32.4,53.7],  IS:[64.9,-19.0], IT:[41.9,12.6],  JM:[18.1,-77.3], JO:[30.6,36.2],
+  JP:[36.2,138.3], KE:[-0.0,37.9],  KG:[41.2,74.8],  KH:[12.6,104.9], KI:[1.5,172.9],
+  KM:[-11.9,43.9], KP:[40.3,127.5], KR:[35.9,127.8], KW:[29.3,47.5],  KZ:[48.0,66.9],
+  LA:[19.9,102.5], LB:[33.9,35.9],  LI:[47.2,9.6],   LK:[7.9,80.8],   LR:[6.4,-9.4],
+  LS:[-29.6,28.2], LT:[55.2,23.9],  LU:[49.8,6.1],   LV:[56.9,24.6],  LY:[26.3,17.2],
+  MA:[31.8,-7.1],  MC:[43.7,7.4],   MD:[47.4,28.4],  ME:[42.7,19.4],  MG:[-18.8,46.9],
+  MK:[41.6,21.7],  ML:[17.6,-4.0],  MM:[21.9,95.9],  MN:[46.9,103.8], MO:[22.2,113.5],
+  MR:[21.0,-10.9], MT:[35.9,14.4],  MU:[-20.3,57.6], MV:[3.2,73.2],   MW:[-13.3,34.3],
+  MX:[23.6,-102.6],MY:[4.2,101.9],  MZ:[-18.7,35.5], NA:[-22.9,18.5], NE:[17.6,8.1],
+  NG:[9.1,8.7],    NI:[12.9,-85.2], NL:[52.1,5.3],   NO:[60.5,8.5],   NP:[28.4,84.1],
+  NR:[-0.5,166.9], NZ:[-40.9,174.9],OM:[21.5,55.9],  PA:[8.5,-80.8],  PE:[-9.2,-75.0],
+  PG:[-6.3,143.9], PH:[12.9,121.8], PK:[30.4,69.3],  PL:[51.9,19.1],  PR:[18.2,-66.6],
+  PS:[31.9,35.2],  PT:[39.4,-8.2],  PY:[-23.4,-58.4],QA:[25.4,51.2],  RO:[45.9,24.9],
+  RS:[44.0,21.0],  RU:[61.5,105.3], RW:[-1.9,29.9],  SA:[23.8,45.1],  SC:[-4.7,55.5],
+  SD:[12.9,30.2],  SE:[60.1,18.6],  SG:[1.4,103.8],  SI:[46.2,14.9],  SK:[48.7,19.7],
+  SL:[8.5,-11.8],  SM:[43.9,12.5],  SN:[14.5,-14.5], SO:[5.2,46.2],   SR:[3.9,-56.0],
+  SS:[6.9,31.3],   ST:[0.2,6.6],    SV:[13.8,-88.9], SY:[34.8,38.0],  SZ:[-26.5,31.5],
+  TD:[15.5,18.7],  TG:[8.6,0.8],    TH:[15.9,100.9], TJ:[38.9,71.3],  TL:[-8.9,125.7],
+  TM:[38.97,59.6], TN:[33.9,9.5],   TO:[-21.2,-175.2],TR:[38.96,35.2],TT:[10.7,-61.2],
+  TV:[-7.1,177.6], TW:[23.7,121.0], TZ:[-6.4,34.9],  UA:[48.4,31.2],  UG:[1.4,32.3],
+  US:[37.1,-95.7], UY:[-32.5,-55.8],UZ:[41.4,64.6],  VE:[6.4,-66.6],  VN:[14.1,108.3],
+  VU:[-15.4,166.9],XK:[42.6,20.9],  YE:[15.6,48.5],  ZA:[-30.6,22.9], ZM:[-13.1,27.8],
+  ZW:[-19.0,29.2]
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   LSG_T — translations for graph UI strings. Mirrors the Alpine app's
+   TRANSLATIONS pattern. Falls back to 'en' for missing keys.
+   ═════════════════════════════════════════════════════════════════════════ */
+window.LSG_T = {
+  en: {
+    title:'Language Similarity Graph',
+    subtitle:'Each node is one of the 96 languages in our dataset. A line connects two languages when their composite linguistic distance — combining lexicon, grammar, phonology, writing system, and genealogy — falls below the threshold. Drag nodes, scroll to zoom, hover to isolate a neighbourhood, click for closest neighbours.',
+    nodes:'nodes', links:'links',
+    distance:'Distance', repulsion:'Repulsion', metric:'Metric',
+    find:'Find', findPlaceholder:'Type a language…',
+    learningView:'Learning view',
+    learningViewHint:'Pick languages you know in the app above to enable this view',
+    resetView:'Reset view', copyLink:'Copy link',
+    composite:'Composite', lexical:'Lexical', grammar:'Grammar',
+    phonology:'Phonology', script:'Script', genealogy:'Genealogy',
+    closest:'Closest neighbours', addCompare:'Add to compare panel',
+    removeCompare:'Remove from compare panel',
+    network:'Network', tree:'Tree', matrix:'Matrix', geo:'Geographic',
+    pathFrom:'Path from', pathTo:'to', findPath:'Find path', clearPath:'Clear',
+    surprising:'Surprising cross-family connections',
+    contactBonus:'Contact bonus', estimated:'estimated (no direct lexical data)',
+    cognates:'Example cognates',
+    exportPng:'Export PNG', exportSvg:'Export SVG', embed:'Embed code',
+    embedCopied:'Embed code copied', linkCopied:'Link copied',
+    tourStart:'Start tour', tourPrev:'Previous', tourNext:'Next', tourSkip:'Skip',
+    tourDone:'Done', hint:'scroll = zoom · drag background = pan · drag node = pull · ←↑→↓ navigate'
+  },
+  de: {
+    title:'Sprachähnlichkeits-Graph',
+    subtitle:'Jeder Knoten ist eine der 96 Sprachen unseres Datensatzes. Eine Linie verbindet zwei Sprachen, wenn ihre zusammengesetzte linguistische Distanz — Lexikon, Grammatik, Phonologie, Schriftsystem und Stammbaum — unter dem Schwellenwert liegt. Ziehen Sie Knoten, scrollen Sie zum Zoomen.',
+    nodes:'Knoten', links:'Verbindungen',
+    distance:'Distanz', repulsion:'Abstoßung', metric:'Metrik',
+    find:'Suchen', findPlaceholder:'Sprache eingeben…',
+    learningView:'Lernansicht',
+    learningViewHint:'Wähle deine bekannten Sprachen in der App oben aus, um diese Ansicht zu aktivieren',
+    resetView:'Ansicht zurücksetzen', copyLink:'Link kopieren',
+    composite:'Gesamt', lexical:'Lexikalisch', grammar:'Grammatik',
+    phonology:'Phonologie', script:'Schrift', genealogy:'Stammbaum',
+    closest:'Nächste Nachbarn', addCompare:'Zum Vergleich hinzufügen',
+    removeCompare:'Aus Vergleich entfernen',
+    network:'Netzwerk', tree:'Baum', matrix:'Matrix', geo:'Geografisch',
+    pathFrom:'Pfad von', pathTo:'zu', findPath:'Pfad finden', clearPath:'Löschen',
+    surprising:'Überraschende familienübergreifende Verbindungen',
+    contactBonus:'Kontaktbonus', estimated:'geschätzt (keine direkten Daten)',
+    cognates:'Beispiel-Kognaten',
+    exportPng:'Als PNG', exportSvg:'Als SVG', embed:'Einbettungscode',
+    embedCopied:'Code kopiert', linkCopied:'Link kopiert',
+    tourStart:'Tour starten', tourPrev:'Zurück', tourNext:'Weiter', tourSkip:'Überspringen',
+    tourDone:'Fertig', hint:'scrollen = zoomen · Hintergrund ziehen = bewegen · Knoten ziehen = anziehen'
+  },
+  fr: {
+    title:'Graphe de similarité des langues',
+    subtitle:'Chaque nœud représente une des 96 langues. Une ligne relie deux langues lorsque leur distance linguistique composite — lexique, grammaire, phonologie, écriture et généalogie — est inférieure au seuil.',
+    nodes:'nœuds', links:'liens',
+    distance:'Distance', repulsion:'Répulsion', metric:'Métrique',
+    find:'Rechercher', findPlaceholder:'Tapez une langue…',
+    learningView:'Vue d’apprentissage',
+    learningViewHint:'Sélectionnez les langues que vous connaissez pour activer cette vue',
+    resetView:'Réinitialiser', copyLink:'Copier le lien',
+    composite:'Composite', lexical:'Lexical', grammar:'Grammaire',
+    phonology:'Phonologie', script:'Écriture', genealogy:'Généalogie',
+    closest:'Plus proches voisins', addCompare:'Ajouter à la comparaison',
+    removeCompare:'Retirer de la comparaison',
+    network:'Réseau', tree:'Arbre', matrix:'Matrice', geo:'Géographique',
+    pathFrom:'Chemin de', pathTo:'à', findPath:'Chercher', clearPath:'Effacer',
+    surprising:'Connexions surprenantes entre familles',
+    contactBonus:'Bonus de contact', estimated:'estimé (pas de données directes)',
+    cognates:'Cognats d’exemple',
+    exportPng:'Exporter PNG', exportSvg:'Exporter SVG', embed:'Code d’intégration',
+    embedCopied:'Code copié', linkCopied:'Lien copié',
+    tourStart:'Démarrer le tour', tourPrev:'Précédent', tourNext:'Suivant', tourSkip:'Passer',
+    tourDone:'Terminé', hint:'molette = zoom · fond = déplacer · nœud = tirer'
+  },
+  es: {
+    title:'Grafo de similitud de idiomas',
+    subtitle:'Cada nodo es uno de los 96 idiomas. Una línea conecta dos idiomas cuando su distancia lingüística compuesta — léxico, gramática, fonología, escritura y genealogía — es menor que el umbral.',
+    nodes:'nodos', links:'enlaces',
+    distance:'Distancia', repulsion:'Repulsión', metric:'Métrica',
+    find:'Buscar', findPlaceholder:'Escribe un idioma…',
+    learningView:'Vista de aprendizaje',
+    learningViewHint:'Selecciona los idiomas que conoces para activar esta vista',
+    resetView:'Restablecer vista', copyLink:'Copiar enlace',
+    composite:'Compuesto', lexical:'Léxico', grammar:'Gramática',
+    phonology:'Fonología', script:'Escritura', genealogy:'Genealogía',
+    closest:'Vecinos más cercanos', addCompare:'Añadir a comparación',
+    removeCompare:'Quitar de comparación',
+    network:'Red', tree:'Árbol', matrix:'Matriz', geo:'Geográfico',
+    pathFrom:'Ruta de', pathTo:'a', findPath:'Buscar ruta', clearPath:'Borrar',
+    surprising:'Conexiones sorprendentes entre familias',
+    contactBonus:'Bonificación por contacto', estimated:'estimado (sin datos directos)',
+    cognates:'Cognados de ejemplo',
+    exportPng:'Exportar PNG', exportSvg:'Exportar SVG', embed:'Código de inserción',
+    embedCopied:'Código copiado', linkCopied:'Enlace copiado',
+    tourStart:'Iniciar tour', tourPrev:'Anterior', tourNext:'Siguiente', tourSkip:'Omitir',
+    tourDone:'Terminar', hint:'rueda = zoom · fondo = mover · nodo = tirar'
+  },
+  it: {
+    title:'Grafo di similarità linguistica',
+    subtitle:'Ogni nodo è una delle 96 lingue. Una linea collega due lingue quando la loro distanza linguistica composita — lessico, grammatica, fonologia, scrittura e genealogia — è inferiore alla soglia.',
+    nodes:'nodi', links:'collegamenti',
+    distance:'Distanza', repulsion:'Repulsione', metric:'Metrica',
+    find:'Cerca', findPlaceholder:'Digita una lingua…',
+    learningView:'Vista di apprendimento',
+    learningViewHint:'Seleziona le lingue che conosci per attivare questa vista',
+    resetView:'Reimposta vista', copyLink:'Copia link',
+    composite:'Composito', lexical:'Lessicale', grammar:'Grammatica',
+    phonology:'Fonologia', script:'Scrittura', genealogy:'Genealogia',
+    closest:'Vicini più prossimi', addCompare:'Aggiungi al confronto',
+    removeCompare:'Rimuovi dal confronto',
+    network:'Rete', tree:'Albero', matrix:'Matrice', geo:'Geografico',
+    pathFrom:'Percorso da', pathTo:'a', findPath:'Trova percorso', clearPath:'Pulisci',
+    surprising:'Connessioni sorprendenti tra famiglie',
+    contactBonus:'Bonus di contatto', estimated:'stimato (nessun dato diretto)',
+    cognates:'Cognati di esempio',
+    exportPng:'Esporta PNG', exportSvg:'Esporta SVG', embed:'Codice di incorporamento',
+    embedCopied:'Codice copiato', linkCopied:'Link copiato',
+    tourStart:'Avvia tour', tourPrev:'Precedente', tourNext:'Successivo', tourSkip:'Salta',
+    tourDone:'Fatto', hint:'rotella = zoom · sfondo = sposta · nodo = trascina'
+  },
+  pl: {
+    title:'Graf podobieństwa języków',
+    subtitle:'Każdy węzeł to jeden z 96 języków. Linia łączy dwa języki, gdy ich łączna odległość językowa — leksyka, gramatyka, fonologia, pismo i genealogia — jest poniżej progu.',
+    nodes:'węzły', links:'połączenia',
+    distance:'Odległość', repulsion:'Odpychanie', metric:'Metryka',
+    find:'Znajdź', findPlaceholder:'Wpisz język…',
+    learningView:'Widok nauki',
+    learningViewHint:'Wybierz znane języki w aplikacji powyżej, aby włączyć ten widok',
+    resetView:'Resetuj widok', copyLink:'Kopiuj link',
+    composite:'Złożona', lexical:'Leksykalna', grammar:'Gramatyka',
+    phonology:'Fonologia', script:'Pismo', genealogy:'Genealogia',
+    closest:'Najbliżsi sąsiedzi', addCompare:'Dodaj do porównania',
+    removeCompare:'Usuń z porównania',
+    network:'Sieć', tree:'Drzewo', matrix:'Macierz', geo:'Geograficzny',
+    pathFrom:'Ścieżka od', pathTo:'do', findPath:'Znajdź ścieżkę', clearPath:'Wyczyść',
+    surprising:'Zaskakujące połączenia między rodzinami',
+    contactBonus:'Bonus kontaktowy', estimated:'szacowane (brak danych)',
+    cognates:'Przykładowe pokrewne',
+    exportPng:'Eksport PNG', exportSvg:'Eksport SVG', embed:'Kod osadzania',
+    embedCopied:'Kod skopiowany', linkCopied:'Link skopiowany',
+    tourStart:'Rozpocznij', tourPrev:'Wstecz', tourNext:'Dalej', tourSkip:'Pomiń',
+    tourDone:'Gotowe', hint:'kółko = zoom · tło = przesuwaj · węzeł = przeciągnij'
+  },
+  tr: {
+    title:'Dil Benzerlik Grafiği',
+    subtitle:'Her düğüm 96 dilden biridir. İki dil arasındaki birleşik dilbilimsel mesafe — söz varlığı, dilbilgisi, ses, yazı sistemi ve genealoji — eşik değerin altındaysa bir çizgi onları bağlar.',
+    nodes:'düğüm', links:'bağlantı',
+    distance:'Mesafe', repulsion:'İtme', metric:'Metrik',
+    find:'Bul', findPlaceholder:'Bir dil yaz…',
+    learningView:'Öğrenme görünümü',
+    learningViewHint:'Bu görünümü etkinleştirmek için yukarıdaki uygulamada bildiğiniz dilleri seçin',
+    resetView:'Görünümü sıfırla', copyLink:'Bağlantıyı kopyala',
+    composite:'Birleşik', lexical:'Sözlüksel', grammar:'Dilbilgisi',
+    phonology:'Sesbilim', script:'Yazı', genealogy:'Soyağacı',
+    closest:'En yakın komşular', addCompare:'Karşılaştırmaya ekle',
+    removeCompare:'Karşılaştırmadan çıkar',
+    network:'Ağ', tree:'Ağaç', matrix:'Matris', geo:'Coğrafi',
+    pathFrom:'Yol başlangıcı', pathTo:'son', findPath:'Yolu bul', clearPath:'Temizle',
+    surprising:'Aileler arası şaşırtıcı bağlantılar',
+    contactBonus:'Temas bonusu', estimated:'tahmini (doğrudan veri yok)',
+    cognates:'Örnek soydaş kelimeler',
+    exportPng:'PNG dışa aktar', exportSvg:'SVG dışa aktar', embed:'Gömme kodu',
+    embedCopied:'Kod kopyalandı', linkCopied:'Bağlantı kopyalandı',
+    tourStart:'Tura başla', tourPrev:'Önceki', tourNext:'Sonraki', tourSkip:'Geç',
+    tourDone:'Bitti', hint:'tekerlek = yakınlaştır · arka plan = kaydır · düğüm = çek'
+  },
+  ru: {
+    title:'Граф языкового сходства',
+    subtitle:'Каждый узел — один из 96 языков. Линия соединяет два языка, когда их совокупная лингвистическая дистанция — лексика, грамматика, фонология, письменность и генеалогия — ниже порогового значения.',
+    nodes:'узлов', links:'связей',
+    distance:'Дистанция', repulsion:'Отталкивание', metric:'Метрика',
+    find:'Найти', findPlaceholder:'Введите язык…',
+    learningView:'Режим обучения',
+    learningViewHint:'Выберите известные вам языки в приложении выше, чтобы включить этот режим',
+    resetView:'Сбросить вид', copyLink:'Копировать ссылку',
+    composite:'Общая', lexical:'Лексическая', grammar:'Грамматика',
+    phonology:'Фонология', script:'Письменность', genealogy:'Генеалогия',
+    closest:'Ближайшие соседи', addCompare:'Добавить в сравнение',
+    removeCompare:'Убрать из сравнения',
+    network:'Сеть', tree:'Дерево', matrix:'Матрица', geo:'Карта',
+    pathFrom:'Путь от', pathTo:'до', findPath:'Найти путь', clearPath:'Очистить',
+    surprising:'Удивительные межсемейные связи',
+    contactBonus:'Контактный бонус', estimated:'оценка (нет прямых данных)',
+    cognates:'Примеры родственных слов',
+    exportPng:'Сохранить PNG', exportSvg:'Сохранить SVG', embed:'Код вставки',
+    embedCopied:'Код скопирован', linkCopied:'Ссылка скопирована',
+    tourStart:'Начать тур', tourPrev:'Назад', tourNext:'Далее', tourSkip:'Пропустить',
+    tourDone:'Готово', hint:'колесо = масштаб · фон = панорама · узел = тянуть'
+  }
+};
+</script>
+
+<!-- Tour overlay (lives at body root so it can spotlight any element) -->
+<div id="lsg-tour-backdrop" hidden></div>
+<div id="lsg-tour-spotlight" hidden></div>
+<div id="lsg-tour-popover" hidden role="dialog" aria-modal="true" aria-labelledby="lsg-tour-title">
+  <div class="lsg-tour-title" id="lsg-tour-title">—</div>
+  <div class="lsg-tour-body"  id="lsg-tour-body">—</div>
+  <div class="lsg-tour-actions">
+    <button type="button" class="lsg-tour-skip" id="lsg-tour-skip" data-i18n="tourSkip">Skip</button>
+    <div style="display:flex;align-items:center;gap:8px">
+      <span class="lsg-tour-counter" id="lsg-tour-counter">1 / 8</span>
+      <button type="button" class="lsg-tour-btn" id="lsg-tour-prev" data-i18n="tourPrev">Previous</button>
+      <button type="button" class="lsg-tour-btn lsg-tour-primary" id="lsg-tour-next" data-i18n="tourNext">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Glossary popover (positioned dynamically near clicked term) -->
+<div id="lsg-gloss-popover" class="lsg-gloss-popover" hidden role="tooltip">
+  <div class="lsg-gloss-popover-title" id="lsg-gloss-popover-title">—</div>
+  <div id="lsg-gloss-popover-body">—</div>
+</div>
+
+<!-- ─────────────────────────────────────────────────────────────────────────
+     LANGUAGE SIMILARITY GRAPH — engine v3
+     v2 features (force sim, zoom, drag, hover, click, threshold, metric switch,
+     edge tip, search, Alpine bridge, learning view, keyboard nav, permalink,
+     hub labels, hulls, curved arcs, reduced motion) plus:
+       • View modes: Network / Tree (dendrogram) / Matrix (heatmap) / Geo
+       • Single-linkage hierarchical clustering on the distance matrix
+       • Shortest learning path (Dijkstra) overlaid on the network
+       • Surprising cross-family connections panel
+       • Cognate examples in edge tooltip (LSG_COGNATES)
+       • Glossary popovers on linguistic terms (LSG_GLOSSARY)
+       • First-time guided tour
+       • i18n via LSG_T (en/de/fr/es/it/pl/tr/ru), synced with Alpine currentLang
+       • Export: PNG, SVG, embed iframe code
+       • Data-quality indicator (curated vs heuristic lexical score)
      ─────────────────────────────────────────────────────────────────────── -->
 <script>
 (function () {
@@ -5595,34 +6440,29 @@ function app() {
     var tries = 0;
     function attempt() {
       tries++;
-      var hasD3   = typeof window.d3 !== 'undefined';
-      var hasDOM  = document.readyState === 'interactive' || document.readyState === 'complete';
-      var hasData = typeof DATA !== 'undefined' && DATA && DATA.languages;
-      var hasHost = document.getElementById('lsg-svg');
-      if (hasD3 && hasDOM && hasData && hasHost) { fn(); return; }
-      if (tries > 200) { console.warn('[LangGraph] gave up waiting for deps'); return; }
+      var ok = typeof window.d3 !== 'undefined' &&
+               (document.readyState === 'interactive' || document.readyState === 'complete') &&
+               typeof DATA !== 'undefined' && DATA && DATA.languages &&
+               document.getElementById('lsg-svg');
+      if (ok) { fn(); return; }
+      if (tries > 200) { console.warn('[LangGraph] gave up'); return; }
       setTimeout(attempt, 50);
     }
-    if (document.readyState === 'loading') {
+    if (document.readyState === 'loading')
       document.addEventListener('DOMContentLoaded', attempt, { once: true });
-    } else { attempt(); }
+    else attempt();
   }
-
   whenReady(function () { initLangGraph(window.d3, DATA); });
 
   /* ═══════════════════════════════════════════════════════════════════════
-     1. Scoring — pure functions. Each `sim*` returns ∈ [0,1] (1 = identical).
-        `contactBonus*` returns a directional or omnidirectional bonus.
+     1. Scoring — pure functions, returning ∈ [0,1] (1 = identical)
      ═════════════════════════════════════════════════════════════════════ */
-  var DEFAULT_WEIGHTS_GRAPH = {
-    lexical: 35, grammatical: 25, phonological: 10,
-    writing_system: 10, genealogical: 20
-  };
-
+  var DW = { lexical: 35, grammatical: 25, phonological: 10, writing_system: 10, genealogical: 20 };
   function pairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
+  function isLexCurated(D, a, b) { return D.lexical[pairKey(a, b)] !== undefined; }
 
   function simLexical(D, a, b) {
-    if (a === b) return 1.0;
+    if (a === b) return 1;
     var k = pairKey(a, b);
     if (D.lexical[k] !== undefined) return D.lexical[k];
     var la = D.languages[a], lb = D.languages[b];
@@ -5633,222 +6473,201 @@ function app() {
   }
   function simGenealogical(D, a, b) {
     var la = D.languages[a], lb = D.languages[b];
-    if (la.family    !== lb.family)    return 0.0;
+    if (la.family    !== lb.family)    return 0;
     if (la.branch    !== lb.branch)    return 0.4;
     if (la.subbranch !== lb.subbranch) return 0.7;
-    return 1.0;
+    return 1;
   }
   function simWordOrder(la, lb) {
-    var fam = {
-      'SVO':              ['SVO'],
-      'V2':               ['V2','SVO'],
-      'SOV':              ['SOV'],
-      'VSO':              ['VSO'],
-      'SVO(free)':        ['SVO(free)','SVO'],
-      'SOV(free)':        ['SOV(free)','SOV'],
-      'topic-focus(free)':['topic-focus(free)','SVO(free)','SVO']
-    };
-    if (la.word_order === lb.word_order) return 1.0;
+    var fam = { 'SVO':['SVO'], 'V2':['V2','SVO'], 'SOV':['SOV'], 'VSO':['VSO'],
+                'SVO(free)':['SVO(free)','SVO'], 'SOV(free)':['SOV(free)','SOV'],
+                'topic-focus(free)':['topic-focus(free)','SVO(free)','SVO'] };
+    if (la.word_order === lb.word_order) return 1;
     if ((fam[la.word_order] || []).indexOf(lb.word_order) > -1) return 0.7;
     if ((fam[lb.word_order] || []).indexOf(la.word_order) > -1) return 0.7;
-    return 0.0;
+    return 0;
   }
   function simMorph(la, lb) {
-    if (la.morphology === lb.morphology) return 1.0;
-    var pairs = {
-      'analytic|analytic-fusional':         0.8,
-      'fusional|analytic-fusional':         0.8,
-      'analytic|fusional':                  0.3,
-      'fusional|agglutinative':             0.2,
-      'analytic|agglutinative':             0.1,
-      'analytic-fusional|agglutinative':    0.15,
-      'analytic|analytic-agglutinative':    0.4,
-      'agglutinative|analytic-agglutinative': 0.6
-    };
-    var k = [la.morphology, lb.morphology].sort().join('|');
-    return pairs[k] || 0.0;
+    if (la.morphology === lb.morphology) return 1;
+    var p = { 'analytic|analytic-fusional':0.8, 'fusional|analytic-fusional':0.8,
+              'analytic|fusional':0.3, 'fusional|agglutinative':0.2,
+              'analytic|agglutinative':0.1, 'analytic-fusional|agglutinative':0.15,
+              'analytic|analytic-agglutinative':0.4, 'agglutinative|analytic-agglutinative':0.6 };
+    return p[[la.morphology, lb.morphology].sort().join('|')] || 0;
   }
   function simGrammatical(D, a, b) {
     var la = D.languages[a], lb = D.languages[b];
-    var caseDiff   = Math.abs((la.case_count   || 0) - (lb.case_count   || 0));
-    var caseScore  = Math.max(0, 1 - caseDiff / 8);
-    var genderDiff = Math.abs((la.gender_count || 0) - (lb.gender_count || 0));
-    var genderScore= Math.max(0, 1 - genderDiff / 3);
-    var artScore;
-    if (la.articles === lb.articles) artScore = 1.0;
-    else if (la.articles !== 'none' && lb.articles !== 'none') artScore = 0.5;
-    else artScore = 0.2;
-    var wordScore  = simWordOrder(la, lb);
-    var morphScore = simMorph(la, lb);
-    var vhScore    = (la.vowel_harmony === lb.vowel_harmony) ? 1.0 : 0.0;
-    return (caseScore + genderScore + artScore + wordScore + morphScore + vhScore) / 6;
+    var cs = Math.max(0, 1 - Math.abs((la.case_count||0)   - (lb.case_count||0))   / 8);
+    var gs = Math.max(0, 1 - Math.abs((la.gender_count||0) - (lb.gender_count||0)) / 3);
+    var as = (la.articles === lb.articles) ? 1 :
+             (la.articles !== 'none' && lb.articles !== 'none' ? 0.5 : 0.2);
+    return (cs + gs + as + simWordOrder(la, lb) + simMorph(la, lb) +
+            (la.vowel_harmony === lb.vowel_harmony ? 1 : 0)) / 6;
   }
   function simPhonological(D, a, b) {
     var pa = new Set(D.languages[a].phoneme_features || []);
     var pb = new Set(D.languages[b].phoneme_features || []);
-    if (pa.size === 0 && pb.size === 0) return 1.0;
-    var inter = 0;
-    pa.forEach(function (x) { if (pb.has(x)) inter++; });
-    var union = pa.size + pb.size - inter;
-    return union === 0 ? 0 : inter / union;
+    if (pa.size === 0 && pb.size === 0) return 1;
+    var inter = 0; pa.forEach(function (x) { if (pb.has(x)) inter++; });
+    var u = pa.size + pb.size - inter; return u === 0 ? 0 : inter / u;
   }
   function scriptRoot(ws) {
     if (!ws) return '';
-    if (ws.indexOf('Latin')      > -1) return 'Latin';
-    if (ws.indexOf('Cyrillic')   > -1) return 'Cyrillic';
-    if (ws.indexOf('Arabic')     > -1) return 'Arabic';
-    if (ws.indexOf('Hebrew')     > -1) return 'Hebrew';
-    if (ws.indexOf('Devanagari') > -1) return 'Devanagari';
+    var roots = ['Latin','Cyrillic','Arabic','Hebrew','Devanagari'];
+    for (var i = 0; i < roots.length; i++) if (ws.indexOf(roots[i]) > -1) return roots[i];
     return ws;
   }
   function simWritingSystem(D, a, b) {
     var sa = D.languages[a].writing_system, sb = D.languages[b].writing_system;
-    if (sa === sb) return 1.0;
-    return scriptRoot(sa) === scriptRoot(sb) ? 0.4 : 0.0;
+    if (sa === sb) return 1;
+    return scriptRoot(sa) === scriptRoot(sb) ? 0.4 : 0;
   }
-  /* Symmetric (any-direction) contact bonus — checks both H|T and T|H. */
   function contactSym(D, a, b) {
     var info = D.contact[a + '|' + b] || D.contact[b + '|' + a];
     return info ? info.bonus : 0;
   }
-  /* Directional contact bonus — knowing `from` helps with `to` via the
-     loanword direction encoded as `from|to`. */
   function contactDir(D, from, to) {
     var info = D.contact[from + '|' + to];
     return info ? info.bonus : 0;
   }
-
-  /* Per-dim similarity. Single source of truth used by composite, by the
-     metric switcher's single-dim mode, and by the edge hover sub-score row. */
-  function simByMetric(D, metric, a, b, directional) {
+  function simByMetric(D, metric, a, b, dir) {
     switch (metric) {
       case 'lexical': {
-        var base = simLexical(D, a, b);
-        var bonus = directional ? contactDir(D, a, b) : contactSym(D, a, b);
-        return Math.min(1.0, base + bonus);
+        var bonus = dir ? contactDir(D, a, b) : contactSym(D, a, b);
+        return Math.min(1, simLexical(D, a, b) + bonus);
       }
-      case 'grammatical':   return simGrammatical(D, a, b);
-      case 'phonological':  return simPhonological(D, a, b);
-      case 'writing_system':return simWritingSystem(D, a, b);
-      case 'genealogical':  return simGenealogical(D, a, b);
-      default: return null;
+      case 'grammatical':    return simGrammatical(D, a, b);
+      case 'phonological':   return simPhonological(D, a, b);
+      case 'writing_system': return simWritingSystem(D, a, b);
+      case 'genealogical':   return simGenealogical(D, a, b);
     }
   }
-  function composite(D, a, b, directional, weights) {
-    var w = weights || DEFAULT_WEIGHTS_GRAPH;
-    var lex  = simByMetric(D, 'lexical',        a, b, directional);
+  function composite(D, a, b, dir) {
+    var w = DW;
+    var lex  = simByMetric(D, 'lexical',        a, b, dir);
     var gen  = simByMetric(D, 'genealogical',   a, b, false);
     var gram = simByMetric(D, 'grammatical',    a, b, false);
     var phon = simByMetric(D, 'phonological',   a, b, false);
     var ws   = simByMetric(D, 'writing_system', a, b, false);
-    var total = w.lexical + w.grammatical + w.phonological + w.writing_system + w.genealogical;
-    return (
-      lex  * (w.lexical        / total) +
-      gen  * (w.genealogical   / total) +
-      gram * (w.grammatical    / total) +
-      phon * (w.phonological   / total) +
-      ws   * (w.writing_system / total)
-    );
+    var T = w.lexical + w.grammatical + w.phonological + w.writing_system + w.genealogical;
+    return lex*(w.lexical/T) + gen*(w.genealogical/T) + gram*(w.grammatical/T) +
+           phon*(w.phonological/T) + ws*(w.writing_system/T);
   }
-  /* Distance ∈ [0,100]. `metric === 'composite'` uses the weighted blend;
-     anything else uses that single dimension. `directional` only matters for
-     lexical / composite (contact bonus has a direction). */
-  function distance(D, metric, a, b, directional) {
+  function distance(D, metric, a, b, dir) {
     if (a === b) return 0;
-    var sim = (metric === 'composite')
-      ? composite(D, a, b, !!directional, null)
-      : simByMetric(D, metric, a, b, !!directional);
-    return 100 * (1 - sim);
+    var s = (metric === 'composite') ? composite(D, a, b, !!dir) : simByMetric(D, metric, a, b, !!dir);
+    return 100 * (1 - s);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     2. Data transforms
+     2. Hierarchical clustering (single-linkage) — used by Tree + Matrix views
      ═════════════════════════════════════════════════════════════════════ */
-  function buildNodes(D) {
-    return Object.keys(D.languages).map(function (code) {
-      var l = D.languages[code];
-      return {
-        id:        code,
-        name:      l.name,
-        group:     l.family    || 'Other',
-        branch:    l.branch    || '',
-        subbranch: l.subbranch || '',
-        speakers:  l.speakers_m || 0
-      };
+  function singleLinkageCluster(codes, distFn) {
+    // returns root node {id, dist, children?, code?}
+    var n = codes.length;
+    var clusters = codes.map(function (c, i) {
+      return { id: i, members: [i], leaf: true, code: c, dist: 0 };
     });
-  }
-  /* Symmetric pairs (i<j). Used in default view for every metric. */
-  function buildSymLinks(D, codes, metric) {
-    var links = [];
-    for (var i = 0; i < codes.length; i++) {
-      for (var j = i + 1; j < codes.length; j++) {
-        var a = codes[i], b = codes[j];
-        var d = distance(D, metric, a, b, false);
-        links.push({ source: a, target: b, dist: d, directed: false });
-      }
+    var dm = [];
+    for (var i = 0; i < n; i++) {
+      dm[i] = [];
+      for (var j = 0; j < n; j++) dm[i][j] = (i === j) ? 0 : distFn(codes[i], codes[j]);
     }
-    return links;
-  }
-  /* Directed FROM each speaker TO every non-speaker, using directional
-     scoring (contact bonus FROM the speaker into the target). Used in
-     "Learning view" when the user has selected speakers in the Alpine app. */
-  function buildDirLinks(D, codes, metric, speakers) {
-    var spkSet = Object.create(null);
-    speakers.forEach(function (s) { spkSet[s] = true; });
-    var links = [];
-    for (var s = 0; s < speakers.length; s++) {
-      var from = speakers[s];
-      if (!(from in D.languages)) continue;
-      for (var t = 0; t < codes.length; t++) {
-        var to = codes[t];
-        if (to === from || spkSet[to]) continue;
-        var d = distance(D, metric, from, to, true);
-        links.push({ source: from, target: to, dist: d, directed: true });
+    var nextId = n;
+    while (clusters.length > 1) {
+      // Find closest pair
+      var best = Infinity, bi = 0, bj = 1;
+      for (var a = 0; a < clusters.length; a++) {
+        for (var b = a + 1; b < clusters.length; b++) {
+          var d = Infinity;
+          var ma = clusters[a].members, mb = clusters[b].members;
+          for (var u = 0; u < ma.length; u++)
+            for (var v = 0; v < mb.length; v++)
+              if (dm[ma[u]][mb[v]] < d) d = dm[ma[u]][mb[v]];
+          if (d < best) { best = d; bi = a; bj = b; }
+        }
       }
+      var ca = clusters[bi], cb = clusters[bj];
+      var merged = {
+        id: nextId++, leaf: false, dist: best,
+        children: [ca, cb],
+        members: ca.members.concat(cb.members)
+      };
+      var next = [];
+      for (var k = 0; k < clusters.length; k++)
+        if (k !== bi && k !== bj) next.push(clusters[k]);
+      next.push(merged);
+      clusters = next;
     }
-    return links;
+    return clusters[0];
+  }
+  /* Walk the tree, return leaves in left-right order */
+  function leafOrder(root) {
+    var out = [];
+    (function walk(n) {
+      if (n.leaf) { out.push(n.code); return; }
+      walk(n.children[0]); walk(n.children[1]);
+    })(root);
+    return out;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     3. URL state — read & write to `#lsg=…`
+     3. Dijkstra — shortest path on the full pairwise graph
+     ═════════════════════════════════════════════════════════════════════ */
+  function dijkstra(codes, distFn, fromCode, toCode) {
+    var n = codes.length;
+    var idx = {}; codes.forEach(function (c, i) { idx[c] = i; });
+    if (!(fromCode in idx) || !(toCode in idx)) return null;
+    var src = idx[fromCode], dst = idx[toCode];
+    var dist = new Array(n).fill(Infinity);
+    var prev = new Array(n).fill(-1);
+    var used = new Array(n).fill(false);
+    dist[src] = 0;
+    for (var step = 0; step < n; step++) {
+      var u = -1, best = Infinity;
+      for (var i = 0; i < n; i++) if (!used[i] && dist[i] < best) { best = dist[i]; u = i; }
+      if (u === -1 || u === dst) break;
+      used[u] = true;
+      for (var v = 0; v < n; v++) {
+        if (used[v]) continue;
+        var w = distFn(codes[u], codes[v]);
+        if (w == null) continue;
+        var alt = dist[u] + w;
+        if (alt < dist[v]) { dist[v] = alt; prev[v] = u; }
+      }
+    }
+    if (!isFinite(dist[dst])) return null;
+    var path = []; for (var x = dst; x !== -1; x = prev[x]) path.unshift(codes[x]);
+    return { path: path, totalDist: dist[dst] };
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     4. URL state
      ═════════════════════════════════════════════════════════════════════ */
   var URL_KEY = 'lsg';
   function readUrlState() {
-    var hash = location.hash.replace(/^#/, '');
-    if (!hash) return {};
-    // hash is a&b&c — find our segment
+    var hash = location.hash.replace(/^#/, ''); if (!hash) return {};
     var parts = hash.split('&');
     for (var i = 0; i < parts.length; i++) {
-      var seg = parts[i];
-      var eq = seg.indexOf('=');
-      if (eq < 0) continue;
-      var key = seg.slice(0, eq), val = seg.slice(eq + 1);
-      if (key !== URL_KEY) continue;
-      // val is `t45,m=composite,n=es,k=1.5,x=10,y=-20,L=1`
+      var seg = parts[i], eq = seg.indexOf('=');
+      if (eq < 0 || seg.slice(0, eq) !== URL_KEY) continue;
       var out = {};
-      val.split(',').forEach(function (kv) {
+      seg.slice(eq + 1).split(',').forEach(function (kv) {
         var p = kv.indexOf('=');
-        if (p < 0) {
-          // shorthand like "t45" → key=first char, val=rest
-          if (kv.length > 1) out[kv[0]] = kv.slice(1);
-        } else {
-          out[kv.slice(0, p)] = kv.slice(p + 1);
-        }
+        if (p < 0) { if (kv.length > 1) out[kv[0]] = kv.slice(1); }
+        else out[kv.slice(0, p)] = kv.slice(p + 1);
       });
       return out;
     }
     return {};
   }
   function writeUrlState(state) {
-    // Build our segment
     var pieces = [];
     Object.keys(state).forEach(function (k) {
-      var v = state[k];
-      if (v === null || v === undefined || v === '') return;
+      var v = state[k]; if (v === null || v === undefined || v === '') return;
       pieces.push(k + '=' + encodeURIComponent(String(v)));
     });
     var ourSeg = pieces.length ? (URL_KEY + '=' + pieces.join(',')) : '';
-    // Splice into existing hash, replacing any prior lsg= segment
     var hash = location.hash.replace(/^#/, '');
     var parts = hash ? hash.split('&').filter(function (p) {
       return p.indexOf(URL_KEY + '=') !== 0;
@@ -5859,20 +6678,45 @@ function app() {
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     4. Alpine bridge — read speakers / recommendations without mutating
+     5. Alpine bridge
      ═════════════════════════════════════════════════════════════════════ */
   function getAlpineData() {
     if (!window.Alpine) return null;
-    var el = document.querySelector('[x-data="app()"]');
-    if (!el) return null;
+    var el = document.querySelector('[x-data="app()"]'); if (!el) return null;
     try { return window.Alpine.$data(el); } catch (e) { return null; }
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     5. Main init
+     6. i18n — tt(key); applyI18n() updates [data-i18n*] elements
+     ═════════════════════════════════════════════════════════════════════ */
+  var currentUiLang = 'en';
+  function tt(key) {
+    var dict = (window.LSG_T && window.LSG_T[currentUiLang]) || window.LSG_T.en;
+    var fallback = window.LSG_T && window.LSG_T.en;
+    return (dict && dict[key]) || (fallback && fallback[key]) || key;
+  }
+  function applyI18n(root) {
+    root = root || document;
+    root.querySelectorAll('[data-i18n]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n');
+      var v = tt(key); if (v) el.textContent = v;
+    });
+    root.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-title');
+      var v = tt(key); if (v) el.title = v;
+    });
+    root.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      var key = el.getAttribute('data-i18n-placeholder');
+      var v = tt(key); if (v) el.placeholder = v;
+    });
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     7. Main init
      ═════════════════════════════════════════════════════════════════════ */
   function initLangGraph(d3, D) {
-    /* ----- elements ----- */
+    /* ── elements ───────────────────────────────────────────────────── */
+    var container = document.getElementById('graph-container');
     var svgEl     = document.getElementById('lsg-svg');
     var wrap      = document.getElementById('lsg-canvas-wrap');
     var tipEl     = document.getElementById('lsg-tip');
@@ -5892,169 +6736,309 @@ function app() {
     var copyToast = document.getElementById('lsg-copy-toast');
     var statNodes = document.getElementById('lsg-stat-nodes-val');
     var statLinks = document.getElementById('lsg-stat-links-val');
-    var metricRow = document.querySelector('#graph-container .lsg-chip-row');
+    var metricRow = document.querySelector('#graph-container .lsg-chip-row[aria-label="Distance metric"]');
     var searchInp = document.getElementById('lsg-search');
     var searchRes = document.getElementById('lsg-search-results');
     var learnInp  = document.getElementById('lsg-learning');
     var learnWrap = document.getElementById('lsg-learning-wrap');
+    var viewRow   = document.getElementById('lsg-view-row');
+    var pathFrom  = document.getElementById('lsg-path-from');
+    var pathTo    = document.getElementById('lsg-path-to');
+    var pathFind  = document.getElementById('lsg-path-find');
+    var pathClear = document.getElementById('lsg-path-clear');
+    var pathRes   = document.getElementById('lsg-path-result');
+    var surprList = document.getElementById('lsg-surprising-list');
+    var glossPop  = document.getElementById('lsg-gloss-popover');
+    var glossPopT = document.getElementById('lsg-gloss-popover-title');
+    var glossPopB = document.getElementById('lsg-gloss-popover-body');
+    var exportBtn = document.getElementById('lsg-export-btn');
+    var exportMenu= document.getElementById('lsg-export-menu');
+    var helpBtn   = document.getElementById('lsg-help-btn');
 
-    /* ----- runtime state ----- */
+    /* ── data ──────────────────────────────────────────────────────── */
     var codes = Object.keys(D.languages);
-    var nodes = buildNodes(D);
+    var nodes = codes.map(function (c) {
+      var l = D.languages[c];
+      return { id: c, name: l.name, group: l.family || 'Other',
+               branch: l.branch || '', subbranch: l.subbranch || '',
+               speakers: l.speakers_m || 0 };
+    });
     var nodeById = Object.create(null);
     nodes.forEach(function (n) { nodeById[n.id] = n; });
-    /* Cache symmetric links per metric (built on first use) */
-    var symLinksCache = Object.create(null);
-    function getSymLinks(metric) {
-      if (!symLinksCache[metric]) symLinksCache[metric] = buildSymLinks(D, codes, metric);
-      return symLinksCache[metric];
-    }
+    var families = Array.from(new Set(nodes.map(function (n) { return n.group; }))).sort();
 
+    /* ── colour scale ──────────────────────────────────────────────── */
+    var palette = [
+      '#34d399','#a78bfa','#60a5fa','#fbbf24','#f472b6','#22d3ee','#fb923c',
+      '#a3e635','#f87171','#c084fc','#2dd4bf','#facc15','#e879f9','#38bdf8',
+      '#fdba74','#bef264','#fb7185'
+    ];
+    var color = d3.scaleOrdinal().domain(families)
+      .range(families.map(function (_, i) { return palette[i % palette.length]; }));
+    var familyHidden = Object.create(null);
+    function isVisibleNode(n) { return !familyHidden[n.group]; }
+
+    /* ── state ─────────────────────────────────────────────────────── */
     var state = {
+      view: 'network',     // network | tree | matrix | geo
       threshold: 45,
-      metric:    'composite',
-      learning:  false,        // directed view enabled?
-      focusedId: null,         // currently focused node (search / keyboard / pin)
-      pinnedId:  null
+      metric: 'composite',
+      learning: false,
+      focusedId: null,
+      pinnedId: null,
+      pathFrom: null,
+      pathTo: null,
+      pathHighlight: []     // array of codes
     };
     var chargeStrength = -150;
     var prefersReducedMotion = !!(window.matchMedia &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-    /* ----- apply URL state (if any) ----- */
+    /* ── URL state ─────────────────────────────────────────────────── */
     var urlState = readUrlState();
-    if (urlState.t) { var t = +urlState.t; if (t >= 10 && t <= 95) state.threshold = t; }
+    if (urlState.v) state.view = urlState.v;
+    if (urlState.t) { var ti = +urlState.t; if (ti >= 10 && ti <= 95) state.threshold = ti; }
     if (urlState.m) state.metric = urlState.m;
     if (urlState.n && urlState.n in nodeById) state.focusedId = urlState.n;
     if (urlState.L) state.learning = urlState.L === '1';
     slider.value = state.threshold;
     sliderVal.textContent = String(state.threshold);
-    document.querySelectorAll('#graph-container .lsg-chip').forEach(function (c) {
+    document.querySelectorAll('#graph-container .lsg-chip[data-metric]').forEach(function (c) {
       c.classList.toggle('is-active', c.dataset.metric === state.metric);
     });
+    document.querySelectorAll('#graph-container .lsg-chip[data-view]').forEach(function (c) {
+      c.classList.toggle('is-active', c.dataset.view === state.view);
+    });
 
-    /* ----- live link buffer ----- */
-    var liveLinks = [];   // links currently bound to the simulation
-    function rebuildLinks() {
-      if (state.learning && userSpeakers.length) {
-        liveLinks = buildDirLinks(D, codes, state.metric, userSpeakers);
-      } else {
-        liveLinks = getSymLinks(state.metric);
-      }
-    }
-
-    /* ----- sizing ----- */
+    /* ── sizing ────────────────────────────────────────────────────── */
     var svg = d3.select(svgEl);
     function dims() {
       var r = wrap.getBoundingClientRect();
       return { w: Math.max(320, r.width), h: Math.max(320, r.height) };
     }
     var W = dims().w, H = dims().h;
-    svg.attr('viewBox', '0 0 ' + W + ' ' + H)
-       .attr('preserveAspectRatio', 'xMidYMid meet');
+    svg.attr('viewBox', '0 0 ' + W + ' ' + H).attr('preserveAspectRatio', 'xMidYMid meet');
 
-    /* ----- colour scale per family ----- */
-    var families = Array.from(new Set(nodes.map(function (n) { return n.group; }))).sort();
-    var palette = [
-      '#34d399', '#a78bfa', '#60a5fa', '#fbbf24', '#f472b6',
-      '#22d3ee', '#fb923c', '#a3e635', '#f87171', '#c084fc',
-      '#2dd4bf', '#facc15', '#e879f9', '#38bdf8', '#fdba74',
-      '#bef264', '#fb7185'
-    ];
-    var color = d3.scaleOrdinal()
-      .domain(families)
-      .range(families.map(function (_, i) { return palette[i % palette.length]; }));
-    var familyHidden = Object.create(null);
-    function isVisibleNode(n) { return !familyHidden[n.group]; }
+    /* ── Alpine-derived state ──────────────────────────────────────── */
+    var userSpeakers = [];
+    var userRecs = [];
+    var lastAlpineKey = '';
+    var alpineLastLang = '';
 
-    /* ----- SVG layers ----- */
-    svg.selectAll('*').remove();
-    // <defs> with arrowhead marker for learning view
-    var defs = svg.append('defs');
-    defs.append('marker')
-      .attr('id', 'lsg-arrow')
-      .attr('viewBox', '0 0 10 10')
-      .attr('refX', 8).attr('refY', 5)
-      .attr('markerWidth', 5).attr('markerHeight', 5)
-      .attr('orient', 'auto-start-reverse')
-      .append('path')
-      .attr('d', 'M0,0 L10,5 L0,10 z')
-      .attr('fill', 'var(--lsg-link-hi)');
-
-    var rootG     = svg.append('g').attr('class', 'lsg-root');
-    var hullLayer = rootG.append('g').attr('class', 'lsg-hulls');
-    var linkLayer = rootG.append('g').attr('class', 'lsg-links');
-    var nodeLayer = rootG.append('g').attr('class', 'lsg-nodes');
-    var focusLayer= rootG.append('g').attr('class', 'lsg-focus-ring');
-
-    /* ----- zoom + pan ----- */
-    var currentZoom = d3.zoomIdentity;
-    var zoomBehaviour = d3.zoom()
-      .scaleExtent([0.25, 6])
-      .filter(function (event) {
-        if (event.type === 'wheel') return true;
-        if (event.type === 'mousedown' && event.target && event.target.closest('.lsg-node')) return false;
-        if (event.type === 'touchstart' && event.target && event.target.closest('.lsg-node')) return false;
-        return true;
-      })
-      .on('zoom', function (event) {
-        currentZoom = event.transform;
-        rootG.attr('transform', event.transform);
-        applyLabelVisibility();
-        scheduleUrlSync();
+    /* ── pre-compute clustering + surprising connections (composite metric) */
+    var leafOrderCache = null;
+    var lastClusterMetric = null;
+    function getLeafOrder(metric) {
+      if (lastClusterMetric === metric && leafOrderCache) return leafOrderCache;
+      var root = singleLinkageCluster(codes, function (a, b) {
+        return distance(D, metric, a, b, false);
       });
-    svg.call(zoomBehaviour);
-    svg.on('dblclick.zoom', null);
-    svg.on('click', function (event) {
-      if (event.target === svgEl || event.target === rootG.node() ||
-          event.target.classList.contains('lsg-hull')) {
-        closeTip();
-      }
-    });
-
-    /* Restore zoom transform from URL if present */
-    if (urlState.k || urlState.x || urlState.y) {
-      var k = parseFloat(urlState.k) || 1;
-      var x = parseFloat(urlState.x) || 0;
-      var y = parseFloat(urlState.y) || 0;
-      var t = d3.zoomIdentity.translate(x, y).scale(k);
-      requestAnimationFrame(function () {
-        svg.call(zoomBehaviour.transform, t);
+      leafOrderCache = leafOrder(root);
+      lastClusterMetric = metric;
+      return leafOrderCache;
+    }
+    var clusterRootCache = null;
+    var lastTreeMetric = null;
+    function getClusterRoot(metric) {
+      if (lastTreeMetric === metric && clusterRootCache) return clusterRootCache;
+      clusterRootCache = singleLinkageCluster(codes, function (a, b) {
+        return distance(D, metric, a, b, false);
       });
+      lastTreeMetric = metric;
+      return clusterRootCache;
     }
 
-    /* ----- nodeRadius (existing) ----- */
+    /* surprising connections: cross-family pairs with smallest composite distance */
+    function computeSurprising(maxN) {
+      var pairs = [];
+      for (var i = 0; i < codes.length; i++) for (var j = i + 1; j < codes.length; j++) {
+        var a = codes[i], b = codes[j];
+        var la = D.languages[a], lb = D.languages[b];
+        if (la.family === lb.family) continue;
+        if (la.family === 'Isolate' || lb.family === 'Isolate') continue;
+        var dst = distance(D, 'composite', a, b, false);
+        pairs.push({ a: a, b: b, dist: dst, famA: la.family, famB: lb.family });
+      }
+      pairs.sort(function (x, y) { return x.dist - y.dist; });
+      return pairs.slice(0, maxN || 6);
+    }
+    var surprising = computeSurprising(6);
+
+    /* ── populate path widget dropdowns ─────────────────────────────── */
+    function fillPathDropdowns() {
+      var sorted = codes.slice().sort(function (a, b) {
+        return D.languages[a].name.localeCompare(D.languages[b].name);
+      });
+      [pathFrom, pathTo].forEach(function (sel) {
+        sel.innerHTML = '';
+        var placeholder = document.createElement('option');
+        placeholder.value = ''; placeholder.textContent = '—';
+        sel.appendChild(placeholder);
+        sorted.forEach(function (c) {
+          var o = document.createElement('option');
+          o.value = c; o.textContent = D.languages[c].name;
+          sel.appendChild(o);
+        });
+      });
+    }
+    fillPathDropdowns();
+
+    /* ── surprising panel render ────────────────────────────────────── */
+    function renderSurprising() {
+      surprList.innerHTML = '';
+      surprising.forEach(function (p) {
+        var row = document.createElement('div');
+        row.className = 'lsg-surprising-item';
+        row.dataset.a = p.a; row.dataset.b = p.b;
+        row.innerHTML =
+          '<div>' +
+            '<div class="lsg-surprising-pair">' +
+              escapeHTML(D.languages[p.a].name) + ' ↔ ' + escapeHTML(D.languages[p.b].name) +
+            '</div>' +
+            '<div class="lsg-surprising-fams">' +
+              escapeHTML(p.famA) + ' · ' + escapeHTML(p.famB) +
+            '</div>' +
+          '</div>' +
+          '<div class="lsg-surprising-dist">' + p.dist.toFixed(0) + '</div>';
+        row.addEventListener('click', function () {
+          if (state.view !== 'network') {
+            setView('network');
+            setTimeout(function () { jumpTo(p.a); }, 200);
+          } else {
+            jumpTo(p.a);
+          }
+        });
+        surprList.appendChild(row);
+      });
+    }
+    renderSurprising();
+
+    /* ── Network/Geo shared layers (created lazily inside initNetwork) ── */
+    var net = {}; // { defs, rootG, hullLayer, linkLayer, nodeLayer, focusLayer, focusCircle, simulation, linkSel, nodeSel, hullSel, currentZoom, zoomBehaviour }
+
+    /* ── node radius helper ─────────────────────────────────────────── */
     function nodeRadius(n) {
       var s = Math.max(1, n.speakers || 1);
       return 5 + Math.min(8, Math.log10(s + 1) * 3.6);
     }
 
-    /* ----- force simulation (or static layout if reduced motion) ----- */
-    var simulation;
-    if (prefersReducedMotion) {
-      staticLayout();
-      simulation = d3.forceSimulation(nodes)
-        .force('link', d3.forceLink([]).id(function (d) { return d.id; }))
-        .stop(); // simulation exists for API compatibility but doesn't run
-    } else {
-      simulation = d3.forceSimulation(nodes)
-        .force('charge', d3.forceManyBody().strength(chargeStrength))
-        .force('center', d3.forceCenter(W / 2, H / 2))
-        .force('collide', d3.forceCollide().radius(function (d) { return nodeRadius(d) + 2; }))
-        .force('x', d3.forceX(W / 2).strength(0.03))
-        .force('y', d3.forceY(H / 2).strength(0.03))
-        .force('link', d3.forceLink([])
-                         .id(function (d) { return d.id; })
-                         .distance(function (l) { return 30 + l.dist * 1.4; })
-                         .strength(function (l) { return 0.4 * (1 - l.dist / 100); }))
-        .on('tick', onTick);
+    /* ═══════════════════════════════════════════════════════════════════
+       NETWORK / GEO view
+       ═════════════════════════════════════════════════════════════════ */
+    var liveLinks = [];
+    function rebuildLinks() {
+      if (state.learning && userSpeakers.length) {
+        var links = [];
+        var spkSet = Object.create(null);
+        userSpeakers.forEach(function (s) { spkSet[s] = true; });
+        userSpeakers.forEach(function (from) {
+          if (!(from in D.languages)) return;
+          codes.forEach(function (to) {
+            if (to === from || spkSet[to]) return;
+            links.push({ source: from, target: to,
+                         dist: distance(D, state.metric, from, to, true),
+                         directed: true });
+          });
+        });
+        liveLinks = links;
+      } else {
+        var links2 = [];
+        for (var i = 0; i < codes.length; i++) for (var j = i + 1; j < codes.length; j++) {
+          var a = codes[i], b = codes[j];
+          links2.push({ source: a, target: b,
+                        dist: distance(D, state.metric, a, b, false),
+                        directed: false });
+        }
+        liveLinks = links2;
+      }
     }
 
-    function staticLayout() {
+    function initNetworkLayer(isGeo) {
+      svg.selectAll('*').remove();
+      net.defs = svg.append('defs');
+      net.defs.append('marker').attr('id', 'lsg-arrow')
+        .attr('viewBox', '0 0 10 10').attr('refX', 8).attr('refY', 5)
+        .attr('markerWidth', 5).attr('markerHeight', 5).attr('orient', 'auto-start-reverse')
+        .append('path').attr('d', 'M0,0 L10,5 L0,10 z').attr('fill', 'var(--lsg-link-hi)');
+
+      net.rootG     = svg.append('g').attr('class', 'lsg-root');
+      // Geographic grid as a background (only in geo mode)
+      if (isGeo) drawGeoGrid(net.rootG);
+      net.hullLayer = net.rootG.append('g').attr('class', 'lsg-hulls');
+      net.linkLayer = net.rootG.append('g').attr('class', 'lsg-links');
+      var pathLayer = net.rootG.append('g').attr('class', 'lsg-path-overlay');
+      net.pathLayer = pathLayer;
+      net.nodeLayer = net.rootG.append('g').attr('class', 'lsg-nodes');
+      net.focusLayer= net.rootG.append('g').attr('class', 'lsg-focus-ring');
+
+      net.currentZoom = d3.zoomIdentity;
+      net.zoomBehaviour = d3.zoom()
+        .scaleExtent([0.25, 6])
+        .filter(function (event) {
+          if (event.type === 'wheel') return true;
+          if (event.type === 'mousedown' && event.target && event.target.closest('.lsg-node')) return false;
+          if (event.type === 'touchstart' && event.target && event.target.closest('.lsg-node')) return false;
+          return true;
+        })
+        .on('zoom', function (event) {
+          net.currentZoom = event.transform;
+          net.rootG.attr('transform', event.transform);
+          applyLabelVisibility();
+          scheduleUrlSync();
+        });
+      svg.call(net.zoomBehaviour);
+      svg.on('dblclick.zoom', null);
+      svg.on('click', function (event) {
+        if (event.target === svgEl || event.target === net.rootG.node() ||
+            event.target.classList.contains('lsg-hull')) closeTip();
+      });
+
+      // Restore zoom transform from URL only in network view
+      if (!isGeo && (urlState.k || urlState.x || urlState.y)) {
+        var k = parseFloat(urlState.k) || 1;
+        var x = parseFloat(urlState.x) || 0;
+        var y = parseFloat(urlState.y) || 0;
+        var t = d3.zoomIdentity.translate(x, y).scale(k);
+        requestAnimationFrame(function () { svg.call(net.zoomBehaviour.transform, t); });
+      }
+      net.focusCircle = net.focusLayer.append('circle').attr('class', 'lsg-focus-ring-circle')
+        .attr('r', 0).attr('fill', 'none').attr('stroke', 'var(--lsg-accent-2)')
+        .attr('stroke-width', 2.5).attr('stroke-dasharray', '4,3')
+        .style('display', 'none').style('pointer-events', 'none');
+
+      // Force sim or static layout
+      if (isGeo) {
+        applyGeoLayout();
+        net.simulation = d3.forceSimulation(nodes)
+          .force('link', d3.forceLink([]).id(function (d) { return d.id; }))
+          .stop();
+      } else if (prefersReducedMotion) {
+        applyStaticLayout();
+        net.simulation = d3.forceSimulation(nodes)
+          .force('link', d3.forceLink([]).id(function (d) { return d.id; }))
+          .stop();
+      } else {
+        net.simulation = d3.forceSimulation(nodes)
+          .force('charge', d3.forceManyBody().strength(chargeStrength))
+          .force('center', d3.forceCenter(W / 2, H / 2))
+          .force('collide', d3.forceCollide().radius(function (d) { return nodeRadius(d) + 2; }))
+          .force('x', d3.forceX(W / 2).strength(0.03))
+          .force('y', d3.forceY(H / 2).strength(0.03))
+          .force('link', d3.forceLink([]).id(function (d) { return d.id; })
+                  .distance(function (l) { return 30 + l.dist * 1.4; })
+                  .strength(function (l) { return 0.4 * (1 - l.dist / 100); }))
+          .on('tick', onNetTick);
+      }
+      net.linkSel = net.linkLayer.selectAll('g.lsg-link-g');
+      net.nodeSel = net.nodeLayer.selectAll('g.lsg-node');
+      net.hullSel = net.hullLayer.selectAll('path.lsg-hull');
+      renderNet();
+    }
+
+    function applyStaticLayout() {
       var cx = W / 2, cy = H / 2;
       var Rmajor = Math.min(W, H) * 0.32;
-      var nodesByFam = {};
-      families.forEach(function (f) { nodesByFam[f] = []; });
+      var nodesByFam = {}; families.forEach(function (f) { nodesByFam[f] = []; });
       nodes.forEach(function (n) { nodesByFam[n.group].push(n); });
       families.forEach(function (fam, fi) {
         var angle = (fi / families.length) * Math.PI * 2 - Math.PI / 2;
@@ -6064,28 +7048,63 @@ function app() {
         var Rminor = Math.max(22, 7 * Math.sqrt(members.length));
         members.forEach(function (n, i) {
           var a = (i / Math.max(1, members.length)) * Math.PI * 2;
-          n.x = fcx + Math.cos(a) * Rminor;
-          n.y = fcy + Math.sin(a) * Rminor;
+          n.x = fcx + Math.cos(a) * Rminor; n.y = fcy + Math.sin(a) * Rminor;
           n.fx = n.x; n.fy = n.y;
         });
       });
     }
+    function applyGeoLayout() {
+      // Pin each node to its primary country centroid via equirectangular proj
+      // Map x: lng [-180..180] → [40..W-40]
+      // Map y: lat [85..-60] → [40..H-40] (clipped to populated area)
+      var padX = 40, padY = 60;
+      var sd = window.SPEAKER_DATA || {};
+      nodes.forEach(function (n) {
+        var off = (sd[n.id] && sd[n.id].official) || [];
+        var iso = off[0];
+        var c = (window.LSG_CENTROIDS || {})[iso];
+        if (!c) { // fall back: random near centre
+          n.x = W/2 + (Math.random() - 0.5) * 100;
+          n.y = H/2 + (Math.random() - 0.5) * 100;
+        } else {
+          var lat = c[0], lng = c[1];
+          n.x = padX + (lng + 180) / 360 * (W - 2 * padX);
+          n.y = padY + (85 - lat) / 145 * (H - 2 * padY);
+        }
+        n.fx = n.x; n.fy = n.y;
+      });
+    }
+    function drawGeoGrid(g) {
+      // Subtle latitude/longitude lines
+      var padX = 40, padY = 60;
+      for (var lng = -180; lng <= 180; lng += 30) {
+        var x = padX + (lng + 180) / 360 * (W - 2 * padX);
+        g.append('line').attr('class', 'lsg-geo-grid')
+          .attr('x1', x).attr('y1', padY).attr('x2', x).attr('y2', H - padY);
+        if (lng % 90 === 0) {
+          g.append('text').attr('class', 'lsg-geo-label')
+            .attr('x', x).attr('y', padY - 4).attr('text-anchor', 'middle')
+            .text(lng + '°');
+        }
+      }
+      for (var lat = -60; lat <= 80; lat += 30) {
+        var y = padY + (85 - lat) / 145 * (H - 2 * padY);
+        g.append('line').attr('class', 'lsg-geo-grid')
+          .attr('x1', padX).attr('y1', y).attr('x2', W - padX).attr('y2', y);
+        g.append('text').attr('class', 'lsg-geo-label')
+          .attr('x', padX - 4).attr('y', y).attr('text-anchor', 'end').attr('dy', '0.3em')
+          .text(lat + '°');
+      }
+      // Prime meridian + equator highlighted
+      var xPM = padX + (0 + 180) / 360 * (W - 2 * padX);
+      var yEQ = padY + (85 - 0) / 145 * (H - 2 * padY);
+      g.append('line').attr('class', 'lsg-geo-pm')
+        .attr('x1', xPM).attr('y1', padY).attr('x2', xPM).attr('y2', H - padY);
+      g.append('line').attr('class', 'lsg-geo-eq')
+        .attr('x1', padX).attr('y1', yEQ).attr('x2', W - padX).attr('y2', yEQ);
+    }
 
-    /* ----- selections (rebuilt by render) ----- */
-    var linkSel = linkLayer.selectAll('g.lsg-link-g');
-    var nodeSel = nodeLayer.selectAll('g.lsg-node');
-    var hullSel = hullLayer.selectAll('path.lsg-hull');
-    var focusCircle = focusLayer.append('circle')
-      .attr('class', 'lsg-focus-ring-circle')
-      .attr('r', 0)
-      .attr('fill', 'none')
-      .attr('stroke', 'var(--lsg-accent-2)')
-      .attr('stroke-width', 2.5)
-      .attr('stroke-dasharray', '4,3')
-      .style('display', 'none')
-      .style('pointer-events', 'none');
-
-    /* ----- live degree map (for hub-label visibility) ----- */
+    /* degree map for hub labels */
     var degreeMap = Object.create(null);
     function recomputeDegrees() {
       degreeMap = Object.create(null);
@@ -6101,30 +7120,23 @@ function app() {
       });
     }
     function hubSetForZoom() {
-      // At low zoom show only the top-12 hubs. At zoom > 1.4 show everything.
-      var k = currentZoom && currentZoom.k ? currentZoom.k : 1;
-      if (k > 1.4) return null; // null = show all
+      var k = (net.currentZoom && net.currentZoom.k) || 1;
+      if (k > 1.4 || state.view === 'geo') return null;
       var top = Object.keys(degreeMap)
-        .sort(function (a, b) { return degreeMap[b] - degreeMap[a]; })
-        .slice(0, 12);
+        .sort(function (a, b) { return degreeMap[b] - degreeMap[a]; }).slice(0, 12);
       var s = Object.create(null);
       top.forEach(function (id) { s[id] = true; });
       return s;
     }
     function applyLabelVisibility() {
+      if (!net.nodeSel) return;
       var hubs = hubSetForZoom();
       svg.classed('lsg-labels-all', hubs === null);
-      if (hubs !== null && nodeSel) {
-        nodeSel.classed('is-hub', function (n) { return !!hubs[n.id]; });
-      } else if (nodeSel) {
-        nodeSel.classed('is-hub', false);
-      }
+      if (hubs !== null) net.nodeSel.classed('is-hub', function (n) { return !!hubs[n.id]; });
+      else               net.nodeSel.classed('is-hub', false);
     }
 
-    /* ═══════════════════════════════════════════════════════════════════
-       Render — rebuilds link & node selections from `state` + `liveLinks`
-       ═════════════════════════════════════════════════════════════════ */
-    function render() {
+    function renderNet() {
       var visibleNodes = nodes.filter(isVisibleNode);
       var visibleLinks = liveLinks.filter(function (l) {
         if (l.dist >= state.threshold) return false;
@@ -6134,90 +7146,81 @@ function app() {
         return sn && tn && isVisibleNode(sn) && isVisibleNode(tn);
       });
 
-      /* --- LINKS --- (group containing hit-area + visible path) */
-      linkSel = linkLayer.selectAll('g.lsg-link-g').data(visibleLinks, function (l) {
+      // LINKS
+      net.linkSel = net.linkLayer.selectAll('g.lsg-link-g').data(visibleLinks, function (l) {
         var s = (typeof l.source === 'object') ? l.source.id : l.source;
         var t = (typeof l.target === 'object') ? l.target.id : l.target;
         return s + (l.directed ? '→' : '~') + t;
       });
-      linkSel.exit().remove();
-      var linkEnter = linkSel.enter().append('g').attr('class', 'lsg-link-g');
+      net.linkSel.exit().remove();
+      var linkEnter = net.linkSel.enter().append('g').attr('class', 'lsg-link-g');
       linkEnter.append('path').attr('class', 'lsg-link-hit');
       linkEnter.append('path').attr('class', 'lsg-link');
-      linkSel = linkEnter.merge(linkSel);
-      linkSel.select('path.lsg-link')
+      net.linkSel = linkEnter.merge(net.linkSel);
+      net.linkSel.select('path.lsg-link')
         .attr('stroke', 'var(--lsg-link)')
-        .attr('stroke-width', function (l) {
-          return 0.6 + (1 - l.dist / state.threshold) * 3.2;
-        })
-        .attr('stroke-opacity', function (l) {
-          return 0.15 + (1 - l.dist / state.threshold) * 0.7;
-        })
+        .attr('stroke-width', function (l) { return 0.6 + (1 - l.dist / state.threshold) * 3.2; })
+        .attr('stroke-opacity', function (l) { return 0.15 + (1 - l.dist / state.threshold) * 0.7; })
         .attr('marker-end', function (l) { return l.directed ? 'url(#lsg-arrow)' : null; });
-      linkSel.select('path.lsg-link-hit')
-        .on('mouseenter', onEdgeHover)
-        .on('mouseleave', onEdgeLeave)
-        .on('mousemove',  onEdgeMove);
+      net.linkSel.select('path.lsg-link-hit')
+        .on('mouseenter', onEdgeHover).on('mouseleave', onEdgeLeave).on('mousemove', onEdgeMove);
 
-      /* --- NODES --- */
-      nodeSel = nodeLayer.selectAll('g.lsg-node').data(visibleNodes, function (d) { return d.id; });
-      nodeSel.exit().remove();
-      var nodeEnter = nodeSel.enter().append('g').attr('class', 'lsg-node');
+      // NODES
+      net.nodeSel = net.nodeLayer.selectAll('g.lsg-node').data(visibleNodes, function (d) { return d.id; });
+      net.nodeSel.exit().remove();
+      var nodeEnter = net.nodeSel.enter().append('g').attr('class', 'lsg-node');
       nodeEnter.append('circle');
       nodeEnter.append('title');
       nodeEnter.append('text').attr('dy', '0.32em').attr('text-anchor', 'middle');
-      nodeSel = nodeEnter.merge(nodeSel);
-      nodeSel.select('circle')
+      net.nodeSel = nodeEnter.merge(net.nodeSel);
+      net.nodeSel.select('circle')
         .attr('r', function (d) { return nodeRadius(d); })
         .attr('fill', function (d) { return color(d.group); });
-      nodeSel.select('title').text(function (d) {
+      net.nodeSel.select('title').text(function (d) {
         return d.name + ' — ' + d.group + (d.branch ? ' · ' + d.branch : '');
       });
-      nodeSel.select('text').text(function (d) { return d.name; })
+      net.nodeSel.select('text').text(function (d) { return d.name; })
         .attr('y', function (d) { return -nodeRadius(d) - 6; });
-
-      nodeSel.call(makeDrag(simulation))
-             .on('mouseenter', onNodeHover)
-             .on('mouseleave', onNodeLeave)
-             .on('click',      onNodeClick);
+      net.nodeSel.call(makeDrag(net.simulation))
+        .on('mouseenter', onNodeHover)
+        .on('mouseleave', onNodeLeave)
+        .on('click',      onNodeClick);
 
       applyUserStateDecor();
       recomputeDegrees();
       applyLabelVisibility();
 
-      /* --- HULLS --- per family with ≥3 visible nodes */
-      var famGroups = Object.create(null);
-      visibleNodes.forEach(function (n) {
-        (famGroups[n.group] || (famGroups[n.group] = [])).push(n);
-      });
-      var hullData = Object.keys(famGroups)
-        .filter(function (f) { return famGroups[f].length >= 3; })
-        .map(function (f) { return { family: f, members: famGroups[f] }; });
-      hullSel = hullLayer.selectAll('path.lsg-hull').data(hullData, function (d) { return d.family; });
-      hullSel.exit().remove();
-      var hullEnter = hullSel.enter().append('path').attr('class', 'lsg-hull');
-      hullSel = hullEnter.merge(hullSel)
-        .attr('fill',   function (d) { return color(d.family); })
+      // HULLS — only in network view, not geo
+      var hullData = [];
+      if (state.view === 'network') {
+        var famGroups = Object.create(null);
+        visibleNodes.forEach(function (n) { (famGroups[n.group] || (famGroups[n.group] = [])).push(n); });
+        hullData = Object.keys(famGroups).filter(function (f) { return famGroups[f].length >= 3; })
+          .map(function (f) { return { family: f, members: famGroups[f] }; });
+      }
+      net.hullSel = net.hullLayer.selectAll('path.lsg-hull').data(hullData, function (d) { return d.family; });
+      net.hullSel.exit().remove();
+      var hullEnter = net.hullSel.enter().append('path').attr('class', 'lsg-hull');
+      net.hullSel = hullEnter.merge(net.hullSel)
+        .attr('fill', function (d) { return color(d.family); })
         .attr('stroke', function (d) { return color(d.family); });
 
-      /* --- simulation update --- */
-      simulation.nodes(visibleNodes);
-      simulation.force('link').links(visibleLinks);
-      if (!prefersReducedMotion) simulation.alpha(0.6).restart();
-      else onTick(); // single static paint
+      // simulation
+      net.simulation.nodes(visibleNodes);
+      net.simulation.force('link').links(visibleLinks);
+      if (!prefersReducedMotion && state.view !== 'geo')
+        net.simulation.alpha(0.6).restart();
+      else
+        onNetTick();
 
-      /* --- counters --- */
       statNodes.textContent = String(visibleNodes.length);
       statLinks.textContent = String(visibleLinks.length);
-
-      /* --- restore hover/focus visuals --- */
       if (hoveredId) applyHover(hoveredId);
+      renderPathOverlay();
       updateFocusRing();
     }
 
-    /* ----- onTick: position links (curved), nodes, hulls, focus ring ----- */
     function expandHull(points, pad) {
-      // Expand each polygon vertex away from the centroid by `pad`.
       var cx = 0, cy = 0;
       points.forEach(function (p) { cx += p[0]; cy += p[1]; });
       cx /= points.length; cy /= points.length;
@@ -6227,19 +7230,15 @@ function app() {
         return [ p[0] + (dx/len) * pad, p[1] + (dy/len) * pad ];
       });
     }
-    function onTick() {
-      linkSel.each(function (l) {
-        var sx = l.source.x, sy = l.source.y;
-        var tx = l.target.x, ty = l.target.y;
+    function onNetTick() {
+      net.linkSel.each(function (l) {
+        var sx = l.source.x, sy = l.source.y, tx = l.target.x, ty = l.target.y;
         var dx = tx - sx, dy = ty - sy;
         var dr = Math.sqrt(dx*dx + dy*dy) || 1;
-        // Slight curve perpendicular to the source→target axis
         var off = Math.min(28, dr * 0.16);
         var mx = (sx + tx) / 2, my = (sy + ty) / 2;
         var nx = -dy / dr, ny = dx / dr;
         var cx = mx + nx * off, cy = my + ny * off;
-        // In directed view, end the visible path short of the target circle
-        // so the arrowhead sits cleanly on the rim instead of inside it.
         var endX = tx, endY = ty;
         if (l.directed) {
           var tr = nodeRadius(l.target) + 4;
@@ -6248,15 +7247,11 @@ function app() {
           endY = ty - Math.sin(ang) * tr;
         }
         var path = 'M' + sx + ',' + sy + ' Q' + cx + ',' + cy + ' ' + endX + ',' + endY;
-        // Two paths in this group: hit (first child) + visible (second child)
         this.firstChild.setAttribute('d', path);
         this.lastChild.setAttribute('d', path);
       });
-      nodeSel.attr('transform', function (d) {
-        return 'translate(' + d.x + ',' + d.y + ')';
-      });
-      // Hulls
-      hullSel.attr('d', function (d) {
+      net.nodeSel.attr('transform', function (d) { return 'translate(' + d.x + ',' + d.y + ')'; });
+      net.hullSel.attr('d', function (d) {
         if (d.members.length < 3) return null;
         var pts = d.members.map(function (n) { return [n.x, n.y]; });
         var hull = d3.polygonHull(pts);
@@ -6264,36 +7259,56 @@ function app() {
         hull = expandHull(hull, 18);
         return 'M' + hull.map(function (p) { return p.join(','); }).join('L') + 'Z';
       });
-      // Focus ring
+      // Path overlay
+      renderPathOverlay();
       updateFocusRing();
     }
+    function renderPathOverlay() {
+      if (!net.pathLayer) return;
+      net.pathLayer.selectAll('*').remove();
+      if (!state.pathHighlight || state.pathHighlight.length < 2) return;
+      for (var i = 0; i < state.pathHighlight.length - 1; i++) {
+        var a = nodeById[state.pathHighlight[i]], b = nodeById[state.pathHighlight[i+1]];
+        if (!a || !b || a.x == null || b.x == null) continue;
+        var dx = b.x - a.x, dy = b.y - a.y;
+        var dr = Math.sqrt(dx*dx + dy*dy) || 1;
+        var off = Math.min(28, dr * 0.16);
+        var mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+        var nx = -dy / dr, ny = dx / dr;
+        var cx = mx + nx * off, cy = my + ny * off;
+        net.pathLayer.append('path').attr('class', 'lsg-path-link')
+          .attr('d', 'M' + a.x + ',' + a.y + ' Q' + cx + ',' + cy + ' ' + b.x + ',' + b.y);
+      }
+      net.nodeSel.classed('lsg-path-node', function (d) {
+        return state.pathHighlight.indexOf(d.id) > -1;
+      });
+    }
 
-    /* ----- drag (existing behaviour) ----- */
     function makeDrag(sim) {
       return d3.drag()
         .on('start', function (event, d) {
-          if (prefersReducedMotion) return; // nodes stay pinned in static layout
+          if (prefersReducedMotion || state.view === 'geo') return;
           if (!event.active) sim.alphaTarget(0.3).restart();
           d.fx = d.x; d.fy = d.y;
         })
         .on('drag', function (event, d) {
-          if (prefersReducedMotion) return;
+          if (prefersReducedMotion || state.view === 'geo') return;
           d.fx = event.x; d.fy = event.y;
         })
         .on('end', function (event, d) {
-          if (prefersReducedMotion) return;
+          if (prefersReducedMotion || state.view === 'geo') return;
           if (!event.active) sim.alphaTarget(0);
           d.fx = null; d.fy = null;
         });
     }
 
-    /* ----- hover dim ----- */
+    /* hover dim */
     var hoveredId = null;
     function onNodeHover(event, d) { hoveredId = d.id; applyHover(d.id); }
     function onNodeLeave()         { hoveredId = null; clearHover(); }
     function neighboursOf(id) {
       var set = Object.create(null); set[id] = true;
-      linkSel.each(function (l) {
+      net.linkSel.each(function (l) {
         if (l.dist >= state.threshold) return;
         var s = l.source.id || l.source, t = l.target.id || l.target;
         if (s === id) set[t] = true;
@@ -6302,29 +7317,47 @@ function app() {
       return set;
     }
     function applyHover(id) {
+      if (!net.nodeSel) return;
       var nbrs = neighboursOf(id);
-      nodeSel.classed('lsg-faded',  function (n) { return !nbrs[n.id]; })
-             .classed('lsg-bright', function (n) { return !!nbrs[n.id]; });
-      linkSel.classed('lsg-faded', function (l) {
+      net.nodeSel.classed('lsg-faded',  function (n) { return !nbrs[n.id]; })
+                 .classed('lsg-bright', function (n) { return !!nbrs[n.id]; });
+      net.linkSel.classed('lsg-faded', function (l) {
         var s = l.source.id || l.source, t = l.target.id || l.target;
         return !(s === id || t === id);
       });
-      linkSel.select('.lsg-link').classed('lsg-link-hot', function (l) {
+      net.linkSel.select('.lsg-link').classed('lsg-link-hot', function (l) {
         var s = l.source.id || l.source, t = l.target.id || l.target;
         return (s === id || t === id);
       });
-      hullSel.classed('lsg-faded', function (h) { return h.family !== nodeById[id].group; });
+      net.hullSel.classed('lsg-faded', function (h) { return h.family !== nodeById[id].group; });
     }
     function clearHover() {
-      nodeSel.classed('lsg-faded', false).classed('lsg-bright', false);
-      linkSel.classed('lsg-faded', false);
-      linkSel.select('.lsg-link').classed('lsg-link-hot', false);
-      hullSel.classed('lsg-faded', false);
+      if (!net.nodeSel) return;
+      net.nodeSel.classed('lsg-faded', false).classed('lsg-bright', false);
+      net.linkSel.classed('lsg-faded', false);
+      net.linkSel.select('.lsg-link').classed('lsg-link-hot', false);
+      net.hullSel.classed('lsg-faded', false);
     }
 
     /* ═══════════════════════════════════════════════════════════════════
-       Edge hover → sub-score breakdown tooltip
+       Edge hover tooltip (with cognates + data-quality indicator)
        ═════════════════════════════════════════════════════════════════ */
+    function injectGlossaryLinks(str) {
+      // Wrap known glossary terms in a span (whole-word match, case-insensitive).
+      // Operates on text content only; assumes input is already HTML-escaped.
+      if (!window.LSG_GLOSSARY) return str;
+      var terms = Object.keys(window.LSG_GLOSSARY).sort(function (a, b) { return b.length - a.length; });
+      var out = str;
+      terms.forEach(function (term) {
+        var safe = term.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+        var re = new RegExp('(^|[^\\w])(' + safe + ')(?![\\w])', 'gi');
+        out = out.replace(re, function (_, pre, m) {
+          return pre + '<span class="lsg-gloss-term" data-gloss="' + term + '">' + m + '</span>';
+        });
+      });
+      return out;
+    }
+
     function onEdgeHover(event, l) {
       var sId = (typeof l.source === 'object') ? l.source.id : l.source;
       var tId = (typeof l.target === 'object') ? l.target.id : l.target;
@@ -6335,39 +7368,62 @@ function app() {
         escapeHTML(nodeById[tId].name) +
         '<span>d ' + l.dist.toFixed(0) + '</span></div>';
       var rows = [
-        ['Lexical',  simByMetric(D, 'lexical',        sId, tId, dirn)],
-        ['Grammar',  simByMetric(D, 'grammatical',    sId, tId, false)],
-        ['Phonology',simByMetric(D, 'phonological',   sId, tId, false)],
-        ['Script',   simByMetric(D, 'writing_system', sId, tId, false)],
-        ['Genealogy',simByMetric(D, 'genealogical',   sId, tId, false)]
+        [tt('lexical'),   simByMetric(D, 'lexical',        sId, tId, dirn)],
+        [tt('grammar'),   simByMetric(D, 'grammatical',    sId, tId, false)],
+        [tt('phonology'), simByMetric(D, 'phonological',   sId, tId, false)],
+        [tt('script'),    simByMetric(D, 'writing_system', sId, tId, false)],
+        [tt('genealogy'), simByMetric(D, 'genealogical',   sId, tId, false)]
       ];
       rows.forEach(function (r) {
-        html += '<div class="lsg-edge-row"><span>' + r[0] + '</span><b>' +
-                r[1].toFixed(2) + '</b></div>';
+        html += '<div class="lsg-edge-row"><span>' + injectGlossaryLinks(r[0]) +
+                '</span><b>' + r[1].toFixed(2) + '</b></div>';
       });
+      // Data-quality flag for lexical
+      if (!isLexCurated(D, sId, tId)) {
+        html += '<div class="lsg-data-flag">' + tt('lexical') + ': ' + tt('estimated') + '</div>';
+      }
+      // Cognates
+      var ck = pairKey(sId, tId);
+      var cogs = (window.LSG_COGNATES && window.LSG_COGNATES[ck]) || [];
+      if (cogs.length) {
+        html += '<div class="lsg-cognates">';
+        html += '<div class="lsg-cognates-title">' + tt('cognates') + '</div>';
+        cogs.slice(0, 4).forEach(function (c) {
+          // Pair direction in cognate data is sorted (a < b)
+          var leftId  = sId < tId ? sId : tId;
+          var rightId = sId < tId ? tId : sId;
+          html += '<div class="lsg-cognate-row">' +
+                  '<span class="lsg-cognate-gloss">' + escapeHTML(c.gloss) + '</span>' +
+                  '<span class="lsg-cognate-words">' + escapeHTML(c.a) + '</span>' +
+                  '<span class="lsg-cognate-sep">↔</span>' +
+                  '<span class="lsg-cognate-words">' + escapeHTML(c.b) + '</span>' +
+                  '</div>';
+        });
+        html += '</div>';
+      }
+      // Contact bonus + note
       if (dirn) {
         var cb = contactDir(D, sId, tId);
         if (cb > 0) {
           var info = D.contact[sId + '|' + tId];
-          html += '<div class="lsg-edge-row" style="margin-top:4px"><span>Contact bonus</span><b>+' +
-                  cb.toFixed(2) + '</b></div>';
-          if (info && info.note) {
+          html += '<div class="lsg-edge-row" style="margin-top:4px"><span>' +
+                  tt('contactBonus') + '</span><b>+' + cb.toFixed(2) + '</b></div>';
+          if (info && info.note)
             html += '<div style="margin-top:4px;color:var(--lsg-text-mute);font-size:0.66rem;line-height:1.3">' +
                     escapeHTML(info.note) + '</div>';
-          }
         }
       }
       edgeTip.innerHTML = html;
       edgeTip.hidden = false;
       requestAnimationFrame(function () { edgeTip.classList.add('is-open'); });
       onEdgeMove(event);
+      bindGlossInteractions(edgeTip);
     }
     function onEdgeMove(event) {
       var rect = wrap.getBoundingClientRect();
       var x = (event.clientX - rect.left) + 12;
       var y = (event.clientY - rect.top)  + 12;
-      edgeTip.style.left = x + 'px';
-      edgeTip.style.top  = y + 'px';
+      edgeTip.style.left = x + 'px'; edgeTip.style.top = y + 'px';
       requestAnimationFrame(function () {
         var tw = edgeTip.offsetWidth, th = edgeTip.offsetHeight;
         if (x + tw > rect.width  - 8) edgeTip.style.left = Math.max(8, rect.width  - tw - 8) + 'px';
@@ -6381,32 +7437,47 @@ function app() {
       }, 160);
     }
 
+    /* Glossary popover */
+    function bindGlossInteractions(root) {
+      root.querySelectorAll('.lsg-gloss-term').forEach(function (el) {
+        el.addEventListener('click', function (e) {
+          e.stopPropagation();
+          var term = el.dataset.gloss;
+          var def = (window.LSG_GLOSSARY || {})[term];
+          if (!def) return;
+          glossPopT.textContent = term;
+          glossPopB.textContent = def;
+          var rect = el.getBoundingClientRect();
+          glossPop.style.left = (rect.left + window.scrollX) + 'px';
+          glossPop.style.top  = (rect.bottom + window.scrollY + 6) + 'px';
+          glossPop.hidden = false;
+          requestAnimationFrame(function () { glossPop.classList.add('is-open'); });
+        });
+      });
+    }
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.lsg-gloss-term') && !e.target.closest('#lsg-gloss-popover')) {
+        glossPop.classList.remove('is-open');
+        setTimeout(function () { if (!glossPop.classList.contains('is-open')) glossPop.hidden = true; }, 150);
+      }
+    });
+
     /* ═══════════════════════════════════════════════════════════════════
-       Click → tooltip
+       Node click → tooltip with closest neighbours + Compare action
        ═════════════════════════════════════════════════════════════════ */
     function onNodeClick(event, d) {
       event.stopPropagation();
       state.pinnedId = d.id;
       state.focusedId = d.id;
-      nodeSel.classed('is-pinned', function (n) { return n.id === d.id; });
+      net.nodeSel.classed('is-pinned', function (n) { return n.id === d.id; });
       openTipFor(d, event);
       updateFocusRing();
       scheduleUrlSync();
     }
     function openTipFor(d, event) {
-      // Top-5 closest by current metric — uses the same scoring as the graph
-      var rows = nodes
-        .filter(function (n) { return n.id !== d.id; })
-        .map(function (n) {
-          var sId = state.learning && userSpeakers.indexOf(d.id) > -1 ? d.id : d.id;
-          // For neighbours-of-pinned, distance is always symmetric (the
-          // pinned node may not be a speaker, so directional doesn't apply).
-          var dist = distance(D, state.metric, d.id, n.id, false);
-          return { id: n.id, name: n.name, family: n.group, dist: dist };
-        })
-        .sort(function (a, b) { return a.dist - b.dist; })
-        .slice(0, 5);
-
+      var rows = nodes.filter(function (n) { return n.id !== d.id; })
+        .map(function (n) { return { id: n.id, name: n.name, dist: distance(D, state.metric, d.id, n.id, false) }; })
+        .sort(function (a, b) { return a.dist - b.dist; }).slice(0, 5);
       tipName.textContent = d.name;
       var metaBits = [d.group];
       if (d.branch && d.branch !== d.group) metaBits.push(d.branch);
@@ -6414,42 +7485,29 @@ function app() {
       tipMeta.textContent = metaBits.join(' · ');
 
       tipList.innerHTML = '';
-      if (rows.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'lsg-tip-empty';
-        empty.textContent = 'No related languages in this dataset.';
-        tipList.appendChild(empty);
-      } else {
-        rows.forEach(function (nb) {
-          var row = document.createElement('div');
-          row.className = 'lsg-tip-row';
-          var left = document.createElement('b'); left.textContent = nb.name;
-          var right = document.createElement('span');
-          right.textContent = 'd ' + nb.dist.toFixed(0);
-          row.appendChild(left); row.appendChild(right);
-          tipList.appendChild(row);
-        });
-      }
+      rows.forEach(function (nb) {
+        var row = document.createElement('div');
+        row.className = 'lsg-tip-row';
+        var left = document.createElement('b'); left.textContent = nb.name;
+        var right = document.createElement('span'); right.textContent = 'd ' + nb.dist.toFixed(0);
+        row.appendChild(left); row.appendChild(right);
+        tipList.appendChild(row);
+      });
 
-      // Show Compare button only if Alpine is available & node is not already
-      // a speaker
       var alpine = getAlpineData();
       if (alpine && Array.isArray(alpine.speakers) && alpine.speakers.indexOf(d.id) < 0) {
         tipActions.hidden = false;
-        tipCompare.textContent = (alpine.compareSlots && alpine.compareSlots.indexOf(d.id) > -1)
-          ? 'Remove from compare panel'
-          : 'Add to compare panel';
+        var inSlots = alpine.compareSlots && alpine.compareSlots.indexOf(d.id) > -1;
+        tipCompare.textContent = inSlots ? tt('removeCompare') : tt('addCompare');
         tipCompare.dataset.targetCode = d.id;
       } else {
         tipActions.hidden = true;
       }
 
-      // Position
       var rect = wrap.getBoundingClientRect();
       var x = (event.clientX - rect.left) + 14;
       var y = (event.clientY - rect.top)  + 14;
-      tipEl.style.left = x + 'px';
-      tipEl.style.top  = y + 'px';
+      tipEl.style.left = x + 'px'; tipEl.style.top = y + 'px';
       tipEl.classList.add('is-open');
       tipEl.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(function () {
@@ -6462,67 +7520,68 @@ function app() {
       tipEl.classList.remove('is-open');
       tipEl.setAttribute('aria-hidden', 'true');
       state.pinnedId = null;
-      nodeSel.classed('is-pinned', false);
+      if (net.nodeSel) net.nodeSel.classed('is-pinned', false);
     }
     tipClose.addEventListener('click', function (e) { e.stopPropagation(); closeTip(); });
     tipCompare.addEventListener('click', function (e) {
       e.stopPropagation();
       var code = tipCompare.dataset.targetCode;
       var alpine = getAlpineData();
-      if (!alpine || !code) return;
-      if (typeof alpine.toggleCompare === 'function') {
-        alpine.toggleCompare(code);
-        // refresh label
-        var inSlots = alpine.compareSlots && alpine.compareSlots.indexOf(code) > -1;
-        tipCompare.textContent = inSlots ? 'Remove from compare panel' : 'Add to compare panel';
-      }
+      if (!alpine || !code || typeof alpine.toggleCompare !== 'function') return;
+      alpine.toggleCompare(code);
+      var inSlots = alpine.compareSlots && alpine.compareSlots.indexOf(code) > -1;
+      tipCompare.textContent = inSlots ? tt('removeCompare') : tt('addCompare');
     });
 
     /* ═══════════════════════════════════════════════════════════════════
-       User-state decoration — known languages (yellow ring) + recs (halo)
+       User-state decoration
        ═════════════════════════════════════════════════════════════════ */
-    var userSpeakers = [];
-    var userRecs = [];   // top-5 recommendation codes
-    var lastAlpineKey = '';
     function applyUserStateDecor() {
+      if (!net.nodeSel) return;
       var spkSet = Object.create(null);
       userSpeakers.forEach(function (s) { spkSet[s] = true; });
       var recSet = Object.create(null);
       userRecs.forEach(function (r) { recSet[r] = true; });
-      nodeSel
+      net.nodeSel
         .classed('is-known', function (n) { return !!spkSet[n.id]; })
         .classed('is-rec',   function (n) { return !!recSet[n.id]; });
     }
     function refreshFromAlpine() {
       var a = getAlpineData();
       if (!a) return;
+      // language sync
+      var lng = a.currentLang || 'en';
+      if (lng !== alpineLastLang) {
+        alpineLastLang = lng;
+        if (window.LSG_T && window.LSG_T[lng]) {
+          currentUiLang = lng;
+          applyI18n(container);
+          // Update placeholders / dynamic strings
+          searchInp.placeholder = tt('findPlaceholder');
+          learnWrap.title = tt('learningViewHint');
+        }
+      }
+      // speakers / recs sync
       var spk = Array.isArray(a.speakers) ? a.speakers.slice() : [];
       var recs = [];
-      try {
-        // a.recommendations is an Alpine getter; reading is safe
-        recs = (a.recommendations || []).slice(0, 5).map(function (r) { return r.target; });
-      } catch (e) { recs = []; }
+      try { recs = (a.recommendations || []).slice(0, 5).map(function (r) { return r.target; }); }
+      catch (e) {}
       var key = spk.join(',') + '|' + recs.join(',');
       if (key === lastAlpineKey) return;
       lastAlpineKey = key;
-      userSpeakers = spk;
-      userRecs = recs;
-      // Enable/disable learning toggle based on speakers
+      userSpeakers = spk; userRecs = recs;
       if (userSpeakers.length === 0) {
-        learnInp.disabled = true;
-        learnWrap.classList.add('is-disabled');
-        if (state.learning) {
-          state.learning = false;
-          learnInp.checked = false;
-        }
+        learnInp.disabled = true; learnWrap.classList.add('is-disabled');
+        if (state.learning) { state.learning = false; learnInp.checked = false; }
       } else {
-        learnInp.disabled = false;
-        learnWrap.classList.remove('is-disabled');
+        learnInp.disabled = false; learnWrap.classList.remove('is-disabled');
       }
       rebuildLinks();
-      render();
+      if (state.view === 'network' || state.view === 'geo') renderNet();
+      // refresh tree/matrix decorations if active
+      if (state.view === 'tree')   renderTree();
+      if (state.view === 'matrix') renderMatrix();
     }
-    // Poll Alpine every 1.2s — light and reliable. Alpine boots after defer.
     setInterval(refreshFromAlpine, 1200);
     setTimeout(refreshFromAlpine, 300);
 
@@ -6531,64 +7590,63 @@ function app() {
        ═════════════════════════════════════════════════════════════════ */
     families.forEach(function (fam) {
       var item = document.createElement('button');
-      item.type = 'button';
-      item.className = 'lsg-legend-item';
+      item.type = 'button'; item.className = 'lsg-legend-item';
       item.setAttribute('aria-pressed', 'true');
       item.dataset.family = fam;
-      var sw = document.createElement('span');
-      sw.className = 'lsg-legend-swatch';
-      sw.style.background = color(fam);
-      var label = document.createElement('span');
-      label.textContent = fam;
+      var sw = document.createElement('span'); sw.className = 'lsg-legend-swatch'; sw.style.background = color(fam);
+      var label = document.createElement('span'); label.textContent = fam;
       item.appendChild(sw); item.appendChild(label);
       item.addEventListener('click', function () {
         familyHidden[fam] = !familyHidden[fam];
         item.classList.toggle('lsg-mute', !!familyHidden[fam]);
         item.setAttribute('aria-pressed', familyHidden[fam] ? 'false' : 'true');
-        render();
+        if (state.view === 'network' || state.view === 'geo') renderNet();
+        if (state.view === 'tree')   renderTree();
+        if (state.view === 'matrix') renderMatrix();
       });
       legendEl.appendChild(item);
     });
 
     /* ═══════════════════════════════════════════════════════════════════
-       Threshold slider + Repulsion slider
+       Threshold + Repulsion sliders
        ═════════════════════════════════════════════════════════════════ */
     function updateSliderTrack(el) {
       var pct = (el.value - el.min) / (el.max - el.min) * 100;
       el.style.setProperty('--lsg-slider-pct', pct + '%');
     }
-    updateSliderTrack(slider);
-    updateSliderTrack(charge);
+    updateSliderTrack(slider); updateSliderTrack(charge);
     slider.addEventListener('input', function () {
       state.threshold = +slider.value;
       sliderVal.textContent = String(state.threshold);
       updateSliderTrack(slider);
-      render();
+      if (state.view === 'network' || state.view === 'geo') renderNet();
       scheduleUrlSync();
     });
     charge.addEventListener('input', function () {
-      chargeStrength = +charge.value;
-      updateSliderTrack(charge);
-      if (!prefersReducedMotion) {
-        simulation.force('charge').strength(chargeStrength);
-        simulation.alpha(0.4).restart();
+      chargeStrength = +charge.value; updateSliderTrack(charge);
+      if (state.view === 'network' && !prefersReducedMotion) {
+        net.simulation.force('charge').strength(chargeStrength);
+        net.simulation.alpha(0.4).restart();
       }
     });
 
     /* ═══════════════════════════════════════════════════════════════════
        Metric switcher
        ═════════════════════════════════════════════════════════════════ */
-    metricRow.addEventListener('click', function (e) {
-      var btn = e.target.closest('.lsg-chip');
-      if (!btn) return;
-      var m = btn.dataset.metric;
-      if (!m || m === state.metric) return;
+    if (metricRow) metricRow.addEventListener('click', function (e) {
+      var btn = e.target.closest('.lsg-chip'); if (!btn) return;
+      var m = btn.dataset.metric; if (!m || m === state.metric) return;
       state.metric = m;
       metricRow.querySelectorAll('.lsg-chip').forEach(function (c) {
         c.classList.toggle('is-active', c.dataset.metric === m);
       });
+      // invalidate clustering caches
+      leafOrderCache = null; clusterRootCache = null;
+      lastClusterMetric = null; lastTreeMetric = null;
       rebuildLinks();
-      render();
+      if (state.view === 'network' || state.view === 'geo') renderNet();
+      if (state.view === 'tree')   renderTree();
+      if (state.view === 'matrix') renderMatrix();
       scheduleUrlSync();
     });
 
@@ -6598,31 +7656,23 @@ function app() {
     var searchActiveIndex = -1;
     function renderSearchResults(query) {
       var q = (query || '').trim().toLowerCase();
-      searchRes.innerHTML = '';
-      searchActiveIndex = -1;
+      searchRes.innerHTML = ''; searchActiveIndex = -1;
       if (!q) { searchRes.hidden = true; return; }
       var matches = nodes.filter(function (n) {
-        return n.name.toLowerCase().indexOf(q) > -1 ||
-               n.id.toLowerCase()   === q ||
-               n.group.toLowerCase().indexOf(q) > -1 ||
-               (n.branch || '').toLowerCase().indexOf(q) > -1;
+        return n.name.toLowerCase().indexOf(q) > -1 || n.id.toLowerCase() === q ||
+               n.group.toLowerCase().indexOf(q) > -1 || (n.branch || '').toLowerCase().indexOf(q) > -1;
       }).sort(function (a, b) {
-        var ai = a.name.toLowerCase().indexOf(q);
-        var bi = b.name.toLowerCase().indexOf(q);
+        var ai = a.name.toLowerCase().indexOf(q), bi = b.name.toLowerCase().indexOf(q);
         if (ai !== bi) return ai - bi;
         return a.name.localeCompare(b.name);
       }).slice(0, 8);
       if (matches.length === 0) {
-        var empty = document.createElement('div');
-        empty.className = 'lsg-search-empty';
-        empty.textContent = 'No language matches';
-        searchRes.appendChild(empty);
+        var empty = document.createElement('div'); empty.className = 'lsg-search-empty';
+        empty.textContent = 'No language matches'; searchRes.appendChild(empty);
       } else {
-        matches.forEach(function (n, i) {
+        matches.forEach(function (n) {
           var row = document.createElement('div');
-          row.className = 'lsg-search-item';
-          row.dataset.code = n.id;
-          row.setAttribute('role', 'option');
+          row.className = 'lsg-search-item'; row.dataset.code = n.id; row.setAttribute('role','option');
           row.innerHTML = '<span>' + escapeHTML(n.name) + '</span>' +
                           '<small>' + escapeHTML(n.group) + (n.branch ? ' · ' + escapeHTML(n.branch) : '') + '</small>';
           row.addEventListener('click', function () { jumpTo(n.id); });
@@ -6636,45 +7686,36 @@ function app() {
       items.forEach(function (el, i) { el.classList.toggle('is-active', i === searchActiveIndex); });
     }
     searchInp.addEventListener('input', function () { renderSearchResults(searchInp.value); });
-    searchInp.addEventListener('focus', function () {
-      if (searchInp.value) renderSearchResults(searchInp.value);
-    });
+    searchInp.addEventListener('focus', function () { if (searchInp.value) renderSearchResults(searchInp.value); });
     searchInp.addEventListener('keydown', function (e) {
       var items = searchRes.querySelectorAll('.lsg-search-item');
       if (e.key === 'ArrowDown') { e.preventDefault();
-        searchActiveIndex = Math.min(items.length - 1, searchActiveIndex + 1);
-        updateSearchActive();
+        searchActiveIndex = Math.min(items.length - 1, searchActiveIndex + 1); updateSearchActive();
       } else if (e.key === 'ArrowUp') { e.preventDefault();
-        searchActiveIndex = Math.max(0, searchActiveIndex - 1);
-        updateSearchActive();
+        searchActiveIndex = Math.max(0, searchActiveIndex - 1); updateSearchActive();
       } else if (e.key === 'Enter') {
         var pick = items[searchActiveIndex] || items[0];
         if (pick) { e.preventDefault(); jumpTo(pick.dataset.code); }
-      } else if (e.key === 'Escape') {
-        searchRes.hidden = true; searchInp.blur();
-      }
+      } else if (e.key === 'Escape') { searchRes.hidden = true; searchInp.blur(); }
     });
     document.addEventListener('click', function (e) {
       if (!e.target.closest('.lsg-search-wrap')) searchRes.hidden = true;
     });
-
     function jumpTo(code) {
       var node = nodeById[code]; if (!node) return;
-      searchRes.hidden = true;
-      searchInp.value = node.name;
-      // Pan + zoom to centre the node, then open its tooltip
-      var k = Math.max(1.2, currentZoom.k || 1);
+      searchRes.hidden = true; searchInp.value = node.name;
+      if (state.view !== 'network' && state.view !== 'geo') {
+        setView('network');
+        setTimeout(function () { jumpTo(code); }, 200);
+        return;
+      }
+      var k = Math.max(1.2, net.currentZoom.k || 1);
       var tx = W / 2 - node.x * k;
       var ty = H / 2 - node.y * k;
       var t  = d3.zoomIdentity.translate(tx, ty).scale(k);
-      svg.transition().duration(550).call(zoomBehaviour.transform, t).on('end', function () {
-        // Synthesise a click position at the centre of the canvas
+      svg.transition().duration(550).call(net.zoomBehaviour.transform, t).on('end', function () {
         var rect = wrap.getBoundingClientRect();
-        onNodeClick({
-          stopPropagation: function () {},
-          clientX: rect.left + W / 2,
-          clientY: rect.top  + H / 2
-        }, node);
+        onNodeClick({ stopPropagation: function () {}, clientX: rect.left + W/2, clientY: rect.top + H/2 }, node);
       });
     }
 
@@ -6684,50 +7725,44 @@ function app() {
     learnInp.addEventListener('change', function () {
       state.learning = !!learnInp.checked && userSpeakers.length > 0;
       rebuildLinks();
-      render();
+      if (state.view === 'network' || state.view === 'geo') renderNet();
       scheduleUrlSync();
     });
 
     /* ═══════════════════════════════════════════════════════════════════
-       Reset view + permalink
+       Reset view + Copy link
        ═════════════════════════════════════════════════════════════════ */
     resetBtn.addEventListener('click', function () {
-      svg.transition().duration(450).call(zoomBehaviour.transform, d3.zoomIdentity);
-      if (!prefersReducedMotion) {
-        nodes.forEach(function (n) { n.fx = null; n.fy = null; });
-        simulation.alpha(0.8).restart();
+      if (state.view === 'network' || state.view === 'geo') {
+        svg.transition().duration(450).call(net.zoomBehaviour.transform, d3.zoomIdentity);
+        if (!prefersReducedMotion && state.view === 'network') {
+          nodes.forEach(function (n) { n.fx = null; n.fy = null; });
+          net.simulation.alpha(0.8).restart();
+        }
       }
       state.focusedId = null;
-      closeTip();
-      updateFocusRing();
-      scheduleUrlSync();
+      closeTip(); updateFocusRing(); scheduleUrlSync();
     });
     copyBtn.addEventListener('click', function () {
       writeUrlState(currentStateObj());
       var url = location.href;
-      var done = function () {
-        copyToast.textContent = 'Link copied';
+      function show(msg) {
+        copyToast.textContent = msg;
         copyToast.classList.add('is-open');
         setTimeout(function () { copyToast.classList.remove('is-open'); }, 1600);
-      };
-      var fail = function () {
-        copyToast.textContent = 'Copy failed — URL updated';
-        copyToast.classList.add('is-open');
-        setTimeout(function () { copyToast.classList.remove('is-open'); }, 2200);
-      };
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url).then(done, fail);
-      } else { fail(); }
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText)
+        navigator.clipboard.writeText(url).then(function () { show(tt('linkCopied')); },
+                                              function () { show('URL updated'); });
+      else show('URL updated');
     });
     function currentStateObj() {
       return {
-        t: state.threshold,
-        m: state.metric,
-        n: state.focusedId || '',
-        L: state.learning ? '1' : '',
-        k: (currentZoom.k || 1).toFixed(2),
-        x: Math.round(currentZoom.x || 0),
-        y: Math.round(currentZoom.y || 0)
+        v: state.view, t: state.threshold, m: state.metric,
+        n: state.focusedId || '', L: state.learning ? '1' : '',
+        k: ((net.currentZoom && net.currentZoom.k) || 1).toFixed(2),
+        x: Math.round((net.currentZoom && net.currentZoom.x) || 0),
+        y: Math.round((net.currentZoom && net.currentZoom.y) || 0)
       };
     }
     var urlSyncT;
@@ -6737,69 +7772,53 @@ function app() {
     }
 
     /* ═══════════════════════════════════════════════════════════════════
-       Keyboard navigation
+       Keyboard navigation (network/geo only)
        ═════════════════════════════════════════════════════════════════ */
     function updateFocusRing() {
+      if (state.view !== 'network' && state.view !== 'geo') return;
+      if (!net.focusCircle) return;
       if (!state.focusedId || !nodeById[state.focusedId]) {
-        focusCircle.style('display', 'none');
-        nodeSel.classed('is-focused', false);
+        net.focusCircle.style('display', 'none');
+        if (net.nodeSel) net.nodeSel.classed('is-focused', false);
         return;
       }
       var n = nodeById[state.focusedId];
-      focusCircle.style('display', null)
-        .attr('cx', n.x).attr('cy', n.y)
-        .attr('r', nodeRadius(n) + 6);
-      nodeSel.classed('is-focused', function (d) { return d.id === n.id; });
+      net.focusCircle.style('display', null)
+        .attr('cx', n.x).attr('cy', n.y).attr('r', nodeRadius(n) + 6);
+      if (net.nodeSel) net.nodeSel.classed('is-focused', function (d) { return d.id === n.id; });
     }
     function nearestInDirection(from, dirVec) {
-      // dirVec ∈ { [1,0], [-1,0], [0,1], [0,-1] }
       var best = null, bestScore = Infinity;
-      var visible = nodes.filter(isVisibleNode);
-      visible.forEach(function (n) {
+      nodes.filter(isVisibleNode).forEach(function (n) {
         if (n.id === from.id) return;
         var dx = n.x - from.x, dy = n.y - from.y;
         var len = Math.sqrt(dx*dx + dy*dy) || 1;
         var dot = (dx * dirVec[0] + dy * dirVec[1]) / len;
-        if (dot < 0.4) return;            // not in this cone (~±66°)
-        var score = len / (0.4 + dot);    // prefer in-direction, then close
+        if (dot < 0.4) return;
+        var score = len / (0.4 + dot);
         if (score < bestScore) { bestScore = score; best = n; }
       });
       return best;
     }
     svgEl.addEventListener('keydown', function (e) {
+      if (state.view !== 'network' && state.view !== 'geo') return;
       var dirMap = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
       if (e.key in dirMap) {
         e.preventDefault();
-        var from;
-        if (state.focusedId && nodeById[state.focusedId]) {
-          from = nodeById[state.focusedId];
-        } else {
-          // Start from a sensible default — first English-family node, else first
-          from = nodes.find(function (n) { return n.id === 'en'; }) || nodes[0];
-        }
+        var from = state.focusedId && nodeById[state.focusedId]
+                 ? nodeById[state.focusedId]
+                 : (nodes.find(function (n) { return n.id === 'en'; }) || nodes[0]);
         var nxt = nearestInDirection(from, dirMap[e.key]);
-        if (nxt) {
-          state.focusedId = nxt.id;
-          updateFocusRing();
-          scheduleUrlSync();
-        }
+        if (nxt) { state.focusedId = nxt.id; updateFocusRing(); scheduleUrlSync(); }
       } else if (e.key === 'Enter' && state.focusedId) {
         e.preventDefault();
         var n = nodeById[state.focusedId];
         if (n) {
           var rect = wrap.getBoundingClientRect();
-          onNodeClick({
-            stopPropagation: function () {},
-            clientX: rect.left + W / 2,
-            clientY: rect.top  + H / 2
-          }, n);
+          onNodeClick({ stopPropagation: function () {}, clientX: rect.left + W/2, clientY: rect.top + H/2 }, n);
         }
       } else if (e.key === 'Escape') {
-        e.preventDefault();
-        closeTip();
-        state.focusedId = null;
-        updateFocusRing();
-        scheduleUrlSync();
+        e.preventDefault(); closeTip(); state.focusedId = null; updateFocusRing(); scheduleUrlSync();
       }
     });
 
@@ -6810,40 +7829,445 @@ function app() {
     window.addEventListener('resize', function () {
       clearTimeout(resizeT);
       resizeT = setTimeout(function () {
-        var d = dims();
-        W = d.w; H = d.h;
+        var d = dims(); W = d.w; H = d.h;
         svg.attr('viewBox', '0 0 ' + W + ' ' + H);
-        if (!prefersReducedMotion) {
-          simulation.force('center', d3.forceCenter(W / 2, H / 2));
-          simulation.force('x', d3.forceX(W / 2).strength(0.03));
-          simulation.force('y', d3.forceY(H / 2).strength(0.03));
-          simulation.alpha(0.4).restart();
+        if (state.view === 'network' && !prefersReducedMotion) {
+          net.simulation.force('center', d3.forceCenter(W/2, H/2));
+          net.simulation.force('x', d3.forceX(W/2).strength(0.03));
+          net.simulation.force('y', d3.forceY(H/2).strength(0.03));
+          net.simulation.alpha(0.4).restart();
         } else {
-          staticLayout(); onTick();
+          setView(state.view);
         }
       }, 120);
     });
 
-    /* ----- tiny escape helper for innerHTML composition ----- */
+    /* ═══════════════════════════════════════════════════════════════════
+       TREE VIEW (dendrogram)
+       ═════════════════════════════════════════════════════════════════ */
+    function renderTree() {
+      svg.selectAll('*').remove();
+      var g = svg.append('g').attr('class', 'lsg-tree-root').attr('transform', 'translate(40,20)');
+      var root = getClusterRoot(state.metric);
+      // Convert to d3 hierarchy
+      function toD3(n) {
+        if (n.leaf) return { name: nodeById[n.code].name, code: n.code, dist: 0 };
+        return { name: '', dist: n.dist,
+                 children: [toD3(n.children[0]), toD3(n.children[1])] };
+      }
+      var data = toD3(root);
+      var h = d3.hierarchy(data);
+      var clusterLayout = d3.cluster().size([H - 80, W - 200]);
+      clusterLayout(h);
+
+      // Draw links
+      g.selectAll('path.lsg-tree-link').data(h.links()).enter()
+        .append('path').attr('class', 'lsg-tree-link')
+        .attr('d', function (l) {
+          return 'M' + l.source.y + ',' + l.source.x +
+                 'C' + (l.source.y + 30) + ',' + l.source.x +
+                  ' ' + (l.target.y - 30) + ',' + l.target.x +
+                  ' ' + l.target.y + ',' + l.target.x;
+        });
+
+      // Draw nodes (leaves get a coloured circle)
+      var spkSet = Object.create(null);
+      userSpeakers.forEach(function (s) { spkSet[s] = true; });
+      var nodeG = g.selectAll('g.lsg-tree-node').data(h.descendants()).enter()
+        .append('g').attr('class', function (d) {
+          return 'lsg-tree-node' + (d.data.code ? ' lsg-tree-leaf' : '');
+        })
+        .attr('transform', function (d) { return 'translate(' + d.y + ',' + d.x + ')'; });
+      nodeG.append('circle')
+        .attr('r', function (d) { return d.data.code ? 4 : 2; })
+        .attr('fill', function (d) {
+          if (!d.data.code) return 'var(--lsg-panel)';
+          var n = nodeById[d.data.code];
+          return color(n.group);
+        })
+        .attr('stroke', function (d) {
+          if (d.data.code && spkSet[d.data.code]) return '#fbbf24';
+          return 'var(--lsg-text-dim)';
+        })
+        .attr('stroke-width', function (d) {
+          return (d.data.code && spkSet[d.data.code]) ? 2 : 1;
+        });
+      nodeG.filter(function (d) { return !!d.data.code; })
+        .append('text').attr('class', function (d) {
+          return 'lsg-tree-label' + (spkSet[d.data.code] ? ' lsg-known' : '');
+        })
+        .attr('dx', 6).attr('dy', '0.32em').text(function (d) { return d.data.name; })
+        .style('cursor', 'pointer')
+        .on('click', function (event, d) {
+          // Switch back to network and jump
+          var code = d.data.code;
+          setView('network');
+          setTimeout(function () { jumpTo(code); }, 200);
+        });
+      statNodes.textContent = String(codes.length);
+      statLinks.textContent = String(codes.length - 1);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       MATRIX VIEW (heatmap)
+       ═════════════════════════════════════════════════════════════════ */
+    function renderMatrix() {
+      svg.selectAll('*').remove();
+      var order = getLeafOrder(state.metric);
+      var n = order.length;
+      var pad = { l: 90, t: 90, r: 10, b: 10 };
+      var cell = Math.max(4, Math.floor(Math.min(W - pad.l - pad.r, H - pad.t - pad.b) / n));
+      var matrixSize = cell * n;
+      var g = svg.append('g').attr('class', 'lsg-matrix-root')
+        .attr('transform', 'translate(' + pad.l + ',' + pad.t + ')');
+      // Family color bar — top
+      var familyBarH = 4;
+      g.append('g').selectAll('rect').data(order).enter().append('rect')
+        .attr('class', 'lsg-matrix-fambar')
+        .attr('x', function (_, i) { return i * cell; })
+        .attr('y', -familyBarH - 2).attr('width', cell).attr('height', familyBarH)
+        .attr('fill', function (c) { return color(nodeById[c].group); });
+      // Family color bar — left
+      g.append('g').selectAll('rect').data(order).enter().append('rect')
+        .attr('class', 'lsg-matrix-fambar')
+        .attr('x', -familyBarH - 2)
+        .attr('y', function (_, i) { return i * cell; })
+        .attr('width', familyBarH).attr('height', cell)
+        .attr('fill', function (c) { return color(nodeById[c].group); });
+      // Cells
+      var spkSet = Object.create(null);
+      userSpeakers.forEach(function (s) { spkSet[s] = true; });
+      var colorScale = d3.scaleSequential().domain([0, 100]).interpolator(d3.interpolateInferno);
+      var rows = g.append('g').selectAll('g').data(order).enter().append('g')
+        .attr('transform', function (_, i) { return 'translate(0,' + i * cell + ')'; });
+      rows.each(function (rCode, ri) {
+        var row = d3.select(this);
+        row.selectAll('rect.lsg-matrix-cell').data(order).enter().append('rect')
+          .attr('class', 'lsg-matrix-cell')
+          .attr('x', function (_, ci) { return ci * cell; })
+          .attr('y', 0).attr('width', cell).attr('height', cell)
+          .attr('fill', function (cCode) {
+            if (cCode === rCode) return 'var(--lsg-panel)';
+            var d = distance(D, state.metric, rCode, cCode, false);
+            return colorScale(d);
+          })
+          .append('title').text(function (cCode) {
+            if (cCode === rCode) return nodeById[rCode].name;
+            var d = distance(D, state.metric, rCode, cCode, false);
+            return nodeById[rCode].name + ' · ' + nodeById[cCode].name + ' — d ' + d.toFixed(0);
+          });
+        // click → jump in network
+        row.selectAll('rect.lsg-matrix-cell')
+          .on('click', function (event, cCode) {
+            if (cCode === rCode) return;
+            setView('network');
+            setTimeout(function () { jumpTo(rCode); }, 200);
+          });
+      });
+      // Row labels (left)
+      g.append('g').selectAll('text').data(order).enter().append('text')
+        .attr('class', function (c) { return 'lsg-matrix-rowlabel' + (spkSet[c] ? ' lsg-known' : ''); })
+        .attr('x', -8).attr('y', function (_, i) { return i * cell + cell / 2; })
+        .attr('text-anchor', 'end').attr('dy', '0.32em')
+        .text(function (c) { return nodeById[c].name; });
+      // Column labels (top, rotated)
+      g.append('g').selectAll('text').data(order).enter().append('text')
+        .attr('class', function (c) { return 'lsg-matrix-collabel' + (spkSet[c] ? ' lsg-known' : ''); })
+        .attr('x', function (_, i) { return i * cell + cell / 2; })
+        .attr('y', -8).attr('text-anchor', 'start').attr('dy', '0.32em')
+        .attr('transform', function (_, i) {
+          return 'rotate(-65 ' + (i * cell + cell / 2) + ',-8)';
+        })
+        .text(function (c) { return nodeById[c].name; });
+      statNodes.textContent = String(n);
+      statLinks.textContent = String(n * (n - 1) / 2);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Shortest path widget
+       ═════════════════════════════════════════════════════════════════ */
+    function findShortestPath() {
+      var a = pathFrom.value, b = pathTo.value;
+      if (!a || !b || a === b) {
+        pathRes.innerHTML = '<span class="lsg-path-empty">Pick two different languages.</span>';
+        state.pathHighlight = [];
+        if (net.pathLayer) renderPathOverlay();
+        return;
+      }
+      var distFn = function (x, y) { return distance(D, state.metric, x, y, false); };
+      var res = dijkstra(codes, distFn, a, b);
+      if (!res) {
+        pathRes.innerHTML = '<span class="lsg-path-empty">No path found.</span>';
+        state.pathHighlight = [];
+        if (net.pathLayer) renderPathOverlay();
+        return;
+      }
+      var html = '';
+      res.path.forEach(function (c, i) {
+        if (i > 0) {
+          var step = distance(D, state.metric, res.path[i-1], c, false);
+          html += '<span class="lsg-path-arrow">→ ' + step.toFixed(0) + ' →</span>';
+        }
+        html += '<span class="lsg-path-step">' + escapeHTML(D.languages[c].name) + '</span>';
+      });
+      html += '<div class="lsg-path-meta">Total accumulated distance: ' + res.totalDist.toFixed(0) +
+              ' · ' + (res.path.length - 1) + ' hop' + (res.path.length === 2 ? '' : 's') + '</div>';
+      pathRes.innerHTML = html;
+      state.pathHighlight = res.path;
+      if (state.view === 'network' || state.view === 'geo') {
+        renderPathOverlay();
+      } else {
+        setView('network');
+      }
+    }
+    pathFind.addEventListener('click', findShortestPath);
+    pathClear.addEventListener('click', function () {
+      pathFrom.value = ''; pathTo.value = '';
+      pathRes.innerHTML = '<span class="lsg-path-empty">Pick two languages and click <b>Find path</b>.</span>';
+      state.pathHighlight = [];
+      if (net.pathLayer) renderPathOverlay();
+    });
+
+    /* ═══════════════════════════════════════════════════════════════════
+       View-mode switcher
+       ═════════════════════════════════════════════════════════════════ */
+    function setView(mode) {
+      if (mode === state.view) return;
+      state.view = mode;
+      container.classList.remove('lsg-view-network','lsg-view-tree','lsg-view-matrix','lsg-view-geo');
+      container.classList.add('lsg-view-' + mode);
+      viewRow.querySelectorAll('.lsg-chip').forEach(function (c) {
+        c.classList.toggle('is-active', c.dataset.view === mode);
+      });
+      // Some controls only make sense in network/geo
+      var inGraph = (mode === 'network' || mode === 'geo');
+      slider.disabled = !inGraph;
+      charge.disabled = (mode !== 'network');
+      if (mode === 'network' || mode === 'geo') {
+        net = {}; initNetworkLayer(mode === 'geo');
+      } else if (mode === 'tree') {
+        net = {}; renderTree();
+      } else if (mode === 'matrix') {
+        net = {}; renderMatrix();
+      }
+      scheduleUrlSync();
+    }
+    viewRow.addEventListener('click', function (e) {
+      var btn = e.target.closest('.lsg-chip'); if (!btn) return;
+      var v = btn.dataset.view; if (!v) return;
+      setView(v);
+    });
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Export menu — PNG / SVG / embed
+       ═════════════════════════════════════════════════════════════════ */
+    exportBtn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var open = exportMenu.classList.contains('is-open');
+      if (open) {
+        exportMenu.classList.remove('is-open');
+        setTimeout(function () { if (!exportMenu.classList.contains('is-open')) exportMenu.hidden = true; }, 150);
+      } else {
+        exportMenu.hidden = false;
+        var rect = exportBtn.getBoundingClientRect();
+        var wrapRect = container.getBoundingClientRect();
+        exportMenu.style.right = (wrapRect.right - rect.right) + 'px';
+        exportMenu.style.top   = (rect.bottom - wrapRect.top + 4) + 'px';
+        requestAnimationFrame(function () { exportMenu.classList.add('is-open'); });
+      }
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('#lsg-export-btn') && !e.target.closest('#lsg-export-menu')) {
+        exportMenu.classList.remove('is-open');
+        setTimeout(function () { if (!exportMenu.classList.contains('is-open')) exportMenu.hidden = true; }, 150);
+      }
+    });
+    exportMenu.addEventListener('click', function (e) {
+      var btn = e.target.closest('button'); if (!btn) return;
+      var kind = btn.dataset.export;
+      if (kind === 'png')   exportPng();
+      if (kind === 'svg')   exportSvg();
+      if (kind === 'embed') copyEmbed();
+      exportMenu.classList.remove('is-open');
+      setTimeout(function () { if (!exportMenu.classList.contains('is-open')) exportMenu.hidden = true; }, 150);
+    });
+    function serializedSvg() {
+      // Clone, inline the computed background so the export looks like the canvas
+      var clone = svgEl.cloneNode(true);
+      clone.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+      clone.setAttribute('width', W); clone.setAttribute('height', H);
+      // Inline bg
+      var bg = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bg.setAttribute('x', 0); bg.setAttribute('y', 0);
+      bg.setAttribute('width', W); bg.setAttribute('height', H);
+      bg.setAttribute('fill', '#1c1917');
+      clone.insertBefore(bg, clone.firstChild);
+      return new XMLSerializer().serializeToString(clone);
+    }
+    function downloadBlob(blob, name) {
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a');
+      a.href = url; a.download = name;
+      document.body.appendChild(a); a.click();
+      document.body.removeChild(a); URL.revokeObjectURL(url);
+    }
+    function exportSvg() {
+      var str = serializedSvg();
+      downloadBlob(new Blob([str], { type: 'image/svg+xml' }),
+                   'language-graph-' + state.view + '.svg');
+    }
+    function exportPng() {
+      var str = serializedSvg();
+      var img = new Image();
+      var blob = new Blob([str], { type: 'image/svg+xml' });
+      var url = URL.createObjectURL(blob);
+      img.onload = function () {
+        var scale = 2;
+        var canvas = document.createElement('canvas');
+        canvas.width = W * scale; canvas.height = H * scale;
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = '#1c1917'; ctx.fillRect(0,0,canvas.width,canvas.height);
+        ctx.scale(scale, scale);
+        ctx.drawImage(img, 0, 0);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function (blob2) {
+          downloadBlob(blob2, 'language-graph-' + state.view + '.png');
+        }, 'image/png');
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        copyToast.textContent = 'PNG export failed — try SVG instead';
+        copyToast.classList.add('is-open');
+        setTimeout(function () { copyToast.classList.remove('is-open'); }, 2000);
+      };
+      img.src = url;
+    }
+    function copyEmbed() {
+      writeUrlState(currentStateObj());
+      var base = location.protocol + '//' + location.host + location.pathname;
+      var hash = location.hash;
+      var src = base + hash;
+      var html = '<iframe src="' + src + '" width="100%" height="720" style="border:0;border-radius:12px"></iframe>';
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(html).then(function () {
+          copyToast.textContent = tt('embedCopied');
+          copyToast.classList.add('is-open');
+          setTimeout(function () { copyToast.classList.remove('is-open'); }, 1800);
+        });
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Guided tour
+       ═════════════════════════════════════════════════════════════════ */
+    var TOUR_STEPS = [
+      { sel: '#lsg-title',       title: 'Welcome',
+        body: 'This is the Language Similarity Graph — every node is a language, every line connects pairs that are linguistically close.' },
+      { sel: '#lsg-view-row',    title: 'Four views of the same data',
+        body: 'Switch between Network (default), Tree (dendrogram), Matrix (heatmap), and Geographic. Each reveals different structure.' },
+      { sel: '#lsg-threshold',   title: 'Distance threshold',
+        body: 'Drag the slider to widen or narrow which pairs count as "connected". Larger threshold = more lines.' },
+      { sel: '#graph-container .lsg-chip-row[aria-label="Distance metric"]',
+        title: 'Metric switcher',
+        body: 'Recolour the connections by a single dimension — lexical (shared vocabulary), grammar, phonology, script, or family — to see how each one clusters languages differently.' },
+      { sel: '#lsg-search',      title: 'Find any language',
+        body: 'Type a name and we jump and open its detail card. Works from any view.' },
+      { sel: '#lsg-learning-wrap', title: 'Personalised "Learning view"',
+        body: 'Pick languages you know in the app above; turn this on to see directed arrows from your known languages to everything else — your personalised study map.' },
+      { sel: '#lsg-path-card',   title: 'Shortest learning path',
+        body: 'Pick two languages and we compute the linguistic stepping-stone chain between them.' },
+      { sel: '#lsg-surprising-card', title: 'Surprising connections',
+        body: 'Cross-family pairs that came out closer than you’d expect. Click one to investigate.' }
+    ];
+    var tourIdx = 0;
+    var tourBackdrop = document.getElementById('lsg-tour-backdrop');
+    var tourSpotlight = document.getElementById('lsg-tour-spotlight');
+    var tourPopover  = document.getElementById('lsg-tour-popover');
+    var tourTitle    = document.getElementById('lsg-tour-title');
+    var tourBody     = document.getElementById('lsg-tour-body');
+    var tourCounter  = document.getElementById('lsg-tour-counter');
+    var tourPrev     = document.getElementById('lsg-tour-prev');
+    var tourNext     = document.getElementById('lsg-tour-next');
+    var tourSkip     = document.getElementById('lsg-tour-skip');
+    function showTourStep(i) {
+      var step = TOUR_STEPS[i];
+      var el = document.querySelector(step.sel);
+      if (!el) { return endTour(); }
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function () {
+        var r = el.getBoundingClientRect();
+        var pad = 6;
+        tourSpotlight.hidden = false;
+        tourSpotlight.style.left   = (r.left - pad) + 'px';
+        tourSpotlight.style.top    = (r.top  - pad) + 'px';
+        tourSpotlight.style.width  = (r.width  + pad * 2) + 'px';
+        tourSpotlight.style.height = (r.height + pad * 2) + 'px';
+        tourTitle.textContent = step.title;
+        tourBody.textContent  = step.body;
+        tourCounter.textContent = (i + 1) + ' / ' + TOUR_STEPS.length;
+        tourPrev.disabled = (i === 0);
+        tourNext.textContent = (i === TOUR_STEPS.length - 1) ? tt('tourDone') : tt('tourNext');
+        // Position popover below or above element
+        var popH = 180; // rough est
+        var top = r.bottom + 12;
+        if (top + popH > window.innerHeight) top = Math.max(12, r.top - popH - 12);
+        tourPopover.style.left = Math.min(window.innerWidth - 340, Math.max(12, r.left)) + 'px';
+        tourPopover.style.top  = top + 'px';
+        tourPopover.hidden = false;
+      }, 250);
+    }
+    function startTour() {
+      tourIdx = 0;
+      tourBackdrop.hidden = false;
+      requestAnimationFrame(function () { tourBackdrop.classList.add('is-open'); });
+      showTourStep(0);
+    }
+    function endTour() {
+      tourBackdrop.classList.remove('is-open');
+      tourSpotlight.hidden = true;
+      tourPopover.hidden = true;
+      setTimeout(function () { tourBackdrop.hidden = true; }, 250);
+      try { localStorage.setItem('lsg-tour-seen', '1'); } catch (e) {}
+    }
+    tourPrev.addEventListener('click', function () { if (tourIdx > 0) showTourStep(--tourIdx); });
+    tourNext.addEventListener('click', function () {
+      if (tourIdx === TOUR_STEPS.length - 1) endTour();
+      else showTourStep(++tourIdx);
+    });
+    tourSkip.addEventListener('click', endTour);
+    if (helpBtn) helpBtn.addEventListener('click', startTour);
+    // Auto-show on first visit
+    try {
+      if (!localStorage.getItem('lsg-tour-seen')) {
+        setTimeout(startTour, 2200);
+      }
+    } catch (e) {}
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Tiny helpers
+       ═════════════════════════════════════════════════════════════════ */
     function escapeHTML(s) {
       return String(s)
         .replace(/&/g, '&amp;').replace(/</g, '&lt;')
         .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     }
 
-    /* ----- first paint ----- */
+    /* ═══════════════════════════════════════════════════════════════════
+       First paint
+       ═════════════════════════════════════════════════════════════════ */
+    applyI18n(container);
+    searchInp.placeholder = tt('findPlaceholder');
+    learnWrap.title = tt('learningViewHint');
+    container.classList.add('lsg-view-' + state.view);
     rebuildLinks();
-    render();
-    // If URL state requested a focused node, open it once layout stabilises
-    if (state.focusedId && nodeById[state.focusedId]) {
+    if (state.view === 'network' || state.view === 'geo') initNetworkLayer(state.view === 'geo');
+    else if (state.view === 'tree') renderTree();
+    else if (state.view === 'matrix') renderMatrix();
+    if (state.focusedId && nodeById[state.focusedId] && (state.view === 'network' || state.view === 'geo')) {
       setTimeout(function () {
         var n = nodeById[state.focusedId];
         var rect = wrap.getBoundingClientRect();
-        onNodeClick({
-          stopPropagation: function () {},
-          clientX: rect.left + W / 2,
-          clientY: rect.top  + H / 2
-        }, n);
+        onNodeClick({ stopPropagation: function () {}, clientX: rect.left + W/2, clientY: rect.top + H/2 }, n);
       }, prefersReducedMotion ? 50 : 800);
     }
   }
