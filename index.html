@@ -722,6 +722,167 @@
     #graph-container .lsg-control { min-width: 0; flex: 1 1 100%; }
     #graph-container .lsg-node text { font-size: 9px; }
   }
+  /* ── v2 additions: metric chips, search, learning toggle, hulls, arrows, edge tip, focus ring ── */
+  #graph-container .lsg-chip-row {
+    display: flex; flex-wrap: wrap; gap: 4px;
+  }
+  #graph-container .lsg-chip {
+    font-size: 0.7rem; font-weight: 600;
+    padding: 4px 9px; border-radius: 999px;
+    background: var(--lsg-panel); color: var(--lsg-text-dim);
+    border: 1px solid var(--lsg-border); cursor: pointer;
+    transition: background .15s, color .15s, border-color .15s;
+    white-space: nowrap;
+  }
+  #graph-container .lsg-chip:hover {
+    color: var(--lsg-text); border-color: var(--lsg-accent);
+  }
+  #graph-container .lsg-chip.is-active {
+    background: color-mix(in srgb, var(--lsg-accent) 22%, var(--lsg-panel));
+    color: var(--lsg-text); border-color: var(--lsg-accent);
+  }
+
+  #graph-container .lsg-search-wrap {
+    position: relative; flex: 1 1 auto; display: flex; align-items: center; gap: 6px;
+  }
+  #graph-container .lsg-search-input {
+    flex: 1 1 auto; min-width: 0;
+    background: var(--lsg-panel); color: var(--lsg-text);
+    border: 1px solid var(--lsg-border); border-radius: 8px;
+    padding: 6px 9px; font-size: 0.78rem; outline: none;
+    transition: border-color .15s, box-shadow .15s;
+  }
+  #graph-container .lsg-search-input:focus {
+    border-color: var(--lsg-accent);
+    box-shadow: 0 0 0 2px color-mix(in srgb, var(--lsg-accent) 25%, transparent);
+  }
+  #graph-container .lsg-search-input::placeholder { color: var(--lsg-text-mute); }
+  #graph-container .lsg-search-results {
+    position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+    max-height: 220px; overflow-y: auto;
+    background: var(--lsg-panel); border: 1px solid var(--lsg-border);
+    border-radius: 8px; box-shadow: var(--lsg-shadow);
+    z-index: 30; padding: 4px;
+  }
+  #graph-container .lsg-search-results[hidden] { display: none; }
+  #graph-container .lsg-search-item {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 5px 9px; border-radius: 6px;
+    font-size: 0.78rem; color: var(--lsg-text); cursor: pointer;
+  }
+  #graph-container .lsg-search-item:hover,
+  #graph-container .lsg-search-item.is-active {
+    background: color-mix(in srgb, var(--lsg-accent) 18%, transparent);
+  }
+  #graph-container .lsg-search-item small {
+    color: var(--lsg-text-mute); font-size: 0.66rem; margin-left: 8px;
+  }
+  #graph-container .lsg-search-empty {
+    padding: 8px 10px; font-size: 0.74rem; color: var(--lsg-text-mute); font-style: italic;
+  }
+
+  #graph-container .lsg-toggle {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 0.72rem; font-weight: 600; color: var(--lsg-text-dim);
+    cursor: pointer; user-select: none;
+    padding: 4px 8px; border-radius: 8px;
+    border: 1px solid var(--lsg-border); background: var(--lsg-panel);
+  }
+  #graph-container .lsg-toggle input { accent-color: var(--lsg-accent); cursor: pointer; }
+  #graph-container .lsg-toggle.is-disabled { opacity: 0.5; cursor: not-allowed; }
+  #graph-container .lsg-toggle.is-disabled input { cursor: not-allowed; }
+  #graph-container .lsg-toggle:hover:not(.is-disabled) { color: var(--lsg-text); border-color: var(--lsg-accent); }
+
+  /* Convex hulls behind each family cluster */
+  #graph-container .lsg-hull {
+    fill-opacity: 0.08; stroke-opacity: 0.35; stroke-width: 1.5;
+    pointer-events: none;
+    transition: fill-opacity .25s, stroke-opacity .25s;
+  }
+  #graph-container .lsg-hull.lsg-faded { fill-opacity: 0.025; stroke-opacity: 0.1; }
+
+  /* Curved link paths (replacing <line>) */
+  #graph-container .lsg-link {
+    fill: none; pointer-events: stroke;
+  }
+  /* invisible thick hit-area path that sits under each visible link */
+  #graph-container .lsg-link-hit {
+    fill: none; stroke: transparent; stroke-width: 12;
+    cursor: help; pointer-events: stroke;
+  }
+
+  /* Known / recommended decorations */
+  #graph-container .lsg-node.is-known circle {
+    stroke: #fbbf24; stroke-width: 3;
+  }
+  #graph-container .lsg-node.is-rec circle {
+    filter: drop-shadow(0 0 6px color-mix(in srgb, var(--lsg-accent) 80%, transparent));
+  }
+  #graph-container .lsg-node.is-focused circle {
+    stroke: var(--lsg-accent-2); stroke-width: 3;
+  }
+
+  /* Label visibility — controlled by class on the parent SVG */
+  #graph-container .lsg-svg .lsg-node text { opacity: 0; transition: opacity .2s; }
+  #graph-container .lsg-svg .lsg-node.is-hub text,
+  #graph-container .lsg-svg .lsg-node.is-pinned text,
+  #graph-container .lsg-svg .lsg-node.is-focused text,
+  #graph-container .lsg-svg.lsg-labels-all .lsg-node text { opacity: 1; }
+  #graph-container .lsg-svg .lsg-node.lsg-bright text { opacity: 1; }
+
+  /* Edge hover tooltip — compact bare-bones */
+  #graph-container .lsg-edge-tip {
+    position: absolute; pointer-events: none; z-index: 22;
+    background: var(--lsg-panel); border: 1px solid var(--lsg-border);
+    border-radius: 8px; box-shadow: var(--lsg-shadow);
+    padding: 7px 9px; font-size: 0.72rem; color: var(--lsg-text);
+    line-height: 1.35; min-width: 180px; max-width: 240px;
+    opacity: 0; transform: translateY(2px); transition: opacity .15s, transform .15s;
+  }
+  #graph-container .lsg-edge-tip[hidden] { display: none; }
+  #graph-container .lsg-edge-tip.is-open { opacity: 1; transform: translateY(0); }
+  #graph-container .lsg-edge-tip .lsg-edge-head {
+    font-weight: 700; margin-bottom: 4px; display: flex; justify-content: space-between; gap: 8px;
+  }
+  #graph-container .lsg-edge-tip .lsg-edge-head span { color: var(--lsg-text-dim); font-weight: 400; }
+  #graph-container .lsg-edge-tip .lsg-edge-row {
+    display: flex; justify-content: space-between;
+    font-variant-numeric: tabular-nums;
+  }
+  #graph-container .lsg-edge-tip .lsg-edge-row b { font-weight: 600; }
+  #graph-container .lsg-edge-tip .lsg-edge-row span { color: var(--lsg-text-dim); }
+
+  /* Tooltip actions row + compare button */
+  #graph-container .lsg-tip-actions {
+    margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--lsg-border);
+    display: flex; gap: 6px; flex-wrap: wrap;
+  }
+  #graph-container .lsg-tip-actions[hidden] { display: none; }
+  #graph-container .lsg-tip-actions .lsg-btn { flex: 1 1 auto; text-align: center; }
+
+  /* Permalink "copied" toast */
+  #graph-container .lsg-copy-toast {
+    position: absolute; right: 12px; top: 12px; z-index: 25;
+    background: var(--lsg-accent); color: #052e16;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 6px 10px; border-radius: 999px;
+    box-shadow: var(--lsg-shadow);
+    opacity: 0; transform: translateY(-4px); transition: opacity .2s, transform .2s;
+    pointer-events: none;
+  }
+  #graph-container .lsg-copy-toast.is-open { opacity: 1; transform: translateY(0); }
+
+  /* SVG keyboard focus ring on the canvas itself */
+  #graph-container .lsg-svg:focus { outline: none; }
+  #graph-container .lsg-svg:focus-visible {
+    box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--lsg-accent) 50%, transparent);
+  }
+
+  /* Reduced-motion adjustments */
+  @media (prefers-reduced-motion: reduce) {
+    #graph-container * { transition: none !important; animation: none !important; }
+  }
+
 </style>
 
 <!-- ── Service Worker registration (PWA / offline support) ──────────────── -->
@@ -2034,13 +2195,17 @@
         </p>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap">
         <span class="lsg-meta-pill" id="lsg-stat-nodes">
           <b id="lsg-stat-nodes-val">0</b> nodes
         </span>
         <span class="lsg-meta-pill" id="lsg-stat-links">
           <b id="lsg-stat-links-val">0</b> links
         </span>
+        <button type="button" class="lsg-btn" id="lsg-copy-link"
+                title="Copy a shareable link to this exact view (threshold, metric, focused node, zoom)">
+          Copy link
+        </button>
         <button type="button" class="lsg-btn" id="lsg-reset-zoom"
                 title="Reset zoom and re-centre the simulation">
           Reset view
@@ -2066,15 +2231,46 @@
                min="-400" max="-50" step="10" value="-150"
                aria-label="Force-directed many-body strength"/>
       </div>
+      <div class="lsg-control" style="flex: 1 1 auto;">
+        <label>Metric</label>
+        <div class="lsg-chip-row" role="group" aria-label="Distance metric">
+          <button type="button" class="lsg-chip is-active" data-metric="composite">Composite</button>
+          <button type="button" class="lsg-chip" data-metric="lexical">Lexical</button>
+          <button type="button" class="lsg-chip" data-metric="grammatical">Grammar</button>
+          <button type="button" class="lsg-chip" data-metric="phonological">Phonology</button>
+          <button type="button" class="lsg-chip" data-metric="writing_system">Script</button>
+          <button type="button" class="lsg-chip" data-metric="genealogical">Genealogy</button>
+        </div>
+      </div>
+      <div class="lsg-control lsg-search-wrap" style="flex: 1 1 220px;">
+        <label for="lsg-search">Find</label>
+        <input type="text"
+               id="lsg-search"
+               class="lsg-search-input"
+               placeholder="Type a language…"
+               autocomplete="off" spellcheck="false"
+               aria-label="Search for a language and jump to it" />
+        <div class="lsg-search-results" id="lsg-search-results" hidden role="listbox"></div>
+      </div>
+      <div class="lsg-control" style="flex: 0 0 auto;">
+        <label class="lsg-toggle is-disabled" id="lsg-learning-wrap"
+               title="Pick languages you know in the app above to enable this view">
+          <input type="checkbox" id="lsg-learning" disabled />
+          <span>Learning view</span>
+        </label>
+      </div>
     </div>
 
     <div class="lsg-canvas-wrap" id="lsg-canvas-wrap">
       <svg class="lsg-svg"
            id="lsg-svg"
            role="img"
-           aria-label="Force-directed language similarity network"
+           tabindex="0"
+           aria-label="Force-directed language similarity network — use arrow keys to navigate, Enter to open details, Esc to close"
            xmlns="http://www.w3.org/2000/svg"></svg>
-      <div class="lsg-hint">scroll&nbsp;= zoom · drag&nbsp;background&nbsp;= pan · drag&nbsp;node&nbsp;= pull</div>
+      <div class="lsg-hint">scroll&nbsp;= zoom · drag&nbsp;background&nbsp;= pan · drag&nbsp;node&nbsp;= pull · ←↑→↓ navigate</div>
+      <div class="lsg-copy-toast" id="lsg-copy-toast" aria-live="polite">Link copied</div>
+      <div class="lsg-edge-tip" id="lsg-edge-tip" hidden></div>
       <div class="lsg-tip" id="lsg-tip" role="dialog" aria-hidden="true">
         <div class="lsg-tip-head">
           <div class="lsg-tip-name" id="lsg-tip-name">—</div>
@@ -2083,6 +2279,9 @@
         <div class="lsg-tip-meta" id="lsg-tip-meta">—</div>
         <div class="lsg-tip-sub">Closest neighbours</div>
         <div class="lsg-tip-list" id="lsg-tip-list"></div>
+        <div class="lsg-tip-actions" id="lsg-tip-actions" hidden>
+          <button type="button" class="lsg-btn" id="lsg-tip-compare">Add to compare panel</button>
+        </div>
       </div>
     </div>
 
@@ -5368,18 +5567,29 @@ function app() {
 </script>
 
 <!-- ─────────────────────────────────────────────────────────────────────────
-     LANGUAGE SIMILARITY GRAPH — engine
-     Pure-D3 force-directed network. Reads the global `DATA` constant defined
-     above (DATA.languages, DATA.lexical, DATA.contact). Self-contained: does
-     not touch the Alpine app. Waits for D3 and DOMContentLoaded before
-     mounting. Safe to load before DATA exists — guarded with retries.
+     LANGUAGE SIMILARITY GRAPH — engine v2
+     v1 features (force sim, zoom, drag, hover, click, threshold slider) plus:
+       • per-dimension metric switcher (Composite + 5 dims)
+       • edge hover tooltip with sub-score breakdown
+       • search box with live filter and zoom-to-node
+       • Alpine bridge: known-language outline + recommendation halo
+       • "Compare" button in tooltip → wires to Alpine compareSlots
+       • zoom-aware label visibility (hub-only at low zoom)
+       • translucent family convex hulls (d3.polygonHull)
+       • curved-arc links (quadratic Bezier)
+       • asymmetric "Learning view" with arrowheads, scored from each speaker
+       • keyboard navigation (arrows + Enter + Esc)
+       • prefers-reduced-motion → stable family-grouped ring layout
+       • permalink: encode state in URL hash + copy to clipboard
+     Self-contained: reads but does not mutate the Alpine app's reactive
+     state (except via the explicit Compare action, by user choice).
      ─────────────────────────────────────────────────────────────────────── -->
 <script>
 (function () {
   'use strict';
 
   /* ═══════════════════════════════════════════════════════════════════════
-     0. Boot guard — wait for D3 + DOM + DATA
+     0. Boot guard
      ═════════════════════════════════════════════════════════════════════ */
   function whenReady(fn) {
     var tries = 0;
@@ -5401,9 +5611,8 @@ function app() {
   whenReady(function () { initLangGraph(window.d3, DATA); });
 
   /* ═══════════════════════════════════════════════════════════════════════
-     1. Scoring — pure functions mirroring the app's combinedScore math.
-        All return similarity ∈ [0,1] where 1 = identical / closest.
-        Distance is then `100 * (1 - similarity)` → [0,100].
+     1. Scoring — pure functions. Each `sim*` returns ∈ [0,1] (1 = identical).
+        `contactBonus*` returns a directional or omnidirectional bonus.
      ═════════════════════════════════════════════════════════════════════ */
   var DEFAULT_WEIGHTS_GRAPH = {
     lexical: 35, grammatical: 25, phonological: 10,
@@ -5412,25 +5621,23 @@ function app() {
 
   function pairKey(a, b) { return a < b ? a + '|' + b : b + '|' + a; }
 
-  function simLexical(DATA, a, b) {
+  function simLexical(D, a, b) {
     if (a === b) return 1.0;
     var k = pairKey(a, b);
-    if (DATA.lexical[k] !== undefined) return DATA.lexical[k];
-    var la = DATA.languages[a], lb = DATA.languages[b];
+    if (D.lexical[k] !== undefined) return D.lexical[k];
+    var la = D.languages[a], lb = D.languages[b];
     if (la.family    !== lb.family)    return 0.03;
     if (la.branch    !== lb.branch)    return 0.10;
     if (la.subbranch !== lb.subbranch) return 0.30;
     return 0.55;
   }
-
-  function simGenealogical(DATA, a, b) {
-    var la = DATA.languages[a], lb = DATA.languages[b];
+  function simGenealogical(D, a, b) {
+    var la = D.languages[a], lb = D.languages[b];
     if (la.family    !== lb.family)    return 0.0;
     if (la.branch    !== lb.branch)    return 0.4;
     if (la.subbranch !== lb.subbranch) return 0.7;
     return 1.0;
   }
-
   function simWordOrder(la, lb) {
     var fam = {
       'SVO':              ['SVO'],
@@ -5446,7 +5653,6 @@ function app() {
     if ((fam[lb.word_order] || []).indexOf(la.word_order) > -1) return 0.7;
     return 0.0;
   }
-
   function simMorph(la, lb) {
     if (la.morphology === lb.morphology) return 1.0;
     var pairs = {
@@ -5462,9 +5668,8 @@ function app() {
     var k = [la.morphology, lb.morphology].sort().join('|');
     return pairs[k] || 0.0;
   }
-
-  function simGrammatical(DATA, a, b) {
-    var la = DATA.languages[a], lb = DATA.languages[b];
+  function simGrammatical(D, a, b) {
+    var la = D.languages[a], lb = D.languages[b];
     var caseDiff   = Math.abs((la.case_count   || 0) - (lb.case_count   || 0));
     var caseScore  = Math.max(0, 1 - caseDiff / 8);
     var genderDiff = Math.abs((la.gender_count || 0) - (lb.gender_count || 0));
@@ -5478,22 +5683,15 @@ function app() {
     var vhScore    = (la.vowel_harmony === lb.vowel_harmony) ? 1.0 : 0.0;
     return (caseScore + genderScore + artScore + wordScore + morphScore + vhScore) / 6;
   }
-
-  function simPhonological(DATA, a, b) {
-    var pa = new Set(DATA.languages[a].phoneme_features || []);
-    var pb = new Set(DATA.languages[b].phoneme_features || []);
+  function simPhonological(D, a, b) {
+    var pa = new Set(D.languages[a].phoneme_features || []);
+    var pb = new Set(D.languages[b].phoneme_features || []);
     if (pa.size === 0 && pb.size === 0) return 1.0;
     var inter = 0;
     pa.forEach(function (x) { if (pb.has(x)) inter++; });
     var union = pa.size + pb.size - inter;
     return union === 0 ? 0 : inter / union;
   }
-
-  /* Lightweight writing-system similarity:
-     1.0 if identical writing_system field,
-     0.4 if same script-family root (Latin-x ↔ Latin-y, Cyrillic ↔ Cyrillic),
-     0.0 otherwise. The full 3-tier orthographic algorithm lives in the Alpine
-     app and is not required here for graph clustering. */
   function scriptRoot(ws) {
     if (!ws) return '';
     if (ws.indexOf('Latin')      > -1) return 'Latin';
@@ -5503,27 +5701,46 @@ function app() {
     if (ws.indexOf('Devanagari') > -1) return 'Devanagari';
     return ws;
   }
-  function simWritingSystem(DATA, a, b) {
-    var sa = DATA.languages[a].writing_system,
-        sb = DATA.languages[b].writing_system;
+  function simWritingSystem(D, a, b) {
+    var sa = D.languages[a].writing_system, sb = D.languages[b].writing_system;
     if (sa === sb) return 1.0;
     return scriptRoot(sa) === scriptRoot(sb) ? 0.4 : 0.0;
   }
-
-  function contactBonus(DATA, a, b) {
-    var info = DATA.contact[a + '|' + b] || DATA.contact[b + '|' + a];
+  /* Symmetric (any-direction) contact bonus — checks both H|T and T|H. */
+  function contactSym(D, a, b) {
+    var info = D.contact[a + '|' + b] || D.contact[b + '|' + a];
+    return info ? info.bonus : 0;
+  }
+  /* Directional contact bonus — knowing `from` helps with `to` via the
+     loanword direction encoded as `from|to`. */
+  function contactDir(D, from, to) {
+    var info = D.contact[from + '|' + to];
     return info ? info.bonus : 0;
   }
 
-  /* Composite similarity in [0,1], weighted exactly like the Alpine app's
-     combinedScore with DEFAULT_WEIGHTS. Distance = 100 * (1 - similarity). */
-  function composite(DATA, a, b, weights) {
+  /* Per-dim similarity. Single source of truth used by composite, by the
+     metric switcher's single-dim mode, and by the edge hover sub-score row. */
+  function simByMetric(D, metric, a, b, directional) {
+    switch (metric) {
+      case 'lexical': {
+        var base = simLexical(D, a, b);
+        var bonus = directional ? contactDir(D, a, b) : contactSym(D, a, b);
+        return Math.min(1.0, base + bonus);
+      }
+      case 'grammatical':   return simGrammatical(D, a, b);
+      case 'phonological':  return simPhonological(D, a, b);
+      case 'writing_system':return simWritingSystem(D, a, b);
+      case 'genealogical':  return simGenealogical(D, a, b);
+      default: return null;
+    }
+  }
+  function composite(D, a, b, directional, weights) {
     var w = weights || DEFAULT_WEIGHTS_GRAPH;
-    var lex   = Math.min(1.0, simLexical(DATA, a, b) + contactBonus(DATA, a, b));
-    var gen   = simGenealogical(DATA, a, b);
-    var gram  = simGrammatical(DATA, a, b);
-    var phon  = simPhonological(DATA, a, b);
-    var ws    = simWritingSystem(DATA, a, b);
+    var lex  = simByMetric(D, 'lexical',        a, b, directional);
+    var gen  = simByMetric(D, 'genealogical',   a, b, false);
+    var gram = simByMetric(D, 'grammatical',    a, b, false);
+    var phon = simByMetric(D, 'phonological',   a, b, false);
+    var ws   = simByMetric(D, 'writing_system', a, b, false);
     var total = w.lexical + w.grammatical + w.phonological + w.writing_system + w.genealogical;
     return (
       lex  * (w.lexical        / total) +
@@ -5533,18 +5750,23 @@ function app() {
       ws   * (w.writing_system / total)
     );
   }
-
-  function distance(DATA, a, b) {
-    return 100 * (1 - composite(DATA, a, b));
+  /* Distance ∈ [0,100]. `metric === 'composite'` uses the weighted blend;
+     anything else uses that single dimension. `directional` only matters for
+     lexical / composite (contact bonus has a direction). */
+  function distance(D, metric, a, b, directional) {
+    if (a === b) return 0;
+    var sim = (metric === 'composite')
+      ? composite(D, a, b, !!directional, null)
+      : simByMetric(D, metric, a, b, !!directional);
+    return 100 * (1 - sim);
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     2. Data transform — DATA → { nodes, links }
+     2. Data transforms
      ═════════════════════════════════════════════════════════════════════ */
-  function buildGraphData(DATA) {
-    var codes = Object.keys(DATA.languages);
-    var nodes = codes.map(function (code) {
-      var l = DATA.languages[code];
+  function buildNodes(D) {
+    return Object.keys(D.languages).map(function (code) {
+      var l = D.languages[code];
       return {
         id:        code,
         name:      l.name,
@@ -5554,30 +5776,103 @@ function app() {
         speakers:  l.speakers_m || 0
       };
     });
-
-    // Precompute every pairwise distance ONCE. 96 langs → C(96,2) = 4,560 pairs.
+  }
+  /* Symmetric pairs (i<j). Used in default view for every metric. */
+  function buildSymLinks(D, codes, metric) {
     var links = [];
     for (var i = 0; i < codes.length; i++) {
       for (var j = i + 1; j < codes.length; j++) {
         var a = codes[i], b = codes[j];
-        var d = distance(DATA, a, b);
-        links.push({ source: a, target: b, dist: d });
+        var d = distance(D, metric, a, b, false);
+        links.push({ source: a, target: b, dist: d, directed: false });
       }
     }
-    return { nodes: nodes, links: links };
+    return links;
+  }
+  /* Directed FROM each speaker TO every non-speaker, using directional
+     scoring (contact bonus FROM the speaker into the target). Used in
+     "Learning view" when the user has selected speakers in the Alpine app. */
+  function buildDirLinks(D, codes, metric, speakers) {
+    var spkSet = Object.create(null);
+    speakers.forEach(function (s) { spkSet[s] = true; });
+    var links = [];
+    for (var s = 0; s < speakers.length; s++) {
+      var from = speakers[s];
+      if (!(from in D.languages)) continue;
+      for (var t = 0; t < codes.length; t++) {
+        var to = codes[t];
+        if (to === from || spkSet[to]) continue;
+        var d = distance(D, metric, from, to, true);
+        links.push({ source: from, target: to, dist: d, directed: true });
+      }
+    }
+    return links;
   }
 
   /* ═══════════════════════════════════════════════════════════════════════
-     3. Main init
+     3. URL state — read & write to `#lsg=…`
      ═════════════════════════════════════════════════════════════════════ */
-  function initLangGraph(d3, DATA) {
-    var graph = buildGraphData(DATA);
-    var nodes = graph.nodes;
-    var allLinks = graph.links;          // every C(n,2) pair, cached
-    var DISTANCE_THRESHOLD = 45;         // mutable; bound to the slider
-    var chargeStrength = -150;           // mutable; bound to the repulsion slider
+  var URL_KEY = 'lsg';
+  function readUrlState() {
+    var hash = location.hash.replace(/^#/, '');
+    if (!hash) return {};
+    // hash is a&b&c — find our segment
+    var parts = hash.split('&');
+    for (var i = 0; i < parts.length; i++) {
+      var seg = parts[i];
+      var eq = seg.indexOf('=');
+      if (eq < 0) continue;
+      var key = seg.slice(0, eq), val = seg.slice(eq + 1);
+      if (key !== URL_KEY) continue;
+      // val is `t45,m=composite,n=es,k=1.5,x=10,y=-20,L=1`
+      var out = {};
+      val.split(',').forEach(function (kv) {
+        var p = kv.indexOf('=');
+        if (p < 0) {
+          // shorthand like "t45" → key=first char, val=rest
+          if (kv.length > 1) out[kv[0]] = kv.slice(1);
+        } else {
+          out[kv.slice(0, p)] = kv.slice(p + 1);
+        }
+      });
+      return out;
+    }
+    return {};
+  }
+  function writeUrlState(state) {
+    // Build our segment
+    var pieces = [];
+    Object.keys(state).forEach(function (k) {
+      var v = state[k];
+      if (v === null || v === undefined || v === '') return;
+      pieces.push(k + '=' + encodeURIComponent(String(v)));
+    });
+    var ourSeg = pieces.length ? (URL_KEY + '=' + pieces.join(',')) : '';
+    // Splice into existing hash, replacing any prior lsg= segment
+    var hash = location.hash.replace(/^#/, '');
+    var parts = hash ? hash.split('&').filter(function (p) {
+      return p.indexOf(URL_KEY + '=') !== 0;
+    }) : [];
+    if (ourSeg) parts.push(ourSeg);
+    var newHash = parts.length ? '#' + parts.join('&') : '';
+    history.replaceState(null, '', location.pathname + location.search + newHash);
+  }
 
-    /* --- elements & sizing -------------------------------------------- */
+  /* ═══════════════════════════════════════════════════════════════════════
+     4. Alpine bridge — read speakers / recommendations without mutating
+     ═════════════════════════════════════════════════════════════════════ */
+  function getAlpineData() {
+    if (!window.Alpine) return null;
+    var el = document.querySelector('[x-data="app()"]');
+    if (!el) return null;
+    try { return window.Alpine.$data(el); } catch (e) { return null; }
+  }
+
+  /* ═══════════════════════════════════════════════════════════════════════
+     5. Main init
+     ═════════════════════════════════════════════════════════════════════ */
+  function initLangGraph(d3, D) {
+    /* ----- elements ----- */
     var svgEl     = document.getElementById('lsg-svg');
     var wrap      = document.getElementById('lsg-canvas-wrap');
     var tipEl     = document.getElementById('lsg-tip');
@@ -5585,14 +5880,70 @@ function app() {
     var tipMeta   = document.getElementById('lsg-tip-meta');
     var tipList   = document.getElementById('lsg-tip-list');
     var tipClose  = document.getElementById('lsg-tip-close');
+    var tipActions= document.getElementById('lsg-tip-actions');
+    var tipCompare= document.getElementById('lsg-tip-compare');
+    var edgeTip   = document.getElementById('lsg-edge-tip');
     var legendEl  = document.getElementById('lsg-legend');
     var slider    = document.getElementById('lsg-threshold');
     var sliderVal = document.getElementById('lsg-threshold-val');
     var charge    = document.getElementById('lsg-charge');
     var resetBtn  = document.getElementById('lsg-reset-zoom');
+    var copyBtn   = document.getElementById('lsg-copy-link');
+    var copyToast = document.getElementById('lsg-copy-toast');
     var statNodes = document.getElementById('lsg-stat-nodes-val');
     var statLinks = document.getElementById('lsg-stat-links-val');
+    var metricRow = document.querySelector('#graph-container .lsg-chip-row');
+    var searchInp = document.getElementById('lsg-search');
+    var searchRes = document.getElementById('lsg-search-results');
+    var learnInp  = document.getElementById('lsg-learning');
+    var learnWrap = document.getElementById('lsg-learning-wrap');
 
+    /* ----- runtime state ----- */
+    var codes = Object.keys(D.languages);
+    var nodes = buildNodes(D);
+    var nodeById = Object.create(null);
+    nodes.forEach(function (n) { nodeById[n.id] = n; });
+    /* Cache symmetric links per metric (built on first use) */
+    var symLinksCache = Object.create(null);
+    function getSymLinks(metric) {
+      if (!symLinksCache[metric]) symLinksCache[metric] = buildSymLinks(D, codes, metric);
+      return symLinksCache[metric];
+    }
+
+    var state = {
+      threshold: 45,
+      metric:    'composite',
+      learning:  false,        // directed view enabled?
+      focusedId: null,         // currently focused node (search / keyboard / pin)
+      pinnedId:  null
+    };
+    var chargeStrength = -150;
+    var prefersReducedMotion = !!(window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
+    /* ----- apply URL state (if any) ----- */
+    var urlState = readUrlState();
+    if (urlState.t) { var t = +urlState.t; if (t >= 10 && t <= 95) state.threshold = t; }
+    if (urlState.m) state.metric = urlState.m;
+    if (urlState.n && urlState.n in nodeById) state.focusedId = urlState.n;
+    if (urlState.L) state.learning = urlState.L === '1';
+    slider.value = state.threshold;
+    sliderVal.textContent = String(state.threshold);
+    document.querySelectorAll('#graph-container .lsg-chip').forEach(function (c) {
+      c.classList.toggle('is-active', c.dataset.metric === state.metric);
+    });
+
+    /* ----- live link buffer ----- */
+    var liveLinks = [];   // links currently bound to the simulation
+    function rebuildLinks() {
+      if (state.learning && userSpeakers.length) {
+        liveLinks = buildDirLinks(D, codes, state.metric, userSpeakers);
+      } else {
+        liveLinks = getSymLinks(state.metric);
+      }
+    }
+
+    /* ----- sizing ----- */
     var svg = d3.select(svgEl);
     function dims() {
       var r = wrap.getBoundingClientRect();
@@ -5602,10 +5953,8 @@ function app() {
     svg.attr('viewBox', '0 0 ' + W + ' ' + H)
        .attr('preserveAspectRatio', 'xMidYMid meet');
 
-    /* --- colour scale per family -------------------------------------- */
+    /* ----- colour scale per family ----- */
     var families = Array.from(new Set(nodes.map(function (n) { return n.group; }))).sort();
-    // 17-colour palette tuned for dark backgrounds; cycles if more families
-    // are ever added. Categorical & perceptually distinct.
     var palette = [
       '#34d399', '#a78bfa', '#60a5fa', '#fbbf24', '#f472b6',
       '#22d3ee', '#fb923c', '#a3e635', '#f87171', '#c084fc',
@@ -5615,98 +5964,208 @@ function app() {
     var color = d3.scaleOrdinal()
       .domain(families)
       .range(families.map(function (_, i) { return palette[i % palette.length]; }));
-
-    var familyHidden = Object.create(null);    // family → true means user toggled off
+    var familyHidden = Object.create(null);
     function isVisibleNode(n) { return !familyHidden[n.group]; }
 
-    /* --- zoom + pan layer --------------------------------------------- */
-    svg.selectAll('*').remove();   // idempotent if called twice
-    var rootG = svg.append('g').attr('class', 'lsg-root');
+    /* ----- SVG layers ----- */
+    svg.selectAll('*').remove();
+    // <defs> with arrowhead marker for learning view
+    var defs = svg.append('defs');
+    defs.append('marker')
+      .attr('id', 'lsg-arrow')
+      .attr('viewBox', '0 0 10 10')
+      .attr('refX', 8).attr('refY', 5)
+      .attr('markerWidth', 5).attr('markerHeight', 5)
+      .attr('orient', 'auto-start-reverse')
+      .append('path')
+      .attr('d', 'M0,0 L10,5 L0,10 z')
+      .attr('fill', 'var(--lsg-link-hi)');
 
+    var rootG     = svg.append('g').attr('class', 'lsg-root');
+    var hullLayer = rootG.append('g').attr('class', 'lsg-hulls');
+    var linkLayer = rootG.append('g').attr('class', 'lsg-links');
+    var nodeLayer = rootG.append('g').attr('class', 'lsg-nodes');
+    var focusLayer= rootG.append('g').attr('class', 'lsg-focus-ring');
+
+    /* ----- zoom + pan ----- */
+    var currentZoom = d3.zoomIdentity;
     var zoomBehaviour = d3.zoom()
       .scaleExtent([0.25, 6])
       .filter(function (event) {
-        // Allow wheel/pinch always; disable pan only when dragging a node
         if (event.type === 'wheel') return true;
         if (event.type === 'mousedown' && event.target && event.target.closest('.lsg-node')) return false;
         if (event.type === 'touchstart' && event.target && event.target.closest('.lsg-node')) return false;
         return true;
       })
-      .on('zoom', function (event) { rootG.attr('transform', event.transform); });
+      .on('zoom', function (event) {
+        currentZoom = event.transform;
+        rootG.attr('transform', event.transform);
+        applyLabelVisibility();
+        scheduleUrlSync();
+      });
     svg.call(zoomBehaviour);
-    svg.on('dblclick.zoom', null);   // dblclick reserved for closing tooltip
+    svg.on('dblclick.zoom', null);
     svg.on('click', function (event) {
-      // Click on the empty SVG background closes the tooltip
-      if (event.target === svgEl || event.target === rootG.node()) closeTip();
+      if (event.target === svgEl || event.target === rootG.node() ||
+          event.target.classList.contains('lsg-hull')) {
+        closeTip();
+      }
     });
 
-    var linkLayer = rootG.append('g').attr('class', 'lsg-links');
-    var nodeLayer = rootG.append('g').attr('class', 'lsg-nodes');
+    /* Restore zoom transform from URL if present */
+    if (urlState.k || urlState.x || urlState.y) {
+      var k = parseFloat(urlState.k) || 1;
+      var x = parseFloat(urlState.x) || 0;
+      var y = parseFloat(urlState.y) || 0;
+      var t = d3.zoomIdentity.translate(x, y).scale(k);
+      requestAnimationFrame(function () {
+        svg.call(zoomBehaviour.transform, t);
+      });
+    }
 
-    /* --- force simulation --------------------------------------------- */
-    // Use string ids on links; d3 will resolve them to node refs on start.
-    var simulation = d3.forceSimulation(nodes)
-      .force('charge', d3.forceManyBody().strength(chargeStrength))
-      .force('center', d3.forceCenter(W / 2, H / 2))
-      .force('collide', d3.forceCollide().radius(function (d) { return nodeRadius(d) + 2; }))
-      .force('x', d3.forceX(W / 2).strength(0.03))
-      .force('y', d3.forceY(H / 2).strength(0.03))
-      .force('link', d3.forceLink([])
-                       .id(function (d) { return d.id; })
-                       .distance(function (l) { return 30 + l.dist * 1.4; })
-                       .strength(function (l) { return 0.4 * (1 - l.dist / 100); }))
-      .on('tick', onTick);
-
+    /* ----- nodeRadius (existing) ----- */
     function nodeRadius(n) {
-      // Scale node size gently by log10(speakers_m). Min 5, max 13.
       var s = Math.max(1, n.speakers || 1);
       return 5 + Math.min(8, Math.log10(s + 1) * 3.6);
     }
 
-    /* --- selections --------------------------------------------------- */
-    var linkSel = linkLayer.selectAll('line');
-    var nodeSel = nodeLayer.selectAll('g');
+    /* ----- force simulation (or static layout if reduced motion) ----- */
+    var simulation;
+    if (prefersReducedMotion) {
+      staticLayout();
+      simulation = d3.forceSimulation(nodes)
+        .force('link', d3.forceLink([]).id(function (d) { return d.id; }))
+        .stop(); // simulation exists for API compatibility but doesn't run
+    } else {
+      simulation = d3.forceSimulation(nodes)
+        .force('charge', d3.forceManyBody().strength(chargeStrength))
+        .force('center', d3.forceCenter(W / 2, H / 2))
+        .force('collide', d3.forceCollide().radius(function (d) { return nodeRadius(d) + 2; }))
+        .force('x', d3.forceX(W / 2).strength(0.03))
+        .force('y', d3.forceY(H / 2).strength(0.03))
+        .force('link', d3.forceLink([])
+                         .id(function (d) { return d.id; })
+                         .distance(function (l) { return 30 + l.dist * 1.4; })
+                         .strength(function (l) { return 0.4 * (1 - l.dist / 100); }))
+        .on('tick', onTick);
+    }
 
+    function staticLayout() {
+      var cx = W / 2, cy = H / 2;
+      var Rmajor = Math.min(W, H) * 0.32;
+      var nodesByFam = {};
+      families.forEach(function (f) { nodesByFam[f] = []; });
+      nodes.forEach(function (n) { nodesByFam[n.group].push(n); });
+      families.forEach(function (fam, fi) {
+        var angle = (fi / families.length) * Math.PI * 2 - Math.PI / 2;
+        var fcx = cx + Math.cos(angle) * Rmajor;
+        var fcy = cy + Math.sin(angle) * Rmajor;
+        var members = nodesByFam[fam];
+        var Rminor = Math.max(22, 7 * Math.sqrt(members.length));
+        members.forEach(function (n, i) {
+          var a = (i / Math.max(1, members.length)) * Math.PI * 2;
+          n.x = fcx + Math.cos(a) * Rminor;
+          n.y = fcy + Math.sin(a) * Rminor;
+          n.fx = n.x; n.fy = n.y;
+        });
+      });
+    }
+
+    /* ----- selections (rebuilt by render) ----- */
+    var linkSel = linkLayer.selectAll('g.lsg-link-g');
+    var nodeSel = nodeLayer.selectAll('g.lsg-node');
+    var hullSel = hullLayer.selectAll('path.lsg-hull');
+    var focusCircle = focusLayer.append('circle')
+      .attr('class', 'lsg-focus-ring-circle')
+      .attr('r', 0)
+      .attr('fill', 'none')
+      .attr('stroke', 'var(--lsg-accent-2)')
+      .attr('stroke-width', 2.5)
+      .attr('stroke-dasharray', '4,3')
+      .style('display', 'none')
+      .style('pointer-events', 'none');
+
+    /* ----- live degree map (for hub-label visibility) ----- */
+    var degreeMap = Object.create(null);
+    function recomputeDegrees() {
+      degreeMap = Object.create(null);
+      liveLinks.forEach(function (l) {
+        if (l.dist >= state.threshold) return;
+        var s = (typeof l.source === 'object') ? l.source.id : l.source;
+        var t = (typeof l.target === 'object') ? l.target.id : l.target;
+        var sn = nodeById[s], tn = nodeById[t];
+        if (!sn || !tn) return;
+        if (!isVisibleNode(sn) || !isVisibleNode(tn)) return;
+        degreeMap[s] = (degreeMap[s] || 0) + 1;
+        degreeMap[t] = (degreeMap[t] || 0) + 1;
+      });
+    }
+    function hubSetForZoom() {
+      // At low zoom show only the top-12 hubs. At zoom > 1.4 show everything.
+      var k = currentZoom && currentZoom.k ? currentZoom.k : 1;
+      if (k > 1.4) return null; // null = show all
+      var top = Object.keys(degreeMap)
+        .sort(function (a, b) { return degreeMap[b] - degreeMap[a]; })
+        .slice(0, 12);
+      var s = Object.create(null);
+      top.forEach(function (id) { s[id] = true; });
+      return s;
+    }
+    function applyLabelVisibility() {
+      var hubs = hubSetForZoom();
+      svg.classed('lsg-labels-all', hubs === null);
+      if (hubs !== null && nodeSel) {
+        nodeSel.classed('is-hub', function (n) { return !!hubs[n.id]; });
+      } else if (nodeSel) {
+        nodeSel.classed('is-hub', false);
+      }
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Render — rebuilds link & node selections from `state` + `liveLinks`
+       ═════════════════════════════════════════════════════════════════ */
     function render() {
-      // Filter to live links: under threshold AND both endpoints visible
-      var visibleLinks = allLinks.filter(function (l) {
-        if (l.dist >= DISTANCE_THRESHOLD) return false;
-        var s = typeof l.source === 'object' ? l.source.id : l.source;
-        var t = typeof l.target === 'object' ? l.target.id : l.target;
+      var visibleNodes = nodes.filter(isVisibleNode);
+      var visibleLinks = liveLinks.filter(function (l) {
+        if (l.dist >= state.threshold) return false;
+        var s = (typeof l.source === 'object') ? l.source.id : l.source;
+        var t = (typeof l.target === 'object') ? l.target.id : l.target;
         var sn = nodeById[s], tn = nodeById[t];
         return sn && tn && isVisibleNode(sn) && isVisibleNode(tn);
       });
-      var visibleNodes = nodes.filter(isVisibleNode);
 
-      // ------- LINKS -------
-      linkSel = linkLayer.selectAll('line').data(visibleLinks,
-        function (d) {
-          var s = typeof d.source === 'object' ? d.source.id : d.source;
-          var t = typeof d.target === 'object' ? d.target.id : d.target;
-          return s + '~' + t;
-        });
+      /* --- LINKS --- (group containing hit-area + visible path) */
+      linkSel = linkLayer.selectAll('g.lsg-link-g').data(visibleLinks, function (l) {
+        var s = (typeof l.source === 'object') ? l.source.id : l.source;
+        var t = (typeof l.target === 'object') ? l.target.id : l.target;
+        return s + (l.directed ? '→' : '~') + t;
+      });
       linkSel.exit().remove();
-      var linkEnter = linkSel.enter().append('line').attr('class', 'lsg-link');
-      linkSel = linkEnter.merge(linkSel)
+      var linkEnter = linkSel.enter().append('g').attr('class', 'lsg-link-g');
+      linkEnter.append('path').attr('class', 'lsg-link-hit');
+      linkEnter.append('path').attr('class', 'lsg-link');
+      linkSel = linkEnter.merge(linkSel);
+      linkSel.select('path.lsg-link')
+        .attr('stroke', 'var(--lsg-link)')
         .attr('stroke-width', function (l) {
-          var t = 1 - l.dist / DISTANCE_THRESHOLD;        // 0..1, closer = bigger
-          return 0.6 + t * 3.2;
+          return 0.6 + (1 - l.dist / state.threshold) * 3.2;
         })
         .attr('stroke-opacity', function (l) {
-          var t = 1 - l.dist / DISTANCE_THRESHOLD;
-          return 0.15 + t * 0.7;
-        });
+          return 0.15 + (1 - l.dist / state.threshold) * 0.7;
+        })
+        .attr('marker-end', function (l) { return l.directed ? 'url(#lsg-arrow)' : null; });
+      linkSel.select('path.lsg-link-hit')
+        .on('mouseenter', onEdgeHover)
+        .on('mouseleave', onEdgeLeave)
+        .on('mousemove',  onEdgeMove);
 
-      // ------- NODES -------
+      /* --- NODES --- */
       nodeSel = nodeLayer.selectAll('g.lsg-node').data(visibleNodes, function (d) { return d.id; });
       nodeSel.exit().remove();
       var nodeEnter = nodeSel.enter().append('g').attr('class', 'lsg-node');
       nodeEnter.append('circle');
-      nodeEnter.append('title');   // native SVG tooltip fallback
-      nodeEnter.append('text')
-        .attr('dy', '0.32em')
-        .attr('text-anchor', 'middle');
-
+      nodeEnter.append('title');
+      nodeEnter.append('text').attr('dy', '0.32em').attr('text-anchor', 'middle');
       nodeSel = nodeEnter.merge(nodeSel);
       nodeSel.select('circle')
         .attr('r', function (d) { return nodeRadius(d); })
@@ -5717,69 +6176,126 @@ function app() {
       nodeSel.select('text').text(function (d) { return d.name; })
         .attr('y', function (d) { return -nodeRadius(d) - 6; });
 
-      // Attach drag + interaction handlers (re-bind on every render)
       nodeSel.call(makeDrag(simulation))
              .on('mouseenter', onNodeHover)
              .on('mouseleave', onNodeLeave)
              .on('click',      onNodeClick);
 
-      // Update simulation
+      applyUserStateDecor();
+      recomputeDegrees();
+      applyLabelVisibility();
+
+      /* --- HULLS --- per family with ≥3 visible nodes */
+      var famGroups = Object.create(null);
+      visibleNodes.forEach(function (n) {
+        (famGroups[n.group] || (famGroups[n.group] = [])).push(n);
+      });
+      var hullData = Object.keys(famGroups)
+        .filter(function (f) { return famGroups[f].length >= 3; })
+        .map(function (f) { return { family: f, members: famGroups[f] }; });
+      hullSel = hullLayer.selectAll('path.lsg-hull').data(hullData, function (d) { return d.family; });
+      hullSel.exit().remove();
+      var hullEnter = hullSel.enter().append('path').attr('class', 'lsg-hull');
+      hullSel = hullEnter.merge(hullSel)
+        .attr('fill',   function (d) { return color(d.family); })
+        .attr('stroke', function (d) { return color(d.family); });
+
+      /* --- simulation update --- */
       simulation.nodes(visibleNodes);
       simulation.force('link').links(visibleLinks);
-      simulation.alpha(0.6).restart();
+      if (!prefersReducedMotion) simulation.alpha(0.6).restart();
+      else onTick(); // single static paint
 
-      // Counters
+      /* --- counters --- */
       statNodes.textContent = String(visibleNodes.length);
       statLinks.textContent = String(visibleLinks.length);
 
-      // Re-apply any active hover dim (in case render fires while hovering)
+      /* --- restore hover/focus visuals --- */
       if (hoveredId) applyHover(hoveredId);
+      updateFocusRing();
     }
 
-    var nodeById = Object.create(null);
-    nodes.forEach(function (n) { nodeById[n.id] = n; });
-
+    /* ----- onTick: position links (curved), nodes, hulls, focus ring ----- */
+    function expandHull(points, pad) {
+      // Expand each polygon vertex away from the centroid by `pad`.
+      var cx = 0, cy = 0;
+      points.forEach(function (p) { cx += p[0]; cy += p[1]; });
+      cx /= points.length; cy /= points.length;
+      return points.map(function (p) {
+        var dx = p[0] - cx, dy = p[1] - cy;
+        var len = Math.sqrt(dx*dx + dy*dy) || 1;
+        return [ p[0] + (dx/len) * pad, p[1] + (dy/len) * pad ];
+      });
+    }
     function onTick() {
-      linkSel
-        .attr('x1', function (d) { return d.source.x; })
-        .attr('y1', function (d) { return d.source.y; })
-        .attr('x2', function (d) { return d.target.x; })
-        .attr('y2', function (d) { return d.target.y; });
+      linkSel.each(function (l) {
+        var sx = l.source.x, sy = l.source.y;
+        var tx = l.target.x, ty = l.target.y;
+        var dx = tx - sx, dy = ty - sy;
+        var dr = Math.sqrt(dx*dx + dy*dy) || 1;
+        // Slight curve perpendicular to the source→target axis
+        var off = Math.min(28, dr * 0.16);
+        var mx = (sx + tx) / 2, my = (sy + ty) / 2;
+        var nx = -dy / dr, ny = dx / dr;
+        var cx = mx + nx * off, cy = my + ny * off;
+        // In directed view, end the visible path short of the target circle
+        // so the arrowhead sits cleanly on the rim instead of inside it.
+        var endX = tx, endY = ty;
+        if (l.directed) {
+          var tr = nodeRadius(l.target) + 4;
+          var ang = Math.atan2(ty - cy, tx - cx);
+          endX = tx - Math.cos(ang) * tr;
+          endY = ty - Math.sin(ang) * tr;
+        }
+        var path = 'M' + sx + ',' + sy + ' Q' + cx + ',' + cy + ' ' + endX + ',' + endY;
+        // Two paths in this group: hit (first child) + visible (second child)
+        this.firstChild.setAttribute('d', path);
+        this.lastChild.setAttribute('d', path);
+      });
       nodeSel.attr('transform', function (d) {
         return 'translate(' + d.x + ',' + d.y + ')';
       });
+      // Hulls
+      hullSel.attr('d', function (d) {
+        if (d.members.length < 3) return null;
+        var pts = d.members.map(function (n) { return [n.x, n.y]; });
+        var hull = d3.polygonHull(pts);
+        if (!hull) return null;
+        hull = expandHull(hull, 18);
+        return 'M' + hull.map(function (p) { return p.join(','); }).join('L') + 'Z';
+      });
+      // Focus ring
+      updateFocusRing();
     }
 
-    /* --- drag --------------------------------------------------------- */
+    /* ----- drag (existing behaviour) ----- */
     function makeDrag(sim) {
       return d3.drag()
         .on('start', function (event, d) {
+          if (prefersReducedMotion) return; // nodes stay pinned in static layout
           if (!event.active) sim.alphaTarget(0.3).restart();
           d.fx = d.x; d.fy = d.y;
         })
-        .on('drag', function (event, d) { d.fx = event.x; d.fy = event.y; })
+        .on('drag', function (event, d) {
+          if (prefersReducedMotion) return;
+          d.fx = event.x; d.fy = event.y;
+        })
         .on('end', function (event, d) {
+          if (prefersReducedMotion) return;
           if (!event.active) sim.alphaTarget(0);
-          // Release the pin so the sim re-equilibrates; users can re-grab.
           d.fx = null; d.fy = null;
         });
     }
 
-    /* --- hover dim ---------------------------------------------------- */
+    /* ----- hover dim ----- */
     var hoveredId = null;
-    function onNodeHover(event, d) {
-      hoveredId = d.id;
-      applyHover(d.id);
-    }
-    function onNodeLeave() { hoveredId = null; clearHover(); }
-
+    function onNodeHover(event, d) { hoveredId = d.id; applyHover(d.id); }
+    function onNodeLeave()         { hoveredId = null; clearHover(); }
     function neighboursOf(id) {
-      var set = Object.create(null);
-      set[id] = true;
+      var set = Object.create(null); set[id] = true;
       linkSel.each(function (l) {
-        if (l.dist >= DISTANCE_THRESHOLD) return;
-        var s = l.source.id || l.source;
-        var t = l.target.id || l.target;
+        if (l.dist >= state.threshold) return;
+        var s = l.source.id || l.source, t = l.target.id || l.target;
         if (s === id) set[t] = true;
         if (t === id) set[s] = true;
       });
@@ -5792,36 +6308,101 @@ function app() {
       linkSel.classed('lsg-faded', function (l) {
         var s = l.source.id || l.source, t = l.target.id || l.target;
         return !(s === id || t === id);
-      }).classed('lsg-link-hot', function (l) {
+      });
+      linkSel.select('.lsg-link').classed('lsg-link-hot', function (l) {
         var s = l.source.id || l.source, t = l.target.id || l.target;
         return (s === id || t === id);
       });
+      hullSel.classed('lsg-faded', function (h) { return h.family !== nodeById[id].group; });
     }
     function clearHover() {
       nodeSel.classed('lsg-faded', false).classed('lsg-bright', false);
-      linkSel.classed('lsg-faded', false).classed('lsg-link-hot', false);
+      linkSel.classed('lsg-faded', false);
+      linkSel.select('.lsg-link').classed('lsg-link-hot', false);
+      hullSel.classed('lsg-faded', false);
     }
 
-    /* --- click → tooltip --------------------------------------------- */
-    var pinnedId = null;
+    /* ═══════════════════════════════════════════════════════════════════
+       Edge hover → sub-score breakdown tooltip
+       ═════════════════════════════════════════════════════════════════ */
+    function onEdgeHover(event, l) {
+      var sId = (typeof l.source === 'object') ? l.source.id : l.source;
+      var tId = (typeof l.target === 'object') ? l.target.id : l.target;
+      var dirn = !!l.directed;
+      var html = '<div class="lsg-edge-head">' +
+        escapeHTML(nodeById[sId].name) +
+        (dirn ? ' <span>→</span> ' : ' <span>·</span> ') +
+        escapeHTML(nodeById[tId].name) +
+        '<span>d ' + l.dist.toFixed(0) + '</span></div>';
+      var rows = [
+        ['Lexical',  simByMetric(D, 'lexical',        sId, tId, dirn)],
+        ['Grammar',  simByMetric(D, 'grammatical',    sId, tId, false)],
+        ['Phonology',simByMetric(D, 'phonological',   sId, tId, false)],
+        ['Script',   simByMetric(D, 'writing_system', sId, tId, false)],
+        ['Genealogy',simByMetric(D, 'genealogical',   sId, tId, false)]
+      ];
+      rows.forEach(function (r) {
+        html += '<div class="lsg-edge-row"><span>' + r[0] + '</span><b>' +
+                r[1].toFixed(2) + '</b></div>';
+      });
+      if (dirn) {
+        var cb = contactDir(D, sId, tId);
+        if (cb > 0) {
+          var info = D.contact[sId + '|' + tId];
+          html += '<div class="lsg-edge-row" style="margin-top:4px"><span>Contact bonus</span><b>+' +
+                  cb.toFixed(2) + '</b></div>';
+          if (info && info.note) {
+            html += '<div style="margin-top:4px;color:var(--lsg-text-mute);font-size:0.66rem;line-height:1.3">' +
+                    escapeHTML(info.note) + '</div>';
+          }
+        }
+      }
+      edgeTip.innerHTML = html;
+      edgeTip.hidden = false;
+      requestAnimationFrame(function () { edgeTip.classList.add('is-open'); });
+      onEdgeMove(event);
+    }
+    function onEdgeMove(event) {
+      var rect = wrap.getBoundingClientRect();
+      var x = (event.clientX - rect.left) + 12;
+      var y = (event.clientY - rect.top)  + 12;
+      edgeTip.style.left = x + 'px';
+      edgeTip.style.top  = y + 'px';
+      requestAnimationFrame(function () {
+        var tw = edgeTip.offsetWidth, th = edgeTip.offsetHeight;
+        if (x + tw > rect.width  - 8) edgeTip.style.left = Math.max(8, rect.width  - tw - 8) + 'px';
+        if (y + th > rect.height - 8) edgeTip.style.top  = Math.max(8, rect.height - th - 8) + 'px';
+      });
+    }
+    function onEdgeLeave() {
+      edgeTip.classList.remove('is-open');
+      setTimeout(function () {
+        if (!edgeTip.classList.contains('is-open')) edgeTip.hidden = true;
+      }, 160);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Click → tooltip
+       ═════════════════════════════════════════════════════════════════ */
     function onNodeClick(event, d) {
       event.stopPropagation();
-      pinnedId = d.id;
+      state.pinnedId = d.id;
+      state.focusedId = d.id;
       nodeSel.classed('is-pinned', function (n) { return n.id === d.id; });
       openTipFor(d, event);
+      updateFocusRing();
+      scheduleUrlSync();
     }
     function openTipFor(d, event) {
-      // Top-5 closest neighbours by precomputed distance (ignores threshold)
-      var neighbours = allLinks
-        .filter(function (l) {
-          var s = l.source.id || l.source, t = l.target.id || l.target;
-          return s === d.id || t === d.id;
-        })
-        .map(function (l) {
-          var s = l.source.id || l.source, t = l.target.id || l.target;
-          var otherId = s === d.id ? t : s;
-          return { id: otherId, name: nodeById[otherId].name,
-                   family: nodeById[otherId].group, dist: l.dist };
+      // Top-5 closest by current metric — uses the same scoring as the graph
+      var rows = nodes
+        .filter(function (n) { return n.id !== d.id; })
+        .map(function (n) {
+          var sId = state.learning && userSpeakers.indexOf(d.id) > -1 ? d.id : d.id;
+          // For neighbours-of-pinned, distance is always symmetric (the
+          // pinned node may not be a speaker, so directional doesn't apply).
+          var dist = distance(D, state.metric, d.id, n.id, false);
+          return { id: n.id, name: n.name, family: n.group, dist: dist };
         })
         .sort(function (a, b) { return a.dist - b.dist; })
         .slice(0, 5);
@@ -5833,13 +6414,13 @@ function app() {
       tipMeta.textContent = metaBits.join(' · ');
 
       tipList.innerHTML = '';
-      if (neighbours.length === 0) {
+      if (rows.length === 0) {
         var empty = document.createElement('div');
         empty.className = 'lsg-tip-empty';
         empty.textContent = 'No related languages in this dataset.';
         tipList.appendChild(empty);
       } else {
-        neighbours.forEach(function (nb) {
+        rows.forEach(function (nb) {
           var row = document.createElement('div');
           row.className = 'lsg-tip-row';
           var left = document.createElement('b'); left.textContent = nb.name;
@@ -5850,7 +6431,20 @@ function app() {
         });
       }
 
-      // Position tooltip near the cursor, clamped to the canvas
+      // Show Compare button only if Alpine is available & node is not already
+      // a speaker
+      var alpine = getAlpineData();
+      if (alpine && Array.isArray(alpine.speakers) && alpine.speakers.indexOf(d.id) < 0) {
+        tipActions.hidden = false;
+        tipCompare.textContent = (alpine.compareSlots && alpine.compareSlots.indexOf(d.id) > -1)
+          ? 'Remove from compare panel'
+          : 'Add to compare panel';
+        tipCompare.dataset.targetCode = d.id;
+      } else {
+        tipActions.hidden = true;
+      }
+
+      // Position
       var rect = wrap.getBoundingClientRect();
       var x = (event.clientX - rect.left) + 14;
       var y = (event.clientY - rect.top)  + 14;
@@ -5860,19 +6454,81 @@ function app() {
       tipEl.setAttribute('aria-hidden', 'false');
       requestAnimationFrame(function () {
         var tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
-        if (x + tw > rect.width - 8)  tipEl.style.left = Math.max(8, rect.width  - tw - 8) + 'px';
+        if (x + tw > rect.width  - 8) tipEl.style.left = Math.max(8, rect.width  - tw - 8) + 'px';
         if (y + th > rect.height - 8) tipEl.style.top  = Math.max(8, rect.height - th - 8) + 'px';
       });
     }
     function closeTip() {
       tipEl.classList.remove('is-open');
       tipEl.setAttribute('aria-hidden', 'true');
-      pinnedId = null;
+      state.pinnedId = null;
       nodeSel.classed('is-pinned', false);
     }
     tipClose.addEventListener('click', function (e) { e.stopPropagation(); closeTip(); });
+    tipCompare.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var code = tipCompare.dataset.targetCode;
+      var alpine = getAlpineData();
+      if (!alpine || !code) return;
+      if (typeof alpine.toggleCompare === 'function') {
+        alpine.toggleCompare(code);
+        // refresh label
+        var inSlots = alpine.compareSlots && alpine.compareSlots.indexOf(code) > -1;
+        tipCompare.textContent = inSlots ? 'Remove from compare panel' : 'Add to compare panel';
+      }
+    });
 
-    /* --- legend ------------------------------------------------------- */
+    /* ═══════════════════════════════════════════════════════════════════
+       User-state decoration — known languages (yellow ring) + recs (halo)
+       ═════════════════════════════════════════════════════════════════ */
+    var userSpeakers = [];
+    var userRecs = [];   // top-5 recommendation codes
+    var lastAlpineKey = '';
+    function applyUserStateDecor() {
+      var spkSet = Object.create(null);
+      userSpeakers.forEach(function (s) { spkSet[s] = true; });
+      var recSet = Object.create(null);
+      userRecs.forEach(function (r) { recSet[r] = true; });
+      nodeSel
+        .classed('is-known', function (n) { return !!spkSet[n.id]; })
+        .classed('is-rec',   function (n) { return !!recSet[n.id]; });
+    }
+    function refreshFromAlpine() {
+      var a = getAlpineData();
+      if (!a) return;
+      var spk = Array.isArray(a.speakers) ? a.speakers.slice() : [];
+      var recs = [];
+      try {
+        // a.recommendations is an Alpine getter; reading is safe
+        recs = (a.recommendations || []).slice(0, 5).map(function (r) { return r.target; });
+      } catch (e) { recs = []; }
+      var key = spk.join(',') + '|' + recs.join(',');
+      if (key === lastAlpineKey) return;
+      lastAlpineKey = key;
+      userSpeakers = spk;
+      userRecs = recs;
+      // Enable/disable learning toggle based on speakers
+      if (userSpeakers.length === 0) {
+        learnInp.disabled = true;
+        learnWrap.classList.add('is-disabled');
+        if (state.learning) {
+          state.learning = false;
+          learnInp.checked = false;
+        }
+      } else {
+        learnInp.disabled = false;
+        learnWrap.classList.remove('is-disabled');
+      }
+      rebuildLinks();
+      render();
+    }
+    // Poll Alpine every 1.2s — light and reliable. Alpine boots after defer.
+    setInterval(refreshFromAlpine, 1200);
+    setTimeout(refreshFromAlpine, 300);
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Legend
+       ═════════════════════════════════════════════════════════════════ */
     families.forEach(function (fam) {
       var item = document.createElement('button');
       item.type = 'button';
@@ -5894,36 +6550,262 @@ function app() {
       legendEl.appendChild(item);
     });
 
-    /* --- threshold slider -------------------------------------------- */
+    /* ═══════════════════════════════════════════════════════════════════
+       Threshold slider + Repulsion slider
+       ═════════════════════════════════════════════════════════════════ */
     function updateSliderTrack(el) {
       var pct = (el.value - el.min) / (el.max - el.min) * 100;
       el.style.setProperty('--lsg-slider-pct', pct + '%');
     }
     updateSliderTrack(slider);
     updateSliderTrack(charge);
-
     slider.addEventListener('input', function () {
-      DISTANCE_THRESHOLD = +slider.value;
-      sliderVal.textContent = String(DISTANCE_THRESHOLD);
+      state.threshold = +slider.value;
+      sliderVal.textContent = String(state.threshold);
       updateSliderTrack(slider);
       render();
+      scheduleUrlSync();
     });
     charge.addEventListener('input', function () {
       chargeStrength = +charge.value;
       updateSliderTrack(charge);
-      simulation.force('charge').strength(chargeStrength);
-      simulation.alpha(0.4).restart();
+      if (!prefersReducedMotion) {
+        simulation.force('charge').strength(chargeStrength);
+        simulation.alpha(0.4).restart();
+      }
     });
 
-    /* --- reset view button ------------------------------------------- */
+    /* ═══════════════════════════════════════════════════════════════════
+       Metric switcher
+       ═════════════════════════════════════════════════════════════════ */
+    metricRow.addEventListener('click', function (e) {
+      var btn = e.target.closest('.lsg-chip');
+      if (!btn) return;
+      var m = btn.dataset.metric;
+      if (!m || m === state.metric) return;
+      state.metric = m;
+      metricRow.querySelectorAll('.lsg-chip').forEach(function (c) {
+        c.classList.toggle('is-active', c.dataset.metric === m);
+      });
+      rebuildLinks();
+      render();
+      scheduleUrlSync();
+    });
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Search box
+       ═════════════════════════════════════════════════════════════════ */
+    var searchActiveIndex = -1;
+    function renderSearchResults(query) {
+      var q = (query || '').trim().toLowerCase();
+      searchRes.innerHTML = '';
+      searchActiveIndex = -1;
+      if (!q) { searchRes.hidden = true; return; }
+      var matches = nodes.filter(function (n) {
+        return n.name.toLowerCase().indexOf(q) > -1 ||
+               n.id.toLowerCase()   === q ||
+               n.group.toLowerCase().indexOf(q) > -1 ||
+               (n.branch || '').toLowerCase().indexOf(q) > -1;
+      }).sort(function (a, b) {
+        var ai = a.name.toLowerCase().indexOf(q);
+        var bi = b.name.toLowerCase().indexOf(q);
+        if (ai !== bi) return ai - bi;
+        return a.name.localeCompare(b.name);
+      }).slice(0, 8);
+      if (matches.length === 0) {
+        var empty = document.createElement('div');
+        empty.className = 'lsg-search-empty';
+        empty.textContent = 'No language matches';
+        searchRes.appendChild(empty);
+      } else {
+        matches.forEach(function (n, i) {
+          var row = document.createElement('div');
+          row.className = 'lsg-search-item';
+          row.dataset.code = n.id;
+          row.setAttribute('role', 'option');
+          row.innerHTML = '<span>' + escapeHTML(n.name) + '</span>' +
+                          '<small>' + escapeHTML(n.group) + (n.branch ? ' · ' + escapeHTML(n.branch) : '') + '</small>';
+          row.addEventListener('click', function () { jumpTo(n.id); });
+          searchRes.appendChild(row);
+        });
+      }
+      searchRes.hidden = false;
+    }
+    function updateSearchActive() {
+      var items = searchRes.querySelectorAll('.lsg-search-item');
+      items.forEach(function (el, i) { el.classList.toggle('is-active', i === searchActiveIndex); });
+    }
+    searchInp.addEventListener('input', function () { renderSearchResults(searchInp.value); });
+    searchInp.addEventListener('focus', function () {
+      if (searchInp.value) renderSearchResults(searchInp.value);
+    });
+    searchInp.addEventListener('keydown', function (e) {
+      var items = searchRes.querySelectorAll('.lsg-search-item');
+      if (e.key === 'ArrowDown') { e.preventDefault();
+        searchActiveIndex = Math.min(items.length - 1, searchActiveIndex + 1);
+        updateSearchActive();
+      } else if (e.key === 'ArrowUp') { e.preventDefault();
+        searchActiveIndex = Math.max(0, searchActiveIndex - 1);
+        updateSearchActive();
+      } else if (e.key === 'Enter') {
+        var pick = items[searchActiveIndex] || items[0];
+        if (pick) { e.preventDefault(); jumpTo(pick.dataset.code); }
+      } else if (e.key === 'Escape') {
+        searchRes.hidden = true; searchInp.blur();
+      }
+    });
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.lsg-search-wrap')) searchRes.hidden = true;
+    });
+
+    function jumpTo(code) {
+      var node = nodeById[code]; if (!node) return;
+      searchRes.hidden = true;
+      searchInp.value = node.name;
+      // Pan + zoom to centre the node, then open its tooltip
+      var k = Math.max(1.2, currentZoom.k || 1);
+      var tx = W / 2 - node.x * k;
+      var ty = H / 2 - node.y * k;
+      var t  = d3.zoomIdentity.translate(tx, ty).scale(k);
+      svg.transition().duration(550).call(zoomBehaviour.transform, t).on('end', function () {
+        // Synthesise a click position at the centre of the canvas
+        var rect = wrap.getBoundingClientRect();
+        onNodeClick({
+          stopPropagation: function () {},
+          clientX: rect.left + W / 2,
+          clientY: rect.top  + H / 2
+        }, node);
+      });
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Learning view toggle
+       ═════════════════════════════════════════════════════════════════ */
+    learnInp.addEventListener('change', function () {
+      state.learning = !!learnInp.checked && userSpeakers.length > 0;
+      rebuildLinks();
+      render();
+      scheduleUrlSync();
+    });
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Reset view + permalink
+       ═════════════════════════════════════════════════════════════════ */
     resetBtn.addEventListener('click', function () {
       svg.transition().duration(450).call(zoomBehaviour.transform, d3.zoomIdentity);
-      nodes.forEach(function (n) { n.fx = null; n.fy = null; });
-      simulation.alpha(0.8).restart();
+      if (!prefersReducedMotion) {
+        nodes.forEach(function (n) { n.fx = null; n.fy = null; });
+        simulation.alpha(0.8).restart();
+      }
+      state.focusedId = null;
       closeTip();
+      updateFocusRing();
+      scheduleUrlSync();
+    });
+    copyBtn.addEventListener('click', function () {
+      writeUrlState(currentStateObj());
+      var url = location.href;
+      var done = function () {
+        copyToast.textContent = 'Link copied';
+        copyToast.classList.add('is-open');
+        setTimeout(function () { copyToast.classList.remove('is-open'); }, 1600);
+      };
+      var fail = function () {
+        copyToast.textContent = 'Copy failed — URL updated';
+        copyToast.classList.add('is-open');
+        setTimeout(function () { copyToast.classList.remove('is-open'); }, 2200);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url).then(done, fail);
+      } else { fail(); }
+    });
+    function currentStateObj() {
+      return {
+        t: state.threshold,
+        m: state.metric,
+        n: state.focusedId || '',
+        L: state.learning ? '1' : '',
+        k: (currentZoom.k || 1).toFixed(2),
+        x: Math.round(currentZoom.x || 0),
+        y: Math.round(currentZoom.y || 0)
+      };
+    }
+    var urlSyncT;
+    function scheduleUrlSync() {
+      clearTimeout(urlSyncT);
+      urlSyncT = setTimeout(function () { writeUrlState(currentStateObj()); }, 250);
+    }
+
+    /* ═══════════════════════════════════════════════════════════════════
+       Keyboard navigation
+       ═════════════════════════════════════════════════════════════════ */
+    function updateFocusRing() {
+      if (!state.focusedId || !nodeById[state.focusedId]) {
+        focusCircle.style('display', 'none');
+        nodeSel.classed('is-focused', false);
+        return;
+      }
+      var n = nodeById[state.focusedId];
+      focusCircle.style('display', null)
+        .attr('cx', n.x).attr('cy', n.y)
+        .attr('r', nodeRadius(n) + 6);
+      nodeSel.classed('is-focused', function (d) { return d.id === n.id; });
+    }
+    function nearestInDirection(from, dirVec) {
+      // dirVec ∈ { [1,0], [-1,0], [0,1], [0,-1] }
+      var best = null, bestScore = Infinity;
+      var visible = nodes.filter(isVisibleNode);
+      visible.forEach(function (n) {
+        if (n.id === from.id) return;
+        var dx = n.x - from.x, dy = n.y - from.y;
+        var len = Math.sqrt(dx*dx + dy*dy) || 1;
+        var dot = (dx * dirVec[0] + dy * dirVec[1]) / len;
+        if (dot < 0.4) return;            // not in this cone (~±66°)
+        var score = len / (0.4 + dot);    // prefer in-direction, then close
+        if (score < bestScore) { bestScore = score; best = n; }
+      });
+      return best;
+    }
+    svgEl.addEventListener('keydown', function (e) {
+      var dirMap = { ArrowLeft:[-1,0], ArrowRight:[1,0], ArrowUp:[0,-1], ArrowDown:[0,1] };
+      if (e.key in dirMap) {
+        e.preventDefault();
+        var from;
+        if (state.focusedId && nodeById[state.focusedId]) {
+          from = nodeById[state.focusedId];
+        } else {
+          // Start from a sensible default — first English-family node, else first
+          from = nodes.find(function (n) { return n.id === 'en'; }) || nodes[0];
+        }
+        var nxt = nearestInDirection(from, dirMap[e.key]);
+        if (nxt) {
+          state.focusedId = nxt.id;
+          updateFocusRing();
+          scheduleUrlSync();
+        }
+      } else if (e.key === 'Enter' && state.focusedId) {
+        e.preventDefault();
+        var n = nodeById[state.focusedId];
+        if (n) {
+          var rect = wrap.getBoundingClientRect();
+          onNodeClick({
+            stopPropagation: function () {},
+            clientX: rect.left + W / 2,
+            clientY: rect.top  + H / 2
+          }, n);
+        }
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeTip();
+        state.focusedId = null;
+        updateFocusRing();
+        scheduleUrlSync();
+      }
     });
 
-    /* --- responsive resize ------------------------------------------- */
+    /* ═══════════════════════════════════════════════════════════════════
+       Responsive resize
+       ═════════════════════════════════════════════════════════════════ */
     var resizeT;
     window.addEventListener('resize', function () {
       clearTimeout(resizeT);
@@ -5931,15 +6813,39 @@ function app() {
         var d = dims();
         W = d.w; H = d.h;
         svg.attr('viewBox', '0 0 ' + W + ' ' + H);
-        simulation.force('center', d3.forceCenter(W / 2, H / 2));
-        simulation.force('x', d3.forceX(W / 2).strength(0.03));
-        simulation.force('y', d3.forceY(H / 2).strength(0.03));
-        simulation.alpha(0.4).restart();
+        if (!prefersReducedMotion) {
+          simulation.force('center', d3.forceCenter(W / 2, H / 2));
+          simulation.force('x', d3.forceX(W / 2).strength(0.03));
+          simulation.force('y', d3.forceY(H / 2).strength(0.03));
+          simulation.alpha(0.4).restart();
+        } else {
+          staticLayout(); onTick();
+        }
       }, 120);
     });
 
-    /* --- first paint ------------------------------------------------- */
+    /* ----- tiny escape helper for innerHTML composition ----- */
+    function escapeHTML(s) {
+      return String(s)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    }
+
+    /* ----- first paint ----- */
+    rebuildLinks();
     render();
+    // If URL state requested a focused node, open it once layout stabilises
+    if (state.focusedId && nodeById[state.focusedId]) {
+      setTimeout(function () {
+        var n = nodeById[state.focusedId];
+        var rect = wrap.getBoundingClientRect();
+        onNodeClick({
+          stopPropagation: function () {},
+          clientX: rect.left + W / 2,
+          clientY: rect.top  + H / 2
+        }, n);
+      }, prefersReducedMotion ? 50 : 800);
+    }
   }
 })();
 </script>
