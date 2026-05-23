@@ -101,7 +101,10 @@ function app() {
 
     langName(code) {
       const names = LANG_NAMES[this.currentLang];
-      return (names && names[code]) ? names[code] : DATA.languages[code].name;
+      if (names && names[code]) return names[code];
+      // Defensive: some codes (e.g. 'sr') appear in LANG_GROUPS but not in
+      // DATA.languages — fall back to the code itself rather than throwing.
+      return DATA.languages[code]?.name || code;
     },
 
     familyName(code) {
