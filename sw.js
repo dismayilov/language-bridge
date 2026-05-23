@@ -5,7 +5,10 @@
 //   • Other CDN scripts/styles       → cache-first with background revalidation
 //   • Everything else                → network-only (pass-through)
 
-const CACHE_VERSION = 'mnl-v1';
+// IMPORTANT: bump this string whenever you ship JS/CSS/JSON changes so
+// returning visitors get a fresh cache. The activate handler deletes any
+// cache whose key !== CACHE_VERSION.
+const CACHE_VERSION = 'mnl-v3-modular-refactor';
 
 // Assets to pre-fetch during install so the map works immediately on next open
 const CDN_PRECACHE = [
