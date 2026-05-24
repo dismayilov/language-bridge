@@ -42,6 +42,13 @@
     quiz: {
       timesPlayed: 0,
       bestByDifficulty: { easy: 0, medium: 0, hard: 0, expert: 0, personal: 0 },
+      // Per-category running totals (correct out of total attempts per category).
+      byCategory: {
+        languages:     { played: 0, correct: 0, attempted: 0 },
+        geo:           { played: 0, correct: 0, attempted: 0 },
+        geolinguistic: { played: 0, correct: 0, attempted: 0 },
+        mixed:         { played: 0, correct: 0, attempted: 0 },
+      },
       correctLangs: {},
       incorrectLangs: {},
       streakRecord: 0,
@@ -175,14 +182,25 @@
     },
 
     /** Record the result of a finished quiz game. */
-    recordQuizResult({ difficulty, score, streakHigh }) {
+    recordQuizResult({ difficulty, score, streakHigh, category, total }) {
       const p = this.get();
       const best = Object.assign({}, p.quiz.bestByDifficulty || {});
       if (difficulty && (best[difficulty] || 0) < score) best[difficulty] = score;
+      // Per-category running totals
+      const byCat = Object.assign({}, p.quiz.byCategory || {});
+      if (category) {
+        const cur = byCat[category] || { played: 0, correct: 0, attempted: 0 };
+        byCat[category] = {
+          played: (cur.played || 0) + 1,
+          correct: (cur.correct || 0) + (score || 0),
+          attempted: (cur.attempted || 0) + (total || 10),
+        };
+      }
       return this.patch({
         quiz: {
           timesPlayed: (p.quiz.timesPlayed || 0) + 1,
           bestByDifficulty: best,
+          byCategory: byCat,
           streakRecord: Math.max(p.quiz.streakRecord || 0, streakHigh || 0),
           lastPlayedAt: Date.now(),
         },
@@ -205,16 +223,13 @@
       return function () { _listeners.delete(fn); };
     },
 
-    /** For tests / debug: force a fresh read from storage. */
+    /** Force a fresh read from storage. */
     reload() {
       _cached = null;
       return this.get();
     },
   };
 
-  // Expose globally
   window.MNLProfile = MNLProfile;
-
-  // Eagerly load once so migration happens at page boot
   MNLProfile.get();
 })();

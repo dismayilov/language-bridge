@@ -341,12 +341,12 @@
       <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl" x-html="t('subtitle')"></p>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
-      <!-- Quiz link (visible on every viewport — text collapses on mobile) -->
+      <!-- Quiz CTA (solid emerald so it stands apart from the utility chips) -->
       <a href="/quiz/"
-         class="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
-         title="Try the Language Quiz">
+         class="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition-colors"
+         title="Play the language &amp; geography quiz">
         <span aria-hidden="true">&#127919;</span>
-        <span class="hidden sm:inline">Quiz</span>
+        <span>Play</span>
       </a>
       <!-- UI language selector -->
       <select
@@ -1903,6 +1903,28 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <!-- Quiz Hub banner CTA — visible to anyone scrolling past recommendations -->
+  <section class="mt-12">
+    <a href="/quiz/"
+       class="block p-5 md:p-6 rounded-2xl bg-gradient-to-br from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white shadow-md hover:shadow-lg transition-all group">
+      <div class="flex items-center justify-between gap-4 flex-wrap">
+        <div class="flex items-center gap-4">
+          <div class="text-4xl" aria-hidden="true">&#127919;</div>
+          <div>
+            <h2 class="text-lg md:text-xl font-semibold">Test your language &amp; geography IQ</h2>
+            <p class="text-sm md:text-base text-emerald-50 mt-0.5">10 questions across 5 categories &mdash; identify languages, flags, capitals, families, and false friends. Personalised to your profile.</p>
+          </div>
+        </div>
+        <span class="hidden sm:inline-flex items-center gap-1 font-semibold text-sm bg-white/15 px-3 py-1.5 rounded-lg group-hover:bg-white/25 transition-colors">
+          Start quiz
+          <svg class="w-4 h-4 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M5 12h14M13 5l7 7-7 7"/>
+          </svg>
+        </span>
+      </div>
+    </a>
   </section>
 
   <!-- FAQ -->

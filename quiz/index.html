@@ -168,15 +168,34 @@
   </div>
 
   <!-- ──────────────── WELCOME / DIFFICULTY ──────────────── -->
-  <section x-show="status === 'welcome'" class="space-y-8">
+  <section x-show="status === 'welcome'" class="space-y-6">
     <div class="text-center">
       <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-3">Can you read the world?</h1>
       <p class="text-stone-500 dark:text-stone-400 max-w-xl mx-auto leading-relaxed">
-        10 questions across 8 formats &mdash; identify languages from a sentence, spot the odd one out,
-        decode cognates, fall into false-friend traps. Pick a difficulty:
+        Pick a category, pick a difficulty, get 10 questions. 4 categories &mdash; from pure language recognition to flags &amp; capitals.
       </p>
     </div>
 
+    <!-- ── Category tabs (Languages / Geography / Geo-Linguistic / Mixed) ── -->
+    <div>
+      <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-2 text-center">Category</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <template x-for="c in categories" :key="c.id">
+          <button @click="category = c.id"
+                  :class="['flex flex-col items-center gap-1 p-3 rounded-xl border-2 transition-all',
+                           category === c.id
+                              ? 'border-emerald-500 dark:border-emerald-400 bg-emerald-50 dark:bg-emerald-900/20'
+                              : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-300 dark:hover:border-stone-700']">
+            <span class="text-2xl" aria-hidden="true" x-text="c.icon"></span>
+            <span class="text-sm font-semibold" x-text="c.label"></span>
+            <span class="text-[10px] text-stone-500 dark:text-stone-400 leading-tight text-center" x-text="c.desc"></span>
+          </button>
+        </template>
+      </div>
+    </div>
+
+    <div>
+      <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-2 text-center">Difficulty</div>
     <div class="grid sm:grid-cols-2 gap-3">
       <template x-for="d in availableDifficulties" :key="d.id">
         <button @click="difficulty = d.id"
@@ -192,6 +211,7 @@
           <p class="text-[10px] uppercase tracking-wide text-stone-400 dark:text-stone-500" x-text="d.types"></p>
         </button>
       </template>
+    </div>
     </div>
 
     <div class="text-center">
@@ -425,8 +445,9 @@
   </footer>
 </main>
 
-<!-- Shared profile module (read/write user state across all surfaces) -->
+<!-- Shared profile module + extra (geography/geo-linguistic) question generators -->
 <script src="/js/profile.js" defer></script>
+<script src="/js/quiz-extras.js" defer></script>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 <script>
@@ -525,6 +546,17 @@ function quizApp() {
     ],
     difficulty: 'easy',
 
+    // ── Category (quiz hub tab) ────────────────────────────
+    // 'languages' = current language quiz; 'geo' = geography flags/capitals;
+    // 'geolinguistic' = country↔language fusion; 'mixed' = pull from all.
+    category: 'languages',
+    categories: [
+      { id: 'languages',     label: 'Languages',      icon: '\u{1F5E3}', desc: 'Identify languages, families, false friends.' },
+      { id: 'geo',           label: 'Geography',      icon: '\u{1F30D}', desc: 'Flags, capitals, continents, driving sides.' },
+      { id: 'geolinguistic', label: 'Geo-Linguistic', icon: '\u{1F3AD}', desc: 'Where languages live. Unique to this dataset.' },
+      { id: 'mixed',         label: 'Mixed',          icon: '\u{1F3B2}', desc: 'Pulls from all categories.' },
+    ],
+
     get availableDifficulties() {
       const hasProfile = this.profile && Array.isArray(this.profile.speakers) && this.profile.speakers.length > 0;
       return this.difficulties.filter(d => d.id !== 'personal' || hasProfile);
@@ -581,6 +613,8 @@ function quizApp() {
         this.LANG_NATIVE        = d.lang_native        || {};
         this.LANG_FLAG          = d.lang_flag          || {};
         this.FSI_TIER           = d.fsi_tier           || {};
+        // Expose speaker_data globally so quiz-extras.js generators can read it.
+        window.__SPEAKER_DATA   = d.speaker_data       || {};
 
         const meta = {};
         const langs = (d.data && d.data.languages) || {};
@@ -595,6 +629,14 @@ function quizApp() {
           };
         }
         this.LANG_META = meta;
+
+        // Lazy-load country data + merge the Geography/Geo-Linguistic generators
+        // exposed by quiz-extras.js (if present).
+        if (window.QuizExtras) {
+          try { this.COUNTRY_DATA = await window.QuizExtras.loadCountries(); } catch (e) { this.COUNTRY_DATA = null; }
+          Object.assign(this._generators, window.QuizExtras.generators);
+        }
+
         this.status = 'welcome';
       } catch (err) {
         this.errorMessage = err.message + ' — try refreshing or check that /data/languages-matrix.json is reachable.';
@@ -603,6 +645,8 @@ function quizApp() {
     },
 
     // ── Pool selection ─────────────────────────────────────
+    // Used only by Language generators. Geo/Geo-Linguistic generators read
+    // this.COUNTRY_DATA directly and don't need a language pool.
     poolForDifficulty(d) {
       const all = Object.keys(this.LANG_PHRASES).filter(c => this.LANG_META[c]);
       if (d === 'hard' || d === 'expert') return all;
@@ -684,8 +728,39 @@ function quizApp() {
     _LANG_TRACKING_TYPES: ['identify', 'identify_rom', 'identify_long', 'native_name'],
 
     _planQuestionTypes(diff) {
-      // Weighted distribution per difficulty. We shuffle the resulting array
-      // and slice 10, so each game has a varied (but seeded-by-weight) mix.
+      // Dispatch by category. Geography and Geo-Linguistic plans live in
+      // quiz-extras.js (window.QuizExtras.typePlans); Mixed merges everything.
+      const cat = this.category || 'languages';
+      const ex = (window.QuizExtras && window.QuizExtras.typePlans) || {};
+      if (cat === 'geo' && ex.geo) {
+        const w = ex.geo[diff] || ex.geo.easy || {};
+        return this._bagFromWeights(w);
+      }
+      if (cat === 'geolinguistic' && ex.geolinguistic) {
+        const w = ex.geolinguistic[diff] || ex.geolinguistic.easy || {};
+        return this._bagFromWeights(w);
+      }
+      if (cat === 'mixed') {
+        // Merge the three category plans into one bag for varied 10-question games.
+        const langBag = this._langWeights(diff);
+        const geoBag  = (ex.geo && (ex.geo[diff] || ex.geo.easy)) || {};
+        const gliBag  = (ex.geolinguistic && (ex.geolinguistic[diff] || ex.geolinguistic.easy)) || {};
+        const merged = Object.assign({}, langBag, geoBag, gliBag);
+        return this._bagFromWeights(merged);
+      }
+      // Default: languages
+      return this._bagFromWeights(this._langWeights(diff));
+    },
+
+    _bagFromWeights(w) {
+      const bag = [];
+      for (const k of Object.keys(w)) {
+        for (let i = 0; i < w[k]; i++) bag.push(k);
+      }
+      return this._shuffle(bag);
+    },
+
+    _langWeights(diff) {
       const weights = {
         easy: {
           identify: 4, native_name: 2, odd_family: 2, odd_script: 1, fsi_hardest: 1,
@@ -709,12 +784,7 @@ function quizApp() {
           closest_to: 2, cognate: 2, false_friend: 2,
         },
       };
-      const w = weights[diff] || weights.easy;
-      const bag = [];
-      for (const k of Object.keys(w)) {
-        for (let i = 0; i < w[k]; i++) bag.push(k);
-      }
-      return this._shuffle(bag);
+      return weights[diff] || weights.easy;
     },
 
     // ── Random helpers ─────────────────────────────────────
@@ -1131,6 +1201,7 @@ function quizApp() {
           if (window.MNLProfile) {
             window.MNLProfile.recordQuizResult({
               difficulty: this.difficulty, score: this.score, streakHigh: this.maxStreak,
+              category: this.category, total: this.questions.length,
             });
           }
         } catch (e) {}
@@ -1160,10 +1231,10 @@ function quizApp() {
           primary: false,
           label: 'Study ' + names + ' →',
           href: '/?learning=' + wrongs.map(encodeURIComponent).join(','),
-          why: 'You missed these — open them in the explorer.',
+          why: 'You missed these in the quiz.',
         });
       }
-      ctas.push({ primary: !correctSorted.length, label: 'Open the recommendation tool →', href: '/', why: '' });
+      ctas.push({ primary: !correctSorted.length, label: 'Open the recommendation tool \u2192', href: '/', why: '' });
       return ctas;
     },
 
@@ -1202,11 +1273,11 @@ function quizApp() {
       return 'There is nowhere to go but up.';
     },
     scoreSubtitle() {
-      if (this.difficulty === 'personal') return 'Personal mode — tuned to the languages in your profile.';
-      if (this.difficulty === 'expert')   return 'Expert mode — same-family distractors throughout.';
-      if (this.difficulty === 'hard')     return 'Hard mode — every language in the dataset was in play.';
-      if (this.difficulty === 'medium')   return 'Drawn from the world\'s 60 most-spoken languages.';
-      return 'Drawn from the world\'s 30 most-spoken languages.';
+      if (this.difficulty === 'personal') return 'Personal mode.';
+      if (this.difficulty === 'expert')   return 'Expert mode.';
+      if (this.difficulty === 'hard')     return 'Hard mode.';
+      if (this.difficulty === 'medium')   return 'Medium difficulty.';
+      return 'Easy mode.';
     },
     difficultyLabel() { return this.difficultyLabelFor(this.difficulty); },
     difficultyLabelFor(d) {
