@@ -60,6 +60,8 @@
     return a;
   }
   function sample(arr, n) { return shuffle(arr).slice(0, n); }
+  // 4-option mode for Easy/Medium/Personal; 6-option mode for Hard/Expert
+  function nDist(diff) { return (diff === 'hard' || diff === 'expert') ? 5 : 3; }
 
   // Country pool by difficulty — uses speaker_count proxy via UN-recognized
   // breadth. Easy = countries everyone has heard of, Hard/Expert = full set.
@@ -85,7 +87,7 @@
       const cpool = countryPool(data, diff);
       if (cpool.length < 4) return null;
       const code = pick(cpool);
-      const others = sample(cpool.filter(c => c !== code), 3);
+      const others = sample(cpool.filter(c => c !== code), nDist(diff));
       const choices = shuffle([code, ...others]).map(c => ({ key: c, label: cname(data, c) }));
       return {
         type: 'flag_country',
@@ -116,7 +118,7 @@
       } else {
         distrPool = cpool.filter(c => c !== code);
       }
-      const distrCodes = sample(distrPool, 3);
+      const distrCodes = sample(distrPool, nDist(diff));
       const choices = shuffle([code, ...distrCodes]).map(c => ({
         key: data[c].capital, label: data[c].capital,
       }));
@@ -139,7 +141,7 @@
       const cpool = countryPool(data, diff);
       if (cpool.length < 4) return null;
       const code = pick(cpool);
-      const others = sample(cpool.filter(c => c !== code), 3);
+      const others = sample(cpool.filter(c => c !== code), nDist(diff));
       const choices = shuffle([code, ...others]).map(c => ({
         key: c, label: cflag(data, c) + ' ' + cname(data, c),
       }));
@@ -164,7 +166,7 @@
       const continents = ['Africa','Asia','Europe','North America','South America','Oceania'];
       const correct = data[code].continent;
       const others = continents.filter(c => c !== correct);
-      const distractors = sample(others, 3);
+      const distractors = sample(others, nDist(diff));
       const choices = shuffle([correct, ...distractors]).map(c => ({ key: c, label: c }));
       return {
         type: 'country_continent',
@@ -191,7 +193,7 @@
       const oddCode = askLeft ? pick(left) : pick(right);
       const distrPool = askLeft ? right : left;
       if (distrPool.length < 3) return null;
-      const distrCodes = sample(distrPool, 3);
+      const distrCodes = sample(distrPool, nDist(diff));
       const choices = shuffle([oddCode, ...distrCodes]).map(c => ({
         key: c, label: cflag(data, c) + ' ' + cname(data, c),
       }));
@@ -218,7 +220,7 @@
       const notIn = cpool.filter(c => data[c].continent !== cont);
       if (inCont.length < 1 || notIn.length < 3) return null;
       const oddCode = pick(inCont);
-      const distrCodes = sample(notIn, 3);
+      const distrCodes = sample(notIn, nDist(diff));
       const choices = shuffle([oddCode, ...distrCodes]).map(c => ({
         key: c, label: cflag(data, c) + ' ' + cname(data, c),
       }));
@@ -251,7 +253,7 @@
       const cpool = countryPool(data, diff);
       const distrPool = cpool.filter(c => !officialSet.has(c));
       if (distrPool.length < 3) return null;
-      const distrCodes = sample(distrPool, 3);
+      const distrCodes = sample(distrPool, nDist(diff));
       const choices = shuffle([correctCode, ...distrCodes]).map(c => ({
         key: c, label: cflag(data, c) + ' ' + cname(data, c),
       }));
@@ -292,7 +294,7 @@
       const officialSet = new Set(langByCountry[code]);
       const distrPool = Object.keys(this.LANG_META).filter(l => !officialSet.has(l) && this.LANG_PHRASES[l]);
       if (distrPool.length < 3) return null;
-      const distractors = sample(distrPool, 3);
+      const distractors = sample(distrPool, nDist(diff));
       const choices = shuffle([correct, ...distractors]).map(l => ({
         key: l, label: this.LANG_META[l].name,
       }));
@@ -321,7 +323,7 @@
       const inOff = spk[lang].official.filter(c => data[c]);
       if (inOff.length < 3) return null;
       // 3 countries that DO speak it + 1 that doesn't
-      const threeIn = sample(inOff, 3);
+      const threeIn = sample(inOff, nDist(diff));
       const cpool = Object.keys(data);
       const notIn = cpool.filter(c => !spk[lang].official.includes(c));
       const odd = pick(notIn);
@@ -356,7 +358,7 @@
       const flagsStr = trio.map(c => cflag(data, c)).join('  ');
       // Distractors: 3 other languages
       const distrPool = Object.keys(this.LANG_META).filter(l => l !== lang && this.LANG_PHRASES[l]);
-      const distractors = sample(distrPool, 3);
+      const distractors = sample(distrPool, nDist(diff));
       const choices = shuffle([lang, ...distractors]).map(l => ({
         key: l, label: this.LANG_META[l].name,
       }));

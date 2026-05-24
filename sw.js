@@ -8,7 +8,7 @@
 // IMPORTANT: bump this string whenever you ship JS/CSS/JSON changes so
 // returning visitors get a fresh cache. The activate handler deletes any
 // cache whose key !== CACHE_VERSION.
-const CACHE_VERSION = 'mnl-v11-quiz-hub';
+const CACHE_VERSION = 'mnl-v18-d3-full-bundle';
 
 // Assets to pre-fetch during install so the map works immediately on next open
 const CDN_PRECACHE = [

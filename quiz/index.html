@@ -282,6 +282,11 @@
                x-text="currentQ.display.text"></div>
         </template>
 
+        <!-- SVG / raw-HTML display (used by Maps category for the highlighted-country world map) -->
+        <template x-if="currentQ.displayHtml">
+          <div class="mb-3" x-html="currentQ.displayHtml"></div>
+        </template>
+
         <!-- Subtitle (romanization, source language label, etc.) -->
         <template x-if="currentQ.display.subtitle">
           <div class="text-sm italic text-stone-500 dark:text-stone-400 mb-4"
@@ -445,9 +450,10 @@
   </footer>
 </main>
 
-<!-- Shared profile module + extra (geography/geo-linguistic) question generators -->
+<!-- Shared profile module + extra (geography/geo-linguistic/maps) generators -->
 <script src="/js/profile.js" defer></script>
 <script src="/js/quiz-extras.js" defer></script>
+<script src="/js/quiz-maps.js" defer></script>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 <script>
@@ -554,6 +560,7 @@ function quizApp() {
       { id: 'languages',     label: 'Languages',      icon: '\u{1F5E3}', desc: 'Identify languages, families, false friends.' },
       { id: 'geo',           label: 'Geography',      icon: '\u{1F30D}', desc: 'Flags, capitals, continents, driving sides.' },
       { id: 'geolinguistic', label: 'Geo-Linguistic', icon: '\u{1F3AD}', desc: 'Where languages live. Unique to this dataset.' },
+      { id: 'maps',          label: 'Maps',           icon: '\u{1F5FA}', desc: 'Find countries on the world map.' },
       { id: 'mixed',         label: 'Mixed',          icon: '\u{1F3B2}', desc: 'Pulls from all categories.' },
     ],
 
@@ -636,6 +643,13 @@ function quizApp() {
           try { this.COUNTRY_DATA = await window.QuizExtras.loadCountries(); } catch (e) { this.COUNTRY_DATA = null; }
           Object.assign(this._generators, window.QuizExtras.generators);
         }
+        // Expose globals that quiz-maps.js needs to render highlighted countries.
+        window.__COUNTRY_DATA  = this.COUNTRY_DATA || null;
+        window.__ISO_A2_TO_NUM = (d.iso_a2_to_num || {});
+        // Merge Maps generators too (registered after QuizExtras loads).
+        if (window.QuizMaps && window.QuizMaps.generators) {
+          Object.assign(this._generators, window.QuizMaps.generators);
+        }
 
         this.status = 'welcome';
       } catch (err) {
@@ -695,9 +709,14 @@ function quizApp() {
     },
 
     // ── Game lifecycle ─────────────────────────────────────
-    startGame() {
+    async startGame() {
       // Refresh profile in case the user updated it in another tab
       try { this.profile = (window.MNLProfile && window.MNLProfile.get()) || null; } catch (e) {}
+      // Maps category needs the world-atlas TopoJSON; lazy-load it now.
+      if ((this.category === 'maps' || this.category === 'mixed') && window.QuizMaps) {
+        this.status = 'loading';
+        try { await window.QuizMaps.preload(); } catch (e) { /* fall back to other generators */ }
+      }
       const pool = this.poolForDifficulty(this.difficulty);
       const plan = this._planQuestionTypes(this.difficulty);
       const questions = [];
@@ -728,24 +747,21 @@ function quizApp() {
     _LANG_TRACKING_TYPES: ['identify', 'identify_rom', 'identify_long', 'native_name'],
 
     _planQuestionTypes(diff) {
-      // Dispatch by category. Geography and Geo-Linguistic plans live in
-      // quiz-extras.js (window.QuizExtras.typePlans); Mixed merges everything.
+      // Data-driven dispatch: any category registered in QuizExtras.typePlans
+      // (geo, geolinguistic, maps, and anything future modules add) is handled
+      // uniformly. Mixed merges everything; default is the languages bag.
       const cat = this.category || 'languages';
       const ex = (window.QuizExtras && window.QuizExtras.typePlans) || {};
-      if (cat === 'geo' && ex.geo) {
-        const w = ex.geo[diff] || ex.geo.easy || {};
-        return this._bagFromWeights(w);
-      }
-      if (cat === 'geolinguistic' && ex.geolinguistic) {
-        const w = ex.geolinguistic[diff] || ex.geolinguistic.easy || {};
+      if (ex[cat]) {
+        const w = ex[cat][diff] || ex[cat].easy || {};
         return this._bagFromWeights(w);
       }
       if (cat === 'mixed') {
-        // Merge the three category plans into one bag for varied 10-question games.
-        const langBag = this._langWeights(diff);
-        const geoBag  = (ex.geo && (ex.geo[diff] || ex.geo.easy)) || {};
-        const gliBag  = (ex.geolinguistic && (ex.geolinguistic[diff] || ex.geolinguistic.easy)) || {};
-        const merged = Object.assign({}, langBag, geoBag, gliBag);
+        let merged = Object.assign({}, this._langWeights(diff));
+        for (const k of Object.keys(ex)) {
+          const w = ex[k][diff] || ex[k].easy || {};
+          merged = Object.assign(merged, w);
+        }
         return this._bagFromWeights(merged);
       }
       // Default: languages
@@ -800,8 +816,14 @@ function quizApp() {
     _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; },
 
     // ── Distractor builders ────────────────────────────────
+    // Returns the number of distractors per question (4-option vs 6-option mode).
+    _distractorCount(diff) {
+      return (diff === 'hard' || diff === 'expert') ? 5 : 3;
+    },
+
     _langChoices(correct, pool, diff, n) {
-      n = n || 3;
+      // Override the passed n based on difficulty — Hard/Expert get 6 options total.
+      n = this._distractorCount(diff);
       const m = this.LANG_META[correct] || {};
       let candidates = pool.filter(c => c !== correct);
 
@@ -1146,7 +1168,17 @@ function quizApp() {
           this.LANG_META[f.langA] && this.LANG_META[f.langB]);
         if (!usable.length) return null;
         const f = this._pick(usable);
-        const choices = this._shuffle([f.meaningB, ...f.wrong]).map(m => ({
+        // Pad curated 'wrong' entries with generic distractors when we need
+        // more than 2 (4-option mode needs 3; 6-option mode needs 5).
+        const needed = this._distractorCount(diff);
+        const distractors = f.wrong.slice();
+        const GENERIC = ['day','night','sun','moon','tree','child','book','water','house','road',
+                          'star','river','bread','horse','wine','cloud','iron','sand','smoke','rope'];
+        while (distractors.length < needed) {
+          const g = GENERIC[Math.floor(Math.random() * GENERIC.length)];
+          if (g !== f.meaningA && g !== f.meaningB && !distractors.includes(g)) distractors.push(g);
+        }
+        const choices = this._shuffle([f.meaningB, ...distractors.slice(0, needed)]).map(m => ({
           key: m, label: m,
         }));
         return {

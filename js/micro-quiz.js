@@ -220,7 +220,14 @@
     // Always frame the question so the user has to identify the meaning in
     // whichever language is the "other" one from the curated entry.
     const showA = (f.a === src) ? f : { word:f.word, a:f.b, b:f.a, mA:f.mB, mB:f.mA, w:f.w };
-    const choices = shuffle([showA.mB, ...showA.w]).map(m => ({ key: m, label: m }));
+    // Pad to 3 distractors so we always get 4 options
+    const padding = ['day','night','sun','moon','tree','book','water','road','star','river','horse','bread'];
+    const distractors = showA.w.slice();
+    while (distractors.length < 3) {
+      const g = padding[Math.floor(Math.random() * padding.length)];
+      if (g !== showA.mA && g !== showA.mB && distractors.indexOf(g) === -1) distractors.push(g);
+    }
+    const choices = shuffle([showA.mB].concat(distractors.slice(0, 3))).map(m => ({ key: m, label: m }));
     return {
       type: 'false_friend',
       typeLabel: 'False-friend trap',
@@ -548,6 +555,22 @@
   //   <div data-micro-quiz data-mq-mode="pair" data-mq-source="pl" data-mq-target="sk"></div>
   function autoMount() {
     const nodes = document.querySelectorAll('[data-micro-quiz]:not([data-mq-mounted])');
+    nodes.forEach(n => {
+      n.setAttribute('data-mq-mounted', '1');
+      mount(n, {
+        mode:   n.getAttribute('data-mq-mode') || 'target',
+        source: n.getAttribute('data-mq-source') || null,
+        target: n.getAttribute('data-mq-target') || null,
+      });
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', autoMount);
+  } else {
+    autoMount();
+  }
+})();
+d])');
     nodes.forEach(n => {
       n.setAttribute('data-mq-mounted', '1');
       mount(n, {
