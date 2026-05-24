@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>MyNextLanguage — Embedded Language Similarity Graph</title>
+<meta name="description" content="Interactive graph of linguistic distances across 96 world languages. Embed-friendly version of MyNextLanguage.org.">
+<meta name="robots" content="noindex, follow"><!-- avoid duplicate-content with the canonical /pair pages -->
+<link rel="canonical" href="https://mynextlanguage.org/">
+
+<!-- Theme bootstrap (auto-respect host page's preference if passed via ?theme=) -->
+<script>
+  (function() {
+    const params = new URLSearchParams(location.search);
+    const forced = params.get('theme');                         // 'dark' | 'light' | null
+    const saved  = localStorage.getItem('lb-theme');
+    const useDark = forced === 'dark' ||
+                    (forced !== 'light' && saved !== 'light');
+    if (useDark) document.documentElement.classList.add('dark');
+  })();
+</script>
+
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = { darkMode: 'class' };
+</script>
+
+<!--
+  Boot chain (same gating contract as the main app):
+    1. data-loader.js   → fetches /data/languages-matrix.json
+    2. d3.js            → required by graph-engine.js
+    3. graph-engine.js  → IIFE, self-boots once window.DATA + #lsg-svg exist
+  Note: this embed deliberately skips Alpine + app.js — the embed shows
+  ONLY the Language Similarity Graph, not the recommendation app.
+-->
+<script src="js/data-loader.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js" defer></script>
+<script src="js/graph-engine.js" defer></script>
+
+<link rel="stylesheet" href="css/styles.css">
+
+<style>
+  /* Embed-only overrides: tighter chrome, no scroll, branded footer bar. */
+  html, body { height: 100%; margin: 0; }
+  body { background: transparent; }
+  .embed-shell {
+    display: flex; flex-direction: column;
+    height: 100vh; max-height: 100vh; min-height: 480px;
+    overflow: hidden;
+  }
+  .embed-graph { flex: 1 1 auto; min-height: 0; padding: 8px; }
+  .embed-graph > * { height: 100% !important; }
+  .embed-footer {
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 6px 12px; gap: 8px;
+    background: rgba(15,110,86,0.07);
+    border-top: 1px solid rgba(15,110,86,0.18);
+    font-size: 11px;
+  }
+  .dark .embed-footer { background: rgba(52,211,153,0.08); border-top-color: rgba(52,211,153,0.18); }
+  .embed-footer a {
+    color: #0F6E56; font-weight: 600; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .dark .embed-footer a { color: #34d399; }
+  .embed-footer a:hover { text-decoration: underline; }
+  .embed-footer .by { color: #78716c; }
+  .dark .embed-footer .by { color: #a8a29e; }
+</style>
+</head>
+<body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100">
+
+<div class="embed-shell">
+
+  <!-- Graph mount point. The structure mirrors the main app's so graph-engine.js
+       finds every element it expects (slider, search input, view tabs, etc.).
+       Embed mode hides a few non-essential controls via embed.css below. -->
+  <div class="embed-graph">
+    <div id="graph-container" class="lsg-card" data-i18n-scope>
+      <header class="lsg-header">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="lsg-led" aria-hidden="true"></span>
+            <h2 class="lsg-title" id="lsg-title">Language Similarity Graph</h2>
+          </div>
+          <p class="lsg-sub" id="lsg-sub">Each node is a language. Lines connect linguistically close pairs.</p>
+        </div>
+        <div class="lsg-stat-row">
+          <span class="lsg-stat"><b id="lsg-stat-nodes-val">0</b> <span data-i18n="nodes">nodes</span></span>
+          <span class="lsg-stat"><b id="lsg-stat-links-val">0</b> <span data-i18n="links">links</span></span>
+          <button id="lsg-copy-link" type="button" class="lsg-btn" data-i18n="copyLink">Copy link</button>
+          <button id="lsg-reset-zoom" type="button" class="lsg-btn" data-i18n="resetView">Reset view</button>
+        </div>
+      </header>
+
+      <div class="lsg-toolbar">
+        <div class="lsg-chip-row" id="lsg-view-row" aria-label="View mode">
+          <span class="lsg-chip-row-label" data-i18n="languageSimilarityGraph">Language Similarity Graph</span>
+          <button class="lsg-chip lsg-chip-on" data-view="network"  data-i18n="network">Network</button>
+          <button class="lsg-chip"             data-view="tree"     data-i18n="tree">Tree</button>
+          <button class="lsg-chip"             data-view="matrix"   data-i18n="matrix">Matrix</button>
+          <button class="lsg-chip"             data-view="geo"      data-i18n="geo">Geographic</button>
+        </div>
+      </div>
+
+      <div class="lsg-toolbar">
+        <label class="lsg-slider-label" for="lsg-threshold">
+          <span data-i18n="distance">DISTANCE</span> ≤
+        </label>
+        <input id="lsg-threshold" class="lsg-slider" type="range" min="10" max="95" value="45">
+        <span class="lsg-slider-val" id="lsg-threshold-val">45</span>
+        <label class="lsg-slider-label" for="lsg-charge">
+          <span data-i18n="repulsion">REPULSION</span>
+        </label>
+        <input id="lsg-charge" class="lsg-slider" type="range" min="0" max="100" value="50">
+      </div>
+
+      <div class="lsg-toolbar">
+        <div class="lsg-chip-row" aria-label="Distance metric">
+          <span class="lsg-chip-row-label" data-i18n="metric">METRIC</span>
+          <button class="lsg-chip lsg-chip-on" data-metric="composite"     data-i18n="composite">Composite</button>
+          <button class="lsg-chip"             data-metric="lexical"       data-i18n="lexical">Lexical</button>
+          <button class="lsg-chip"             data-metric="grammatical"   data-i18n="grammar">Grammar</button>
+          <button class="lsg-chip"             data-metric="phonological"  data-i18n="phonology">Phonology</button>
+          <button class="lsg-chip"             data-metric="writing_system" data-i18n="script">Script</button>
+          <button class="lsg-chip"             data-metric="genealogical"  data-i18n="genealogy">Genealogy</button>
+        </div>
+        <div class="lsg-find-wrap">
+          <label class="lsg-slider-label" for="lsg-search" data-i18n="find">FIND</label>
+          <input id="lsg-search" class="lsg-find" type="text" placeholder="Type a language…">
+          <div id="lsg-search-results" class="lsg-find-results" hidden></div>
+        </div>
+      </div>
+
+      <div class="lsg-canvas-wrap" id="lsg-canvas-wrap">
+        <svg id="lsg-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Language similarity graph"></svg>
+        <div id="lsg-legend" class="lsg-legend"></div>
+        <div id="lsg-tip" class="lsg-tip" hidden role="dialog" aria-label="Language details">
+          <button id="lsg-tip-close" type="button" class="lsg-tip-close" aria-label="Close">×</button>
+          <div id="lsg-tip-name" class="lsg-tip-name">—</div>
+          <div id="lsg-tip-meta" class="lsg-tip-meta">—</div>
+          <ul id="lsg-tip-list" class="lsg-tip-list"></ul>
+          <div id="lsg-tip-actions" class="lsg-tip-actions"></div>
+          <button id="lsg-tip-compare" type="button" class="lsg-tip-compare" hidden></button>
+        </div>
+        <div id="lsg-edge-tip" class="lsg-edge-tip" hidden></div>
+        <div id="lsg-copy-toast" class="lsg-copy-toast" data-i18n="linkCopied">Link copied</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Branded attribution footer -->
+  <div class="embed-footer">
+    <span class="by">Embedded from</span>
+    <a href="https://mynextlanguage.org/" target="_blank" rel="noopener">
+      MyNextLanguage.org →
+    </a>
+  </div>
+
+</div>
+
+<!-- Glossary popover (lives at body root) -->
+<div id="lsg-gloss-popover" class="lsg-gloss-popover" hidden role="tooltip">
+  <div class="lsg-gloss-popover-title" id="lsg-gloss-popover-title">—</div>
+  <div id="lsg-gloss-popover-body">—</div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+# MyNextLanguage
+
+> A free, no-signup, ad-free interactive linguistic tool that ranks 96 world
+> languages by how easy each one will be for *you* to learn next, based on
+> the languages you already speak. Scores are powered by lexical overlap,
+> grammatical distance, phonological similarity, writing-system difficulty,
+> and genealogical relationships, with adjustable weights and CEFR-aware
+> proficiency weighting.
+
+## Background
+
+MyNextLanguage.org is a research-preview prototype built and maintained as an
+open-source side project. It covers 96 living world languages spanning 17
+language families (Indo-European, Sino-Tibetan, Afroasiatic, Niger-Congo,
+Austronesian, Dravidian, Turkic, Uralic, Mongolic, Japonic, Koreanic,
+Tai-Kadai, Austroasiatic, Kartvelian, Quechuan, Mayan, Constructed). The
+tool runs entirely in the browser as a Progressive Web App — no server,
+no account, no installation.
+
+## How the scoring works
+
+For every (source, target) pair we compute five sub-scores in `[0, 1]`,
+then combine them with user-adjustable weights:
+
+- **Lexical similarity** — curated cognate overlap percentages plus heuristic
+  fallback by family/branch/subbranch when no curated value exists.
+- **Grammatical distance** — typological comparison of case count, gender
+  count, article system, word order, morphology type, and vowel harmony.
+- **Phonological similarity** — Jaccard similarity of phoneme-feature sets.
+- **Writing-system difficulty** — exact match, same script root, or fully
+  different script.
+- **Genealogical distance** — same family / branch / subbranch ladder.
+
+The user can adjust the five dimension weights with sliders or pick a preset
+(Balanced, Vocabulary-first, Grammar-first, Sound-first, Script-first).
+CEFR proficiency in each known language scales the transfer benefit
+non-linearly (A1 = 0.10 weight, C2 = 1.00 weight).
+
+## Reference dataset
+
+The full machine-readable linguistic distance matrix is published as a
+single JSON file under a permissive license:
+
+- [/data/languages-matrix.json](https://mynextlanguage.org/data/languages-matrix.json) —
+  unified dataset (388 KB). Top-level keys: `data.languages` (96 typological
+  profiles), `data.lexical` (curated pair overlap %), `data.contact`
+  (documented language-contact bonuses), `lsg_cognates` (cognate exemplars),
+  `lsg_glossary` (linguistic-term definitions), `lsg_centroids` (country
+  centroids for geo view), `lsg_t` (UI translations across 8 locales),
+  plus FSI difficulty tiers, language flag emojis, native names, and
+  parallel sample sentences for 74 language combinations.
+
+## Pages worth indexing
+
+- [/](https://mynextlanguage.org/) — the interactive recommendation tool
+- [/from/{source}/to/{target}/](https://mynextlanguage.org/from/en/to/de/) —
+  pair-specific static pages (96 × 95 = 9,120 pairs) with score breakdowns
+  and parallel sentences. Replace `{source}` and `{target}` with any two
+  ISO-639-1 codes from the dataset.
+- [/static.html](https://mynextlanguage.org/static.html) — full static HTML
+  view of the recommendation grid for crawlers
+- [/difficulty.html](https://mynextlanguage.org/difficulty.html) — FSI
+  difficulty tiers reference page
+- [/compare.html](https://mynextlanguage.org/compare.html) — side-by-side
+  comparison reference
+- [/data/languages-matrix.json](https://mynextlanguage.org/data/languages-matrix.json) —
+  the underlying dataset
+
+## Suggested citations
+
+When citing MyNextLanguage scores, please link to the relevant pair page
+(e.g. `https://mynextlanguage.org/from/en/to/de/`) and the dataset URL
+above. Scores are deterministic — given the same source language, target
+language, CEFR levels, and dimension weights, the tool returns the same
+composite distance.
+
+## What this tool is not
+
+- Not a course or curriculum (we recommend iTalki tutors via affiliate
+  link on individual recommendation cards).
+- Not a definitive measure of difficulty — every learner's experience
+  varies. We expose every sub-score so you can judge for yourself.
+- Not academic peer-reviewed research. It is a transparent, openly-published
+  heuristic synthesizing publicly available typological data.
+
+## Contact
+
+- GitHub: <https://github.com/davudismailov/language-bridge>
+- Site:   <https://mynextlanguage.org/>

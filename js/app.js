@@ -85,6 +85,16 @@ function app() {
       return (s && TRANSLATIONS[s]) ? s : 'en';
     })(),
 
+    // ── Translation playground state ──────────────────────────────────────
+    tlSource: '',                  // ISO code of source language (auto-init in init())
+    tlTarget: '',                  // ISO code of target language (auto-init in init())
+    tlInput: '',                   // user-typed sentence
+    tlResult: '',                  // last successful translation
+    tlLoading: false,              // request in flight
+    tlError: '',                   // last error message (empty = OK)
+    tlMatchScore: null,            // MyMemory's quality score (0..1) for the last call
+    _tlDebounce: null,             // debounce timer handle
+
     t(key, vars = {}) {
       const lang = TRANSLATIONS[this.currentLang] || TRANSLATIONS['en'];
       let str = lang[key] !== undefined ? lang[key] : (TRANSLATIONS['en'][key] || key);
@@ -263,6 +273,19 @@ function app() {
       document.addEventListener('click', function bmcClickHandler(e) {
         const el = e.target.closest('#bmc-wbtn, [id^="bmc-"], .bmc-btn, a[href*="buymeacoffee.com"]');
         if (el) umamiTrack('click_support_dev', { source: 'buy_me_a_coffee' });
+      });
+
+      // ── Translation playground: pre-fill source/target sensibly. ────────
+      // Source defaults to the user's first known language, then English.
+      // Target defaults to the current reverseTarget, then the top recommendation,
+      // then a sensible same-family neighbour, then German.
+      this.tlSource = this.speakers[0] || 'en';
+      this.tlTarget = this.reverseTarget
+                   || (this.recommendations[0] && this.recommendations[0].target)
+                   || (this.tlSource === 'de' ? 'yi' : 'de');
+      // Keep tlSource in sync when the user adds/removes speakers.
+      this.$watch('speakers', (s) => {
+        if (!s.includes(this.tlSource) && s.length) this.tlSource = s[0];
       });
     },
 
@@ -981,6 +1004,223 @@ function app() {
     },
 
     // ── ENTRY POINT A: Top 5 Dashboard (800×1200 @ 2×) ─────────────────────
+    // ─── Translation Playground (MyMemory free API) ──────────────────────
+    // MyMemory: free, CORS-friendly, ~5k chars/day per IP — bumped to ~50k
+    // by passing &de=<anyEmailString>. No API key required. Supports almost
+    // every Latin/Cyrillic/CJK locale via 2-letter ISO codes that align with
+    // our DATA.languages keys (with a few exceptions handled below).
+    //
+    // Strategy: debounced auto-translate on every input change, plus a
+    // manual button for instant runs. Errors gracefully on unsupported pairs.
+
+    tlMapCode(code) {
+      // Map our internal ISO codes to MyMemory's expected codes when they
+      // differ. Most are 1:1 — only a handful of edge cases need translating.
+      const fix = {
+        'zh':  'zh-CN',
+        'jv':  'jv',     // Javanese — MyMemory accepts but quality is mixed
+        'yi':  'yi',
+        'nb':  'no',     // Norwegian Bokmål → "no"
+        'nn':  'no',
+        'fil': 'tl',     // Filipino → Tagalog
+        // 'sr' (Serbian) we exclude from the dropdown — not in DATA.languages
+      };
+      return fix[code] || code;
+    },
+
+    tlSwap() {
+      const a = this.tlSource, b = this.tlTarget;
+      this.tlSource = b; this.tlTarget = a;
+      const newSrc = this.tlResult, newDst = '';
+      this.tlInput = newSrc;
+      this.tlResult = newDst;
+      this.tlError = '';
+      this.tlMatchScore = null;
+      umamiTrack('translate_swap');
+      // Re-translate the swapped text after a tiny delay so Alpine settles.
+      this.$nextTick(() => this.translateText());
+    },
+
+    tlExample() {
+      // A short list of universally-translatable example sentences.
+      const examples = [
+        'Hello, how are you today?',
+        'Where is the nearest train station?',
+        'I would like a coffee, please.',
+        'My name is Anna and I am learning languages.',
+        'The weather is beautiful today.',
+        'Could you please speak more slowly?',
+        'How much does this cost?',
+        'Thank you very much for your help.',
+      ];
+      this.tlInput = examples[Math.floor(Math.random() * examples.length)];
+      this.translateText();
+    },
+
+    tlScheduleTranslate() {
+      // Debounce: only fire 700ms after the user stops typing.
+      clearTimeout(this._tlDebounce);
+      this._tlDebounce = setTimeout(() => this.translateText(), 700);
+    },
+
+    async translateText() {
+      clearTimeout(this._tlDebounce);
+      const text = (this.tlInput || '').trim();
+      if (!text) { this.tlResult = ''; this.tlError = ''; this.tlMatchScore = null; return; }
+      if (!this.tlSource || !this.tlTarget) { return; }
+      if (this.tlSource === this.tlTarget) {
+        this.tlResult = text;
+        this.tlError = '';
+        this.tlMatchScore = 1;
+        return;
+      }
+      this.tlLoading = true;
+      this.tlError = '';
+      try {
+        const src = this.tlMapCode(this.tlSource);
+        const tgt = this.tlMapCode(this.tlTarget);
+        // Cap at 500 chars per call to stay in the free tier comfortably.
+        const q   = text.slice(0, 500);
+        const url = 'https://api.mymemory.translated.net/get'
+                  + '?q=' + encodeURIComponent(q)
+                  + '&langpair=' + encodeURIComponent(src + '|' + tgt)
+                  + '&de=app@mynextlanguage.org';     // bumps daily quota
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const result = (data.responseData && data.responseData.translatedText) || '';
+        // MyMemory sometimes returns warnings inline (e.g. INVALID LANGUAGE).
+        if (!result || result.startsWith('PLEASE SELECT') || result.includes('MYMEMORY WARNING')) {
+          throw new Error('This language pair is not supported by the free translator. Try a more common language.');
+        }
+        if (data.responseStatus && data.responseStatus !== 200 && data.responseStatus !== '200') {
+          throw new Error(data.responseDetails || 'Translation failed');
+        }
+        this.tlResult = result;
+        this.tlMatchScore = (data.responseData && typeof data.responseData.match === 'number')
+          ? data.responseData.match : null;
+        umamiTrack('translate', { from: src, to: tgt, len: q.length });
+      } catch (e) {
+        this.tlError = e.message || 'Translation failed.';
+        this.tlResult = '';
+        this.tlMatchScore = null;
+      } finally {
+        this.tlLoading = false;
+      }
+    },
+
+    async tlCopy() {
+      if (!this.tlResult) return;
+      try { await navigator.clipboard.writeText(this.tlResult); }
+      catch (_) { /* clipboard blocked — no-op */ }
+      this.savedToast = true;
+      clearTimeout(this._toastTimer);
+      this._toastTimer = setTimeout(() => { this.savedToast = false; }, 1500);
+    },
+
+    tlSpeak(which) {
+      // Use the browser's built-in Speech Synthesis to pronounce either
+      // the source ('src') or the translated result ('dst').
+      try {
+        const text = which === 'src' ? this.tlInput : this.tlResult;
+        const lang = which === 'src' ? this.tlMapCode(this.tlSource) : this.tlMapCode(this.tlTarget);
+        if (!text || !('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = lang;
+        u.rate = 0.9;
+        window.speechSynthesis.speak(u);
+        umamiTrack('translate_listen', { which: which, lang: lang });
+      } catch (_) { /* speech unavailable — silent fail */ }
+    },
+
+    // Computed: the list of languages the dropdowns can use (excludes 'sr'
+    // since it isn't in DATA.languages — a pre-existing data quirk).
+    get tlAvailableLangs() {
+      return Object.keys(DATA.languages).sort((a, b) =>
+        this.langName(a).localeCompare(this.langName(b))
+      );
+    },
+
+    // ─── URL-based social share helpers ──────────────────────────────────
+    // These complement shareTopFive() (which generates a downloadable PNG)
+    // by giving the user one-click prefilled posts on Twitter / WhatsApp,
+    // plus a copy-link option. Witty copy includes flags + top rec to maximise
+    // CTR on social feeds.
+
+    _shareUrl() {
+      // Use the existing permalink encoder so the share URL restores the
+      // user's exact speaker + proficiency + weight state.
+      try {
+        const url = new URL(window.location.origin || 'https://mynextlanguage.org/');
+        url.pathname = '/';
+        url.hash = this._encodeProfile ? this._encodeProfile() : (window.location.hash || '');
+        if (!url.hash && window.location.hash) url.hash = window.location.hash;
+        return url.toString();
+      } catch (_) {
+        return 'https://mynextlanguage.org/';
+      }
+    },
+    _shareCopy() {
+      const speakerFlags = this.speakers
+        .map(c => (LANG_FLAG[c] || ''))
+        .filter(Boolean).slice(0, 4).join('');
+      const top = this.recommendations[0];
+      if (top) {
+        const topFlag = LANG_FLAG[top.target] || '';
+        const topName = this.langName(top.target);
+        if (speakerFlags) {
+          return `I speak ${speakerFlags} — apparently ${topFlag} ${topName} will be the easiest language for me to learn next. Find yours →`;
+        }
+        return `${topFlag} ${topName} is the easiest next language to learn for me, according to MyNextLanguage. Find yours →`;
+      }
+      return 'I just discovered which language will be easiest for me to learn next 🌍 — find yours at MyNextLanguage:';
+    },
+    shareToTwitter() {
+      const text = encodeURIComponent(this._shareCopy());
+      const url  = encodeURIComponent(this._shareUrl());
+      const hashtags = 'languagelearning,polyglot,linguistics';
+      window.open(
+        `https://twitter.com/intent/tweet?text=${text}&url=${url}&hashtags=${hashtags}`,
+        '_blank', 'noopener,width=560,height=420'
+      );
+      umamiTrack('share', { platform: 'twitter' });
+    },
+    shareToWhatsApp() {
+      const msg = encodeURIComponent(this._shareCopy() + ' ' + this._shareUrl());
+      window.open(`https://wa.me/?text=${msg}`, '_blank', 'noopener');
+      umamiTrack('share', { platform: 'whatsapp' });
+    },
+    shareToReddit() {
+      const title = encodeURIComponent(this._shareCopy().replace(/ →$/, ''));
+      const url   = encodeURIComponent(this._shareUrl());
+      window.open(
+        `https://www.reddit.com/submit?url=${url}&title=${title}`,
+        '_blank', 'noopener,width=720,height=620'
+      );
+      umamiTrack('share', { platform: 'reddit' });
+    },
+    async shareCopyLink() {
+      const url = this._shareUrl();
+      try {
+        await navigator.clipboard.writeText(url);
+        this.savedToast = true;
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => { this.savedToast = false; }, 1800);
+        umamiTrack('share', { platform: 'copy-link' });
+      } catch (_) {
+        // Fallback for non-secure contexts
+        const ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); } catch (e) {}
+        document.body.removeChild(ta);
+        this.savedToast = true;
+        clearTimeout(this._toastTimer);
+        this._toastTimer = setTimeout(() => { this.savedToast = false; }, 1800);
+      }
+    },
+
     async shareTopFive() {
       if (this.sharing || !this.recommendations.length) return;
       this.sharing = true;

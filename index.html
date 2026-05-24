@@ -231,6 +231,56 @@
   ]
 }
 </script>
+
+<!-- ── Dataset JSON-LD (so LLMs / search engines index the underlying matrix) ── -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Dataset",
+  "name": "MyNextLanguage Linguistic Distance Matrix",
+  "alternateName": ["MyNextLanguage Dataset", "Language Similarity Matrix"],
+  "description": "Open dataset ranking the linguistic distance between 96 world languages across five dimensions: lexical overlap (curated cognate percentages plus heuristic fallbacks), grammatical distance (case count, gender, articles, word order, morphology, vowel harmony), phonological similarity (Jaccard over phoneme feature sets), writing-system difficulty, and genealogical distance (family / branch / subbranch). Includes 42 curated cognate-exemplar pair sets, 24 linguistic-term glossary entries, country centroids for geo visualisation, FSI difficulty tiers, parallel sample sentences for 74 language combinations, and UI translations across 8 locales.",
+  "url": "https://mynextlanguage.org/data/languages-matrix.json",
+  "keywords": [
+    "language similarity", "linguistic distance", "lexical overlap",
+    "grammar distance", "phonological similarity", "writing system",
+    "language family tree", "cognates", "FSI difficulty tier",
+    "CEFR proficiency", "polyglot", "language learning"
+  ],
+  "license": "https://opensource.org/licenses/MIT",
+  "isAccessibleForFree": true,
+  "creator": {
+    "@type": "Organization",
+    "name": "MyNextLanguage",
+    "url": "https://mynextlanguage.org/"
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "MyNextLanguage",
+    "url": "https://mynextlanguage.org/"
+  },
+  "distribution": [{
+    "@type": "DataDownload",
+    "encodingFormat": "application/json",
+    "contentUrl": "https://mynextlanguage.org/data/languages-matrix.json",
+    "name": "Unified linguistic matrix (JSON)"
+  }],
+  "variableMeasured": [
+    "lexical similarity (0..1)",
+    "grammatical distance (0..1)",
+    "phonological similarity (0..1)",
+    "writing-system similarity (0..1)",
+    "genealogical distance (0..1)",
+    "composite difficulty score (0..1)",
+    "CEFR-weighted transfer benefit"
+  ],
+  "spatialCoverage": {
+    "@type": "Place",
+    "name": "World (96 languages across 17 language families)"
+  },
+  "temporalCoverage": "Synchronic / contemporary usage"
+}
+</script>
 </head>
 <body class="bg-stone-50 dark:bg-stone-950 text-stone-900 dark:text-stone-100 min-h-screen transition-colors">
 
@@ -500,24 +550,77 @@
         Reset
       </button>
 
-      <!-- Share button -->
-      <button @click="shareTopFive()"
-              :disabled="sharing || !recommendations.length"
-              class="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm">
-        <template x-if="!sharing">
+      <!-- Share cluster: PNG download + one-click social posts -->
+      <div class="ml-auto flex items-center gap-2 relative" x-data="{ openShare: false }" @click.outside="openShare = false">
+        <!-- Primary: PNG download (existing behaviour) -->
+        <button @click="shareTopFive()"
+                :disabled="sharing || !recommendations.length"
+                class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm">
+          <template x-if="!sharing">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            </svg>
+          </template>
+          <template x-if="sharing">
+            <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+            </svg>
+          </template>
+          <span x-text="t('shareBtn')"></span>
+        </button>
+
+        <!-- Caret: opens one-click social-share menu -->
+        <button @click="openShare = !openShare"
+                :disabled="!recommendations.length"
+                aria-label="Open social share menu"
+                class="px-2.5 py-2 rounded-lg text-sm font-medium bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white shadow-sm">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                  d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
           </svg>
-        </template>
-        <template x-if="sharing">
-          <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-          </svg>
-        </template>
-        <span x-text="t('shareBtn')"></span>
-      </button>
+        </button>
+
+        <!-- Dropdown menu -->
+        <div x-show="openShare" x-cloak
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 scale-95"
+             x-transition:enter-end="opacity-100 scale-100"
+             x-transition:leave="transition ease-in duration-100"
+             x-transition:leave-start="opacity-100 scale-100"
+             x-transition:leave-end="opacity-0 scale-95"
+             class="absolute right-0 top-full mt-2 w-56 z-40 rounded-lg border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-900 shadow-xl overflow-hidden">
+          <button @click="shareToTwitter(); openShare = false"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+            Share on Twitter / X
+          </button>
+          <button @click="shareToWhatsApp(); openShare = false"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163a11.867 11.867 0 01-1.587-5.946C.16 5.335 5.495 0 12.05 0a11.817 11.817 0 018.413 3.488 11.824 11.824 0 013.48 8.413c-.003 6.555-5.338 11.89-11.893 11.89a11.9 11.9 0 01-5.688-1.448L.057 24zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.881.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.881-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.982zm11.387-5.464c-.074-.124-.272-.198-.57-.347-.297-.149-1.758-.868-2.031-.967-.272-.099-.47-.149-.669.149-.198.297-.768.967-.941 1.165-.173.198-.347.223-.644.074-.297-.149-1.255-.462-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.297-.347.446-.521.151-.172.2-.296.3-.495.099-.198.05-.372-.025-.521-.075-.148-.669-1.611-.916-2.206-.242-.579-.487-.501-.669-.51l-.57-.01c-.198 0-.52.074-.792.372s-1.04 1.016-1.04 2.479 1.065 2.876 1.213 3.074c.149.198 2.095 3.2 5.076 4.487.709.306 1.263.489 1.694.626.712.226 1.36.194 1.872.118.571-.085 1.758-.719 2.006-1.413.248-.695.248-1.29.173-1.414z"/></svg>
+            Share on WhatsApp
+          </button>
+          <button @click="shareToReddit(); openShare = false"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0zm5.01 4.744c.688 0 1.25.561 1.25 1.249a1.25 1.25 0 0 1-2.498.056l-2.597-.547-.8 3.747c1.824.07 3.48.632 4.674 1.488.308-.309.73-.491 1.207-.491.968 0 1.754.786 1.754 1.754 0 .716-.435 1.333-1.01 1.614a3.111 3.111 0 0 1 .042.52c0 2.694-3.13 4.87-7.004 4.87-3.874 0-7.004-2.176-7.004-4.87 0-.183.015-.366.043-.534A1.748 1.748 0 0 1 4.028 12.5c0-.968.786-1.754 1.754-1.754.463 0 .898.196 1.207.49 1.207-.883 2.878-1.43 4.744-1.487l.885-4.182a.342.342 0 0 1 .14-.197.35.35 0 0 1 .238-.042l2.906.617a1.214 1.214 0 0 1 1.108-.701zM9.25 12C8.561 12 8 12.562 8 13.25c0 .687.561 1.248 1.25 1.248.687 0 1.248-.561 1.248-1.249 0-.688-.561-1.249-1.249-1.249zm5.5 0c-.687 0-1.248.561-1.248 1.25 0 .687.561 1.248 1.249 1.248.688 0 1.249-.561 1.249-1.249 0-.687-.562-1.249-1.25-1.249zm-5.466 3.99a.327.327 0 0 0-.231.094.33.33 0 0 0 0 .463c.842.842 2.484.913 2.961.913.477 0 2.105-.056 2.961-.913a.361.361 0 0 0 .029-.463.33.33 0 0 0-.464 0c-.547.533-1.684.73-2.512.73-.828 0-1.979-.196-2.512-.73a.326.326 0 0 0-.232-.095z"/></svg>
+            Share on Reddit
+          </button>
+          <button @click="shareCopyLink(); openShare = false"
+                  class="w-full px-4 py-2.5 flex items-center gap-3 text-sm text-stone-700 dark:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors border-t border-stone-200 dark:border-stone-700">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
+            Copy share link
+          </button>
+        </div>
+
+        <!-- Toast: copy confirmation -->
+        <div x-show="savedToast" x-cloak
+             x-transition:enter="transition ease-out duration-200"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0"
+             class="absolute right-0 -bottom-9 px-3 py-1.5 rounded-md bg-stone-900 dark:bg-stone-100 text-white dark:text-stone-900 text-xs font-medium shadow-lg pointer-events-none">
+          Link copied ✓
+        </div>
+      </div>
     </div>
 
     <!-- FSI difficulty filter bar -->
@@ -1369,6 +1472,154 @@
   </div>
 
   <!-- ─────────────────────────────────────────────────────────────────────
+       Translation Playground — type any sentence, see it live-translated
+       to the selected target language. Uses the free MyMemory API (no key,
+       CORS-friendly). Complements the static parallel-sentence pairs by
+       letting users try ANY phrase across ANY supported pair — particularly
+       useful for closely-related-language comparisons (German↔Yiddish,
+       Polish↔Czech, Spanish↔Portuguese, etc.) where intuition can be
+       checked sentence-by-sentence.
+       ───────────────────────────────────────────────────────────────────── -->
+  <section id="translate-playground"
+           class="mt-10 mb-8 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6">
+    <div class="flex items-start justify-between gap-4 flex-wrap mb-1">
+      <div>
+        <h2 class="text-lg font-medium flex items-center gap-2">
+          <svg class="w-5 h-5 text-emerald-600 dark:text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 016.412 9m6.088 9l6-12 6 12M14.5 16h7"/>
+          </svg>
+          Translation playground
+        </h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
+          Type a sentence in any language, see it instantly translated. Particularly handy for sanity-checking the cousins — try German ↔ Yiddish, Polish ↔ Czech, Spanish ↔ Portuguese, or Norwegian ↔ Swedish.
+        </p>
+      </div>
+      <button @click="tlExample()" type="button"
+              class="text-xs px-2.5 py-1.5 rounded-full border border-stone-300 dark:border-stone-700 text-stone-600 dark:text-stone-300 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
+        Try an example
+      </button>
+    </div>
+
+    <!-- Language pickers + swap -->
+    <div class="grid md:grid-cols-[1fr_auto_1fr] gap-3 mt-4 items-center">
+      <!-- Source picker -->
+      <label class="block">
+        <span class="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 font-semibold">From</span>
+        <select x-model="tlSource"
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <template x-for="code in tlAvailableLangs" :key="'tlsrc-' + code">
+            <option :value="code" x-text="(LANG_FLAG[code] || '🌐') + '  ' + langName(code)"></option>
+          </template>
+        </select>
+      </label>
+
+      <!-- Swap button -->
+      <div class="flex items-end md:items-center justify-center pb-0.5">
+        <button @click="tlSwap()" type="button"
+                title="Swap source and target"
+                class="w-9 h-9 rounded-full border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-all flex items-center justify-center">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                  d="M8 7h12m0 0l-4-4m4 4l-4 4m-4 6H4m0 0l4 4m-4-4l4-4"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Target picker -->
+      <label class="block">
+        <span class="text-xs uppercase tracking-wider text-stone-500 dark:text-stone-400 font-semibold">To</span>
+        <select x-model="tlTarget" @change="translateText()"
+                class="mt-1 w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          <template x-for="code in tlAvailableLangs" :key="'tltgt-' + code">
+            <option :value="code" x-text="(LANG_FLAG[code] || '🌐') + '  ' + langName(code)"></option>
+          </template>
+        </select>
+      </label>
+    </div>
+
+    <!-- Textareas -->
+    <div class="grid md:grid-cols-2 gap-3 mt-4">
+      <!-- Source -->
+      <div class="relative">
+        <textarea x-model="tlInput"
+                  @input="tlScheduleTranslate()"
+                  rows="4" maxlength="500"
+                  placeholder="Type a sentence here…"
+                  class="w-full px-3 py-2 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-sm resize-y focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[110px]"></textarea>
+        <div class="flex items-center justify-between mt-1.5 text-xs text-stone-400 dark:text-stone-500">
+          <button @click="tlSpeak('src')" type="button"
+                  :disabled="!tlInput"
+                  class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+            </svg>
+            Listen
+          </button>
+          <span><span x-text="(tlInput || '').length"></span> / 500</span>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="relative">
+        <div class="w-full px-3 py-2 rounded-lg border border-stone-200 dark:border-stone-800 bg-stone-50 dark:bg-stone-950 text-sm min-h-[110px] flex items-start"
+             :class="tlError ? 'text-red-600 dark:text-red-400' : 'text-stone-800 dark:text-stone-200'">
+          <template x-if="tlLoading">
+            <div class="flex items-center gap-2 text-stone-400 dark:text-stone-500">
+              <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+              </svg>
+              Translating…
+            </div>
+          </template>
+          <template x-if="!tlLoading && tlError">
+            <span x-text="tlError"></span>
+          </template>
+          <template x-if="!tlLoading && !tlError && tlResult">
+            <span x-text="tlResult"></span>
+          </template>
+          <template x-if="!tlLoading && !tlError && !tlResult">
+            <span class="text-stone-400 dark:text-stone-500 italic">Translation will appear here.</span>
+          </template>
+        </div>
+        <div class="flex items-center justify-between mt-1.5 text-xs text-stone-400 dark:text-stone-500">
+          <div class="flex items-center gap-3">
+            <button @click="tlSpeak('dst')" type="button"
+                    :disabled="!tlResult"
+                    class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>
+              </svg>
+              Listen
+            </button>
+            <button @click="tlCopy()" type="button"
+                    :disabled="!tlResult"
+                    class="flex items-center gap-1 hover:text-emerald-600 dark:hover:text-emerald-400 disabled:opacity-30 disabled:cursor-not-allowed transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+              </svg>
+              Copy
+            </button>
+          </div>
+          <span x-show="tlMatchScore !== null && !tlError"
+                :title="'Translation confidence (from MyMemory)'"
+                class="text-emerald-600 dark:text-emerald-400">
+            ~<span x-text="Math.round((tlMatchScore || 0) * 100)"></span>% match
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs text-stone-400 dark:text-stone-500 mt-3">
+      Translation powered by <a href="https://mymemory.translated.net/" target="_blank" rel="noopener" class="text-emerald-600 dark:text-emerald-400 hover:underline">MyMemory</a> (free community translation memory). Pronunciation uses your browser's built-in speech synthesis. Neither service sends data to MyNextLanguage; both operate purely in your browser.
+    </p>
+  </section>
+
+  <!-- ─────────────────────────────────────────────────────────────────────
        Language Similarity Graph — interactive D3 force-directed network.
        Mounted unconditionally (does not depend on user having selected
        speakers). All 96 languages are nodes; links are drawn whenever the
@@ -1569,6 +1820,84 @@
     </p>
   </section>
   
+  <!-- Embed this tool — gives bloggers / educators a copy-paste iframe.
+       Each embed becomes a permanent backlink to mynextlanguage.org. -->
+  <section class="mt-12 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6"
+           x-data="{
+             open: false,
+             theme: 'auto',
+             height: 720,
+             copied: false,
+             snippet() {
+               const q = this.theme === 'auto' ? '' : ('?theme=' + this.theme);
+               return '<iframe src=&quot;https://mynextlanguage.org/embed.html' + q + '&quot; '
+                    + 'width=&quot;100%&quot; height=&quot;' + this.height + '&quot; '
+                    + 'style=&quot;border:0;border-radius:12px;max-width:100%&quot; '
+                    + 'loading=&quot;lazy&quot; title=&quot;Language Similarity Graph&quot;>'
+                    + '</iframe>';
+             },
+             rawSnippet() {
+               return this.snippet().replace(/&quot;/g, '"');
+             },
+             async copy() {
+               try { await navigator.clipboard.writeText(this.rawSnippet()); }
+               catch (e) { /* clipboard blocked — selection still works */ }
+               this.copied = true;
+               setTimeout(() => { this.copied = false; }, 1800);
+             }
+           }">
+    <div class="flex items-start justify-between gap-4 flex-wrap">
+      <div>
+        <h2 class="text-lg font-medium">Embed this tool</h2>
+        <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">
+          Have a blog post or course page? Drop the interactive Language Similarity Graph into it with one snippet — free, no attribution required (but appreciated).
+        </p>
+      </div>
+      <button @click="open = !open"
+              class="px-3 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 hover:border-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-400 transition-colors">
+        <span x-text="open ? 'Hide embed code' : 'Show embed code'"></span>
+      </button>
+    </div>
+
+    <div x-show="open" x-cloak class="mt-5 grid md:grid-cols-2 gap-5">
+      <!-- Options -->
+      <div class="space-y-3 text-sm">
+        <label class="block">
+          <span class="text-stone-500 dark:text-stone-400">Theme</span>
+          <select x-model="theme"
+                  class="mt-1 w-full px-2 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200">
+            <option value="auto">Auto (match visitor's system / saved preference)</option>
+            <option value="dark">Force dark</option>
+            <option value="light">Force light</option>
+          </select>
+        </label>
+        <label class="block">
+          <span class="text-stone-500 dark:text-stone-400">Height (px)</span>
+          <input type="number" x-model.number="height" min="400" max="1600" step="40"
+                 class="mt-1 w-full px-2 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200">
+        </label>
+        <p class="text-xs text-stone-500 dark:text-stone-400 pt-2">
+          The embed loads independently of the host page — your readers can drag, zoom, and switch views in place. It does not set cookies or run analytics on the host domain.
+        </p>
+      </div>
+      <!-- Snippet + copy -->
+      <div>
+        <div class="relative">
+          <pre class="text-xs leading-relaxed bg-stone-900 dark:bg-stone-950 text-emerald-300 rounded-lg p-4 overflow-auto whitespace-pre-wrap break-all min-h-[140px]"
+               x-text="rawSnippet()"></pre>
+          <button @click="copy()"
+                  class="absolute top-2 right-2 px-2.5 py-1 text-xs rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors">
+            <span x-show="!copied">Copy</span>
+            <span x-show="copied" x-cloak>Copied ✓</span>
+          </button>
+        </div>
+        <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
+          Paste this `&lt;iframe&gt;` anywhere HTML works — WordPress (Custom HTML block), Ghost, Medium (limited), Notion (via /embed), or any static-site engine.
+        </p>
+      </div>
+    </div>
+  </section>
+
   <!-- FAQ -->
   <section class="mt-12 space-y-2">
     <h2 class="text-xl font-semibold mb-4" x-text="t('faqHeading')"></h2>
