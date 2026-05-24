@@ -429,23 +429,29 @@ function app() {
         if (PARALLEL_SENTENCES[key2]) return { sentences: PARALLEL_SENTENCES[key2], bridge: spk, reversed: true,  tier: 1 };
       }
 
-      // ── Tier 2: universal phrase-bank fallback (100% coverage) ────────────
-      const bestSpk = ranked[0]?.spk;
-      if (bestSpk && LANG_PHRASES[bestSpk] && LANG_PHRASES[code]) {
-        const helperPhrases = LANG_PHRASES[bestSpk];
-        const targetPhrases = LANG_PHRASES[code];
-        return {
-          sentences: helperPhrases.p.map((ph, i) => ({
-            b:  ph,
-            rb: helperPhrases.r ? helperPhrases.r[i] : null,
-            t:  (targetPhrases.p[i] || ''),
-            rt: targetPhrases.r  ? targetPhrases.r[i]  : null,
-            c:  []
-          })),
-          bridge: bestSpk,
-          reversed: false,
-          tier: 2
-        };
+      // ── Tier 2: universal phrase-bank fallback ────────────────────────────
+      // Walk ranked sources and use the FIRST one that has phrase-bank coverage
+      // for both itself and the target. This guarantees we never silently fall
+      // back to a low-similarity helper (e.g. picking German→Slovak when the
+      // user also speaks Polish, which is the actual reason Slovak was suggested).
+      if (LANG_PHRASES[code]) {
+        for (const { spk } of ranked) {
+          if (!LANG_PHRASES[spk]) continue;
+          const helperPhrases = LANG_PHRASES[spk];
+          const targetPhrases = LANG_PHRASES[code];
+          return {
+            sentences: helperPhrases.p.map((ph, i) => ({
+              b:  ph,
+              rb: helperPhrases.r ? helperPhrases.r[i] : null,
+              t:  (targetPhrases.p[i] || ''),
+              rt: targetPhrases.r  ? targetPhrases.r[i]  : null,
+              c:  []
+            })),
+            bridge: spk,
+            reversed: false,
+            tier: 2
+          };
+        }
       }
 
       return null;
@@ -1829,3 +1835,53 @@ function app() {
 
 // ── Expose to Alpine ──
 window.app = app;
+
+// ── Embed-snippet widget (kept out of the HTML attribute to avoid quote-escaping pain) ──
+function embedWidget() {
+  return {
+    open: false,
+    theme: 'auto',
+    height: 720,
+    copied: false,
+
+    // Build the iframe HTML snippet. Uses String.fromCharCode(34) for the
+    // double-quote character so this code is safe to live in app.js without
+    // collisions with surrounding string literals.
+    snippet() {
+      var Q = String.fromCharCode(34);
+      var q = this.theme === 'auto' ? '' : ('?theme=' + this.theme);
+      return '<iframe src=' + Q + 'https://mynextlanguage.org/embed.html' + q + Q + ' '
+           + 'width=' + Q + '100%' + Q + ' '
+           + 'height=' + Q + this.height + Q + ' '
+           + 'style=' + Q + 'border:0;border-radius:12px;max-width:100%' + Q + ' '
+           + 'loading=' + Q + 'lazy' + Q + ' '
+           + 'title=' + Q + 'Language Similarity Graph' + Q + '>'
+           + '</iframe>';
+    },
+
+    // URL used by the in-page <iframe> preview.
+    previewSrc() {
+      var q = this.theme === 'auto' ? '' : ('?theme=' + this.theme);
+      return 'embed.html' + q;
+    },
+
+    async copy() {
+      try {
+        await navigator.clipboard.writeText(this.snippet());
+      } catch (e) {
+        // Clipboard blocked (e.g. file:// or http:). Fall back to selecting the <pre>.
+        try {
+          var pre = document.querySelector('section [x-data="embedWidget()"] pre');
+          if (pre) {
+            var r = document.createRange(); r.selectNodeContents(pre);
+            var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+          }
+        } catch (_) {}
+      }
+      this.copied = true;
+      var self = this;
+      setTimeout(function () { self.copied = false; }, 1800);
+    },
+  };
+}
+window.embedWidget = embedWidget;

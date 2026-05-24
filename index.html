@@ -820,7 +820,7 @@
           </div>
         </template>
 
-        <template x-for="(rec, idx) in displayRecommendations" :key="rec.target">
+        <template x-for="(rec, idx) in displayRecommendations" :key="'rec-' + rec.target + '|' + speakers.join(',')">
           <div class="bg-white dark:bg-stone-900 rounded-xl border overflow-hidden transition-shadow"
                :data-card="rec.target"
                :class="[
@@ -984,7 +984,7 @@
 
               <!-- Linguistic Bridge / Sample Phrases (Tier 1 = custom, Tier 2 = phrase-bank) -->
               <template x-if="parallelSentencesFor(rec.target)">
-                <div x-data="{ ps: parallelSentencesFor(rec.target) }"
+                <div x-data="{ get ps() { return parallelSentencesFor(rec.target); } }"
                      class="mb-4 p-3 rounded-xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-700">
 
                   <!-- Header row: title + tier badge -->
@@ -1823,29 +1823,7 @@
   <!-- Embed this tool — gives bloggers / educators a copy-paste iframe.
        Each embed becomes a permanent backlink to mynextlanguage.org. -->
   <section class="mt-12 bg-white dark:bg-stone-900 rounded-xl border border-stone-200 dark:border-stone-800 p-5 md:p-6"
-           x-data="{
-             open: false,
-             theme: 'auto',
-             height: 720,
-             copied: false,
-             snippet() {
-               const q = this.theme === 'auto' ? '' : ('?theme=' + this.theme);
-               return '<iframe src=&quot;https://mynextlanguage.org/embed.html' + q + '&quot; '
-                    + 'width=&quot;100%&quot; height=&quot;' + this.height + '&quot; '
-                    + 'style=&quot;border:0;border-radius:12px;max-width:100%&quot; '
-                    + 'loading=&quot;lazy&quot; title=&quot;Language Similarity Graph&quot;>'
-                    + '</iframe>';
-             },
-             rawSnippet() {
-               return this.snippet().replace(/&quot;/g, '"');
-             },
-             async copy() {
-               try { await navigator.clipboard.writeText(this.rawSnippet()); }
-               catch (e) { /* clipboard blocked — selection still works */ }
-               this.copied = true;
-               setTimeout(() => { this.copied = false; }, 1800);
-             }
-           }">
+           x-data="embedWidget()">
     <div class="flex items-start justify-between gap-4 flex-wrap">
       <div>
         <h2 class="text-lg font-medium">Embed this tool</h2>
@@ -1884,16 +1862,27 @@
       <div>
         <div class="relative">
           <pre class="text-xs leading-relaxed bg-stone-900 dark:bg-stone-950 text-emerald-300 rounded-lg p-4 overflow-auto whitespace-pre-wrap break-all min-h-[140px]"
-               x-text="rawSnippet()"></pre>
+               x-text="snippet()"></pre>
           <button @click="copy()"
                   class="absolute top-2 right-2 px-2.5 py-1 text-xs rounded-md bg-emerald-600 hover:bg-emerald-700 text-white font-medium transition-colors">
             <span x-show="!copied">Copy</span>
-            <span x-show="copied" x-cloak>Copied ✓</span>
+            <span x-show="copied" x-cloak>Copied &#10003;</span>
           </button>
         </div>
         <p class="text-xs text-stone-500 dark:text-stone-400 mt-2">
-          Paste this `&lt;iframe&gt;` anywhere HTML works — WordPress (Custom HTML block), Ghost, Medium (limited), Notion (via /embed), or any static-site engine.
+          Paste this `&lt;iframe&gt;` anywhere HTML works &mdash; WordPress (Custom HTML block), Ghost, Medium (limited), Notion (via /embed), or any static-site engine.
         </p>
+
+        <!-- Live preview -->
+        <div class="mt-3">
+          <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-1">Live preview</div>
+          <iframe :src="previewSrc()"
+                  :height="Math.min(height, 480)"
+                  width="100%"
+                  style="border:0;border-radius:12px;max-width:100%;background:#0c0a09"
+                  loading="lazy"
+                  title="Language Similarity Graph preview"></iframe>
+        </div>
       </div>
     </div>
   </section>

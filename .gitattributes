@@ -1,0 +1,42 @@
+# Standardize line endings across all platforms.
+# Everything stored in the repo is LF; Windows tooling keeps LF locally too
+# (no auto CRLF conversion on checkout).
+
+* text=auto eol=lf
+
+# ── Text overrides (explicit, so contributors know) ──
+*.html      text eol=lf
+*.css       text eol=lf
+*.js        text eol=lf
+*.mjs       text eol=lf
+*.json      text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.xml       text eol=lf
+*.svg       text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+
+# ── Windows-only scripts must stay CRLF ──
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+*.ps1       text eol=crlf
+
+# ── Binary assets (no diff, no line-ending mangling) ──
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.webp      binary
+*.ico       binary
+*.pdf       binary
+*.zip       binary
+*.gz        binary
+*.woff      binary
+*.woff2     binary
+*.ttf       binary
+*.otf       binary
+*.eot       binary
+*.mp3       binary
+*.mp4       binary
+*.webm      binary
