@@ -503,3 +503,4 @@ writeFileSync(SITEMAP, sitemap, 'utf8');
 
 console.log(`[gen] ✅ Wrote ${written} pair pages + ${LANGS.length} source-hub pages`);
 console.log(`[gen] ✅ Updated sitemap.xml with ${sitemapEntries.length} URLs`);
+// (v10 template includes /js/profile.js + /js/micro-quiz.js + data-micro-quiz embed)

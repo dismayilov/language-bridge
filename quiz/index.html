@@ -1110,22 +1110,15 @@ function quizApp() {
       } else {
         this.streak = 0;
       }
-      // Per-language session tracking + write to shared profile (so the main
-      // app, micro-quizzes, etc., can use this signal too).
       if (this._LANG_TRACKING_TYPES.indexOf(q.type) !== -1 && this.LANG_META[q.correctKey]) {
         const bucket = correct ? this.sessionCorrectLangs : this.sessionWrongLangs;
         bucket[q.correctKey] = (bucket[q.correctKey] || 0) + 1;
         try {
-          if (window.MNLProfile) {
-            window.MNLProfile.recordQuizAnswer(q.correctKey, correct);
-          }
+          if (window.MNLProfile) window.MNLProfile.recordQuizAnswer(q.correctKey, correct);
         } catch (e) {}
       }
       this.feedback = {
-        correct,
-        picked: choice.key,
-        correctLabel: q.correctLabel,
-        fact: q.fact || '',
+        correct, picked: choice.key, correctLabel: q.correctLabel, fact: q.fact || '',
       };
     },
 
@@ -1134,14 +1127,10 @@ function quizApp() {
       this.feedback = null;
       if (this.qIndex + 1 >= this.questions.length) {
         this.status = 'result';
-        // Persist the result to the shared profile so the main app and
-        // other surfaces can react (e.g., showing personalized recommendations).
         try {
           if (window.MNLProfile) {
             window.MNLProfile.recordQuizResult({
-              difficulty: this.difficulty,
-              score: this.score,
-              streakHigh: this.maxStreak,
+              difficulty: this.difficulty, score: this.score, streakHigh: this.maxStreak,
             });
           }
         } catch (e) {}
@@ -1151,17 +1140,10 @@ function quizApp() {
       }
     },
 
-    // ── Smart CTAs for the result screen ───────────────────
-    // Returns an array of up to 3 deep-link CTAs based on what the user
-    // got right / wrong this session.
     smartCtas() {
       const ctas = [];
-      const correctSorted = Object.entries(this.sessionCorrectLangs)
-        .sort((a, b) => b[1] - a[1]).map(e => e[0]);
-      const wrongSorted = Object.entries(this.sessionWrongLangs)
-        .sort((a, b) => b[1] - a[1]).map(e => e[0]);
-
-      // 1. "Find languages similar to X" — based on top correct language
+      const correctSorted = Object.entries(this.sessionCorrectLangs).sort((a, b) => b[1] - a[1]).map(e => e[0]);
+      const wrongSorted = Object.entries(this.sessionWrongLangs).sort((a, b) => b[1] - a[1]).map(e => e[0]);
       if (correctSorted.length) {
         const top = correctSorted[0];
         ctas.push({
@@ -1171,8 +1153,6 @@ function quizApp() {
           why: 'You identified this one — let\'s find your next.',
         });
       }
-
-      // 2. "Add the ones you missed to your learning list" — top 2 wrong
       if (wrongSorted.length) {
         const wrongs = wrongSorted.slice(0, 2);
         const names = wrongs.map(c => this.LANG_META[c] ? this.LANG_META[c].name : c).join(' & ');
@@ -1183,15 +1163,7 @@ function quizApp() {
           why: 'You missed these — open them in the explorer.',
         });
       }
-
-      // 3. Always offer the generic discover CTA
-      ctas.push({
-        primary: !correctSorted.length,
-        label: 'Open the recommendation tool →',
-        href: '/',
-        why: '',
-      });
-
+      ctas.push({ primary: !correctSorted.length, label: 'Open the recommendation tool →', href: '/', why: '' });
       return ctas;
     },
 
@@ -1213,7 +1185,6 @@ function quizApp() {
       } catch (e) {}
     },
 
-    // ── Result helpers ─────────────────────────────────────
     scoreColor() {
       const r = this.score / this.questions.length;
       if (r >= 0.9) return 'text-emerald-500';
@@ -1228,21 +1199,20 @@ function quizApp() {
       if (r >= 0.6)   return 'Solid.';
       if (r >= 0.4)   return 'Not bad.';
       if (r >= 0.2)   return 'Tough crowd.';
-      return 'There’s nowhere to go but up.';
+      return 'There is nowhere to go but up.';
     },
     scoreSubtitle() {
-      if (this.difficulty === 'personal') return 'Personal mode &mdash; tuned to the languages in your profile.';
-      if (this.difficulty === 'expert')   return 'Expert mode &mdash; same-family distractors throughout.';
-      if (this.difficulty === 'hard')     return 'Hard mode &mdash; every language in the dataset was in play.';
-      if (this.difficulty === 'medium')   return 'Drawn from the world’s 60 most-spoken languages.';
-      return 'Drawn from the world’s 30 most-spoken languages.';
+      if (this.difficulty === 'personal') return 'Personal mode — tuned to the languages in your profile.';
+      if (this.difficulty === 'expert')   return 'Expert mode — same-family distractors throughout.';
+      if (this.difficulty === 'hard')     return 'Hard mode — every language in the dataset was in play.';
+      if (this.difficulty === 'medium')   return 'Drawn from the world\'s 60 most-spoken languages.';
+      return 'Drawn from the world\'s 30 most-spoken languages.';
     },
     difficultyLabel() { return this.difficultyLabelFor(this.difficulty); },
     difficultyLabelFor(d) {
       return ({ personal: 'My Languages', easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' })[d] || d;
     },
     nextHarder() {
-      // Personal doesn't have a "harder" successor in the linear sense — fall back to expert
       if (this.difficulty === 'personal') return 'hard';
       const order = ['easy', 'medium', 'hard', 'expert'];
       const i = order.indexOf(this.difficulty);
@@ -1253,11 +1223,10 @@ function quizApp() {
       return c ? c.label : key;
     },
 
-    // ── Share ──────────────────────────────────────────────
     _shareText() {
       return 'I scored ' + this.score + '/' + this.questions.length +
              ' on the ' + this.difficultyLabel() + ' Language Quiz at mynextlanguage.org' +
-             (this.maxStreak >= 3 ? ' (max streak ' + this.maxStreak + ' 🔥)' : '') +
+             (this.maxStreak >= 3 ? ' (max streak ' + this.maxStreak + ' fire)' : '') +
              '. Can you beat me?';
     },
     _shareUrl() { return 'https://mynextlanguage.org/quiz/'; },
