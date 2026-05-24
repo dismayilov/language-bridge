@@ -178,7 +178,7 @@
     </div>
 
     <div class="grid sm:grid-cols-2 gap-3">
-      <template x-for="d in difficulties" :key="d.id">
+      <template x-for="d in availableDifficulties" :key="d.id">
         <button @click="difficulty = d.id"
                 :class="['difficulty-card', 'text-left', 'p-4', 'rounded-xl', 'border-2',
                          difficulty === d.id
@@ -389,15 +389,33 @@
       </div>
     </div>
 
+    <!-- Smart CTAs based on what the user got right / wrong this session -->
+    <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5">
+      <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-3">Tailored to your session</div>
+      <div class="flex flex-col gap-2">
+        <template x-for="(cta, ci) in smartCtas()" :key="ci">
+          <a :href="cta.href"
+             :class="[
+               'flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-medium transition-colors',
+               cta.primary
+                  ? 'bg-emerald-600 hover:bg-emerald-700 text-white'
+                  : 'border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400'
+             ]">
+            <span class="text-left flex-1">
+              <span x-text="cta.label"></span>
+              <span x-show="cta.why" class="block text-xs opacity-75 mt-0.5 font-normal" x-text="cta.why"></span>
+            </span>
+          </a>
+        </template>
+      </div>
+    </div>
+
     <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
-      <button @click="restart()" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">Play again</button>
+      <button @click="restart()" class="px-5 py-2.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">Play again</button>
       <button @click="restart(nextHarder())" x-show="nextHarder() !== null"
               class="px-5 py-2.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
         Try <span x-text="difficultyLabelFor(nextHarder())"></span> &rarr;
       </button>
-      <a href="/" class="px-5 py-2.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
-        Find your next language &rarr;
-      </a>
     </div>
   </section>
 
@@ -407,6 +425,8 @@
   </footer>
 </main>
 
+<!-- Shared profile module (read/write user state across all surfaces) -->
+<script src="/js/profile.js" defer></script>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
 
 <script>
@@ -476,7 +496,16 @@ function quizApp() {
     LANG_FLAG: {},
     FSI_TIER: {},
 
+    // User profile snapshot taken on init (and refreshed when a game starts)
+    profile: null,
+
+    // All possible difficulties — the "personal" one is filtered out at render
+    // time when the user has no profile yet (see availableDifficulties getter).
     difficulties: [
+      { id: 'personal', label: 'My Languages', badge: 'Personalized',
+        tone: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-400',
+        desc: 'Tuned to what you speak and what we recommended. Mixes your languages with their closest relatives.',
+        types: 'Profile-aware · Cognates · False friends · Closest-to' },
       { id: 'easy',   label: 'Easy',   badge: 'Beginner',
         tone: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
         desc: 'Top 30 most-spoken languages. Identify, family-grouping, FSI difficulty.',
@@ -496,6 +525,11 @@ function quizApp() {
     ],
     difficulty: 'easy',
 
+    get availableDifficulties() {
+      const hasProfile = this.profile && Array.isArray(this.profile.speakers) && this.profile.speakers.length > 0;
+      return this.difficulties.filter(d => d.id !== 'personal' || hasProfile);
+    },
+
     questions: [],
     qIndex: 0,
     score: 0,
@@ -504,7 +538,21 @@ function quizApp() {
     feedback: null,
     copied: false,
 
+    // Per-session per-language counters for end-of-game smart CTAs.
+    // Populated only for question types where "got it right" really means
+    // "the user recognized this language" (identify variants + native_name).
+    sessionCorrectLangs: {},
+    sessionWrongLangs: {},
+
     init() {
+      // Snapshot the shared profile so the welcome screen can decide whether
+      // to surface the "My Languages" personalized mode. Re-read on every
+      // startGame() in case the user updated it in another tab.
+      try { this.profile = (window.MNLProfile && window.MNLProfile.get()) || null; } catch (e) { this.profile = null; }
+      // If profile has speakers, default the difficulty to "personal"
+      if (this.profile && Array.isArray(this.profile.speakers) && this.profile.speakers.length > 0) {
+        this.difficulty = 'personal';
+      }
       this.loadData();
       window.addEventListener('keydown', (e) => {
         if (this.status !== 'playing') return;
@@ -558,6 +606,7 @@ function quizApp() {
     poolForDifficulty(d) {
       const all = Object.keys(this.LANG_PHRASES).filter(c => this.LANG_META[c]);
       if (d === 'hard' || d === 'expert') return all;
+      if (d === 'personal') return this._personalPool(all);
       const sorted = [...all].sort((a, b) =>
         (this.LANG_META[b].speakers_m || 0) - (this.LANG_META[a].speakers_m || 0));
       if (d === 'easy')   return sorted.slice(0, 30);
@@ -565,8 +614,46 @@ function quizApp() {
       return all;
     },
 
+    // Build a pool tuned to the user's profile:
+    //   • Their known languages (speakers)
+    //   • Their learning/pinned targets
+    //   • The closest relatives of each (same branch / subbranch)
+    // Capped so distractors stay relevant.
+    _personalPool(allCodes) {
+      const p = this.profile || {};
+      const seeds = new Set();
+      (p.speakers || []).forEach(c => seeds.add(c));
+      (p.pinned   || []).forEach(c => seeds.add(c));
+      Object.keys(p.learningStatus || {}).forEach(c => seeds.add(c));
+      // Expand by adding same-branch / same-subbranch siblings (limit per seed)
+      const expanded = new Set(seeds);
+      for (const seed of seeds) {
+        const m = this.LANG_META[seed];
+        if (!m) continue;
+        const sibs = allCodes.filter(c => c !== seed && this.LANG_META[c] && (
+          (m.subbranch && this.LANG_META[c].subbranch === m.subbranch) ||
+          (m.branch && this.LANG_META[c].branch === m.branch)
+        ));
+        // Take up to 4 siblings per seed so the pool doesn't explode
+        this._shuffle(sibs).slice(0, 4).forEach(c => expanded.add(c));
+      }
+      // Always keep at least 10 languages in the pool — top up with popular
+      // languages if the profile is sparse.
+      if (expanded.size < 10) {
+        const sorted = [...allCodes].sort((a, b) =>
+          (this.LANG_META[b].speakers_m || 0) - (this.LANG_META[a].speakers_m || 0));
+        for (const c of sorted) {
+          expanded.add(c);
+          if (expanded.size >= 12) break;
+        }
+      }
+      return [...expanded];
+    },
+
     // ── Game lifecycle ─────────────────────────────────────
     startGame() {
+      // Refresh profile in case the user updated it in another tab
+      try { this.profile = (window.MNLProfile && window.MNLProfile.get()) || null; } catch (e) {}
       const pool = this.poolForDifficulty(this.difficulty);
       const plan = this._planQuestionTypes(this.difficulty);
       const questions = [];
@@ -586,9 +673,15 @@ function quizApp() {
       this.streak = 0;
       this.maxStreak = 0;
       this.feedback = null;
+      this.sessionCorrectLangs = {};
+      this.sessionWrongLangs = {};
       this.status = 'playing';
       window.scrollTo({ top: 0, behavior: 'smooth' });
     },
+
+    // Question types whose correctKey is a real language code AND where
+    // getting it right means "I recognized this language" specifically.
+    _LANG_TRACKING_TYPES: ['identify', 'identify_rom', 'identify_long', 'native_name'],
 
     _planQuestionTypes(diff) {
       // Weighted distribution per difficulty. We shuffle the resulting array
@@ -608,6 +701,12 @@ function quizApp() {
         expert: {
           identify: 1, identify_rom: 2, identify_long: 1,
           odd_family: 1, closest_to: 2, cognate: 1, false_friend: 2,
+        },
+        // Personal: heavy on cognates / false-friends / closest-to since the pool
+        // is centred on the user's languages + their relatives.
+        personal: {
+          identify: 2, identify_long: 1, native_name: 1,
+          closest_to: 2, cognate: 2, false_friend: 2,
         },
       };
       const w = weights[diff] || weights.easy;
@@ -1011,6 +1110,17 @@ function quizApp() {
       } else {
         this.streak = 0;
       }
+      // Per-language session tracking + write to shared profile (so the main
+      // app, micro-quizzes, etc., can use this signal too).
+      if (this._LANG_TRACKING_TYPES.indexOf(q.type) !== -1 && this.LANG_META[q.correctKey]) {
+        const bucket = correct ? this.sessionCorrectLangs : this.sessionWrongLangs;
+        bucket[q.correctKey] = (bucket[q.correctKey] || 0) + 1;
+        try {
+          if (window.MNLProfile) {
+            window.MNLProfile.recordQuizAnswer(q.correctKey, correct);
+          }
+        } catch (e) {}
+      }
       this.feedback = {
         correct,
         picked: choice.key,
@@ -1024,10 +1134,65 @@ function quizApp() {
       this.feedback = null;
       if (this.qIndex + 1 >= this.questions.length) {
         this.status = 'result';
+        // Persist the result to the shared profile so the main app and
+        // other surfaces can react (e.g., showing personalized recommendations).
+        try {
+          if (window.MNLProfile) {
+            window.MNLProfile.recordQuizResult({
+              difficulty: this.difficulty,
+              score: this.score,
+              streakHigh: this.maxStreak,
+            });
+          }
+        } catch (e) {}
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } else {
         this.qIndex += 1;
       }
+    },
+
+    // ── Smart CTAs for the result screen ───────────────────
+    // Returns an array of up to 3 deep-link CTAs based on what the user
+    // got right / wrong this session.
+    smartCtas() {
+      const ctas = [];
+      const correctSorted = Object.entries(this.sessionCorrectLangs)
+        .sort((a, b) => b[1] - a[1]).map(e => e[0]);
+      const wrongSorted = Object.entries(this.sessionWrongLangs)
+        .sort((a, b) => b[1] - a[1]).map(e => e[0]);
+
+      // 1. "Find languages similar to X" — based on top correct language
+      if (correctSorted.length) {
+        const top = correctSorted[0];
+        ctas.push({
+          primary: true,
+          label: 'Find languages similar to ' + (this.LANG_META[top] ? this.LANG_META[top].name : top) + ' →',
+          href: '/?from=' + encodeURIComponent(top),
+          why: 'You identified this one — let\'s find your next.',
+        });
+      }
+
+      // 2. "Add the ones you missed to your learning list" — top 2 wrong
+      if (wrongSorted.length) {
+        const wrongs = wrongSorted.slice(0, 2);
+        const names = wrongs.map(c => this.LANG_META[c] ? this.LANG_META[c].name : c).join(' & ');
+        ctas.push({
+          primary: false,
+          label: 'Study ' + names + ' →',
+          href: '/?learning=' + wrongs.map(encodeURIComponent).join(','),
+          why: 'You missed these — open them in the explorer.',
+        });
+      }
+
+      // 3. Always offer the generic discover CTA
+      ctas.push({
+        primary: !correctSorted.length,
+        label: 'Open the recommendation tool →',
+        href: '/',
+        why: '',
+      });
+
+      return ctas;
     },
 
     restart(diffOverride) {
@@ -1066,14 +1231,19 @@ function quizApp() {
       return 'There’s nowhere to go but up.';
     },
     scoreSubtitle() {
-      if (this.difficulty === 'expert') return 'Expert mode &mdash; same-family distractors throughout.';
-      if (this.difficulty === 'hard')   return 'Hard mode &mdash; every language in the dataset was in play.';
-      if (this.difficulty === 'medium') return 'Drawn from the world’s 60 most-spoken languages.';
+      if (this.difficulty === 'personal') return 'Personal mode &mdash; tuned to the languages in your profile.';
+      if (this.difficulty === 'expert')   return 'Expert mode &mdash; same-family distractors throughout.';
+      if (this.difficulty === 'hard')     return 'Hard mode &mdash; every language in the dataset was in play.';
+      if (this.difficulty === 'medium')   return 'Drawn from the world’s 60 most-spoken languages.';
       return 'Drawn from the world’s 30 most-spoken languages.';
     },
     difficultyLabel() { return this.difficultyLabelFor(this.difficulty); },
-    difficultyLabelFor(d) { return ({ easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' })[d] || d; },
+    difficultyLabelFor(d) {
+      return ({ personal: 'My Languages', easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' })[d] || d;
+    },
     nextHarder() {
+      // Personal doesn't have a "harder" successor in the linear sense — fall back to expert
+      if (this.difficulty === 'personal') return 'hard';
       const order = ['easy', 'medium', 'hard', 'expert'];
       const i = order.indexOf(this.difficulty);
       return (i >= 0 && i < order.length - 1) ? order[i + 1] : null;

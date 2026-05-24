@@ -200,19 +200,24 @@ function app() {
       else if (saved === 'light') { document.documentElement.classList.remove('dark'); this.isDark = false; }
       document.documentElement.lang = this.currentLang;
 
-      // URL state takes priority over localStorage; fall back when no hash is present
-      const fromUrl = this.readFromUrl();
-      if (!fromUrl) {
+      // Query-string params (?from=, ?learning=) take highest priority — these
+      // are the deep-links the quiz and pair-page micro-quizzes generate.
+      const queryApplied = this.applyQueryParams();
+
+      // URL hash state (#langs=...) takes priority over localStorage
+      const fromUrl = queryApplied ? false : this.readFromUrl();
+
+      if (!fromUrl && !queryApplied) {
         this.loadProfile();
       } else {
-        // Always restore bookmarks from localStorage even when URL overrides the rest
+        // Always restore bookmarks/learning state from profile even when URL overrides the rest
         try {
-          const pi = localStorage.getItem('lb-pinned');
-          if (pi) this.pinned = JSON.parse(pi).filter(c => c in DATA.languages);
-          const pn = localStorage.getItem('lb-pinned-notes');
-          if (pn) this.pinnedNotes = JSON.parse(pn);
-          const ls = localStorage.getItem('lb-status');
-          if (ls) this.learningStatus = JSON.parse(ls);
+          const p = (window.MNLProfile && window.MNLProfile.get()) || {};
+          if (Array.isArray(p.pinned) && p.pinned.length) {
+            this.pinned = p.pinned.filter(c => c in DATA.languages);
+          }
+          if (p.pinnedNotes && typeof p.pinnedNotes === 'object') this.pinnedNotes = p.pinnedNotes;
+          if (p.learningStatus && typeof p.learningStatus === 'object') this.learningStatus = p.learningStatus;
         } catch (_) {}
       }
 
@@ -461,6 +466,18 @@ function app() {
       const patterns = words.map(w => w.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
       const regex = new RegExp('(' + patterns.join('|') + ')', 'gi');
       return text.replace(regex, '<span class="cognate-hl">$1</span>');
+    },
+
+    // ── Test-yourself mini-quiz modal bridge ─────────────────────
+    // The modal lives at body root with its own tiny Alpine component
+    // (defined inline in index.html). We just dispatch an event so we
+    // don't have to thread state through two Alpine scopes.
+    openTestModal(code) {
+      if (!code) return;
+      umamiTrack('open_test_modal', { language_code: code, language_name: this.langName(code) });
+      window.dispatchEvent(new CustomEvent('mnl-open-test-modal', {
+        detail: { code: code, name: this.langName(code) },
+      }));
     },
 
     // ── Detail panel ─────────────────────────────────────────────
@@ -1578,40 +1595,112 @@ function app() {
 
     // ── Persistence & bookmarking ─────────────────────────────────────────────
 
+    // Read speakers / proficiency / pinned / learning from the unified
+    // MNLProfile (which transparently migrates the legacy lb-* keys).
     loadProfile() {
       try {
-        const sp = localStorage.getItem('lb-speakers');
-        if (sp) {
-          const arr = JSON.parse(sp).filter(c => c in DATA.languages);
+        const p = (window.MNLProfile && window.MNLProfile.get()) || {};
+        if (Array.isArray(p.speakers)) {
+          const arr = p.speakers.filter(c => c in DATA.languages);
           if (arr.length) this.speakers = arr;
         }
-        const pr = localStorage.getItem('lb-proficiency');
-        if (pr) {
-          const obj = JSON.parse(pr);
+        if (p.proficiency && typeof p.proficiency === 'object') {
           const filtered = {};
-          for (const c of this.speakers) { if (obj[c]) filtered[c] = obj[c]; }
+          for (const c of this.speakers) { if (p.proficiency[c]) filtered[c] = p.proficiency[c]; }
           if (Object.keys(filtered).length) this.proficiency = filtered;
         }
-        const pi = localStorage.getItem('lb-pinned');
-        if (pi) {
-          this.pinned = JSON.parse(pi).filter(c => c in DATA.languages);
+        if (Array.isArray(p.pinned)) {
+          this.pinned = p.pinned.filter(c => c in DATA.languages);
         }
-        const pn = localStorage.getItem('lb-pinned-notes');
-        if (pn) this.pinnedNotes = JSON.parse(pn);
-        const ls = localStorage.getItem('lb-status');
-        if (ls) this.learningStatus = JSON.parse(ls);
+        if (p.pinnedNotes && typeof p.pinnedNotes === 'object') this.pinnedNotes = p.pinnedNotes;
+        if (p.learningStatus && typeof p.learningStatus === 'object') this.learningStatus = p.learningStatus;
       } catch (_) {}
     },
 
+    // Persist via MNLProfile (which also mirrors back to the legacy
+    // lb-* keys so any old code paths continue to work).
     persistProfile() {
       try {
-        localStorage.setItem('lb-speakers',      JSON.stringify(this.speakers));
-        localStorage.setItem('lb-proficiency',   JSON.stringify(this.proficiency));
-        localStorage.setItem('lb-pinned',        JSON.stringify(this.pinned));
-        localStorage.setItem('lb-pinned-notes',  JSON.stringify(this.pinnedNotes));
-        localStorage.setItem('lb-status',        JSON.stringify(this.learningStatus));
+        if (window.MNLProfile) {
+          window.MNLProfile.patch({
+            speakers: this.speakers,
+            proficiency: this.proficiency,
+            pinned: this.pinned,
+            pinnedNotes: this.pinnedNotes,
+            learningStatus: this.learningStatus,
+          });
+        } else {
+          // Fallback: write legacy keys directly if profile.js failed to load
+          localStorage.setItem('lb-speakers',      JSON.stringify(this.speakers));
+          localStorage.setItem('lb-proficiency',   JSON.stringify(this.proficiency));
+          localStorage.setItem('lb-pinned',        JSON.stringify(this.pinned));
+          localStorage.setItem('lb-pinned-notes',  JSON.stringify(this.pinnedNotes));
+          localStorage.setItem('lb-status',        JSON.stringify(this.learningStatus));
+        }
       } catch (_) {}
       this.showSavedToast();
+    },
+
+    // ── Query-string seeding ──────────────────────────────────────────────
+    // Supported params (all comma-separated codes):
+    //   ?from=pl,de         → set speakers
+    //   ?learning=cs,sk     → add to learningStatus as "learning"
+    //   ?target=cs          → open detail card on that language
+    // Returns true if any param was applied (so init() can skip lower-priority sources).
+    applyQueryParams() {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        let applied = false;
+
+        const fromParam = params.get('from');
+        if (fromParam) {
+          const codes = fromParam.split(',').map(c => c.trim()).filter(c => c in DATA.languages);
+          if (codes.length) {
+            this.speakers = codes;
+            // Default proficiency to C1 for seeded speakers
+            const prof = Object.assign({}, this.proficiency || {});
+            codes.forEach(c => { if (!prof[c]) prof[c] = 'C1'; });
+            this.proficiency = prof;
+            applied = true;
+          }
+        }
+
+        const learningParam = params.get('learning');
+        if (learningParam) {
+          const codes = learningParam.split(',').map(c => c.trim()).filter(c => c in DATA.languages);
+          if (codes.length) {
+            const ls = Object.assign({}, this.learningStatus || {});
+            codes.forEach(c => {
+              if (!ls[c]) ls[c] = { status: 'learning', cefr: 'A1', addedAt: Date.now() };
+            });
+            this.learningStatus = ls;
+            applied = true;
+          }
+        }
+
+        const targetParam = params.get('target');
+        if (targetParam && targetParam in DATA.languages) {
+          // Defer until after the recommendations array is built
+          this.$nextTick(() => { this.selectedCard = targetParam; });
+          applied = true;
+        }
+
+        if (applied && window.MNLProfile) {
+          window.MNLProfile.patch({
+            speakers: this.speakers,
+            proficiency: this.proficiency,
+            learningStatus: this.learningStatus,
+          });
+          // Clear the query string from the URL so a refresh keeps state but
+          // doesn't re-apply the deep-link (which would overwrite any user
+          // tweaks). The hash-based syncToUrl() takes over from here.
+          try {
+            const cleanUrl = window.location.pathname + window.location.hash;
+            window.history.replaceState({}, '', cleanUrl);
+          } catch (_) {}
+        }
+        return applied;
+      } catch (_) { return false; }
     },
 
     // ── URL state: encode speakers / proficiency / weights / open card ─────────
