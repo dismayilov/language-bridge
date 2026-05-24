@@ -339,6 +339,13 @@
       <p class="mt-2 text-stone-600 dark:text-stone-400 max-w-2xl" x-html="t('subtitle')"></p>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
+      <!-- Quiz link -->
+      <a href="/quiz/"
+         class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg border border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-200 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors"
+         title="Try the Language Quiz">
+        <span aria-hidden="true">&#127919;</span>
+        <span>Quiz</span>
+      </a>
       <!-- UI language selector -->
       <select
         x-model="currentLang"

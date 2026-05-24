@@ -8,7 +8,7 @@
 // IMPORTANT: bump this string whenever you ship JS/CSS/JSON changes so
 // returning visitors get a fresh cache. The activate handler deletes any
 // cache whose key !== CACHE_VERSION.
-const CACHE_VERSION = 'mnl-v7-embed-bridge-fix';
+const CACHE_VERSION = 'mnl-v9-quiz-rich';
 
 // Assets to pre-fetch during install so the map works immediately on next open
 const CDN_PRECACHE = [

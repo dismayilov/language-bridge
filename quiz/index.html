@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Language Quiz — 10 ways to test your language IQ | MyNextLanguage</title>
+  <meta name="description" content="Eight question types: identify languages from a sentence, spot the odd-one-out, match false friends, decode cognates, and more. Four difficulty modes from beginner to expert.">
+  <link rel="canonical" href="https://mynextlanguage.org/quiz/">
+  <meta name="robots" content="index, follow, max-snippet:-1">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="MyNextLanguage">
+  <meta property="og:url" content="https://mynextlanguage.org/quiz/">
+  <meta property="og:title" content="Language Quiz — Can you identify 10 languages?">
+  <meta property="og:description" content="Eight question types: identify the script, spot the odd-one-out, decode false friends, match cognates. Four difficulty modes.">
+  <meta property="og:image" content="https://mynextlanguage.org/icon_test_2.1.jpeg">
+  <meta property="og:locale" content="en_US">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Language Quiz — Can you identify 10 languages?">
+  <meta name="twitter:description" content="Eight question types from easy to expert-mode false friends and same-family confusables.">
+  <meta name="twitter:image" content="https://mynextlanguage.org/icon_test_2.1.jpeg">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Quiz",
+    "name": "Language Identification Quiz",
+    "description": "Multiple-format quiz covering language identification, family/script grouping, lexical similarity, FSI difficulty, cognate decoding, and false-friend traps. Four difficulty modes.",
+    "about": "World languages and linguistic identification",
+    "inLanguage": "en",
+    "isPartOf": {
+      "@type": "WebSite",
+      "name": "MyNextLanguage",
+      "url": "https://mynextlanguage.org"
+    },
+    "audience": {
+      "@type": "Audience",
+      "audienceType": "Language learners, polyglots, linguistics enthusiasts"
+    }
+  }
+  </script>
+
+  <script>
+    try {
+      var t = localStorage.getItem('theme');
+      if (t === 'light') document.documentElement.classList.remove('dark');
+      else document.documentElement.classList.add('dark');
+    } catch (e) {
+      document.documentElement.classList.add('dark');
+    }
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { darkMode: 'class' };</script>
+
+  <style>
+    [x-cloak] { display: none !important; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    .phrase-display {
+      font-size: clamp(1.5rem, 4vw, 2.25rem);
+      line-height: 1.4;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+    }
+    .native-name-display {
+      font-size: clamp(2rem, 5vw, 3rem);
+      line-height: 1.2;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+    }
+    .prompt-rich strong {
+      color: rgb(16 185 129);
+      font-weight: 600;
+    }
+    .prompt-rich em {
+      font-style: italic;
+      color: rgb(120 113 108);
+    }
+    .dark .prompt-rich em { color: rgb(168 162 158); }
+
+    .choice-btn {
+      transition: transform 0.06s ease, background-color 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .choice-btn:not(:disabled):hover { transform: translateY(-1px); }
+    .choice-btn:not(:disabled):active { transform: translateY(0); }
+    .choice-correct {
+      background-color: rgb(5 150 105 / 0.18) !important;
+      border-color: rgb(16 185 129) !important;
+      color: rgb(16 185 129) !important;
+    }
+    .choice-wrong {
+      background-color: rgb(220 38 38 / 0.18) !important;
+      border-color: rgb(248 113 113) !important;
+      color: rgb(248 113 113) !important;
+    }
+    .choice-faded { opacity: 0.35; }
+    .feedback-enter { animation: feedbackIn 0.28s ease-out; }
+    @keyframes feedbackIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .pulse-dot { animation: pulseDot 1.4s ease-in-out infinite; }
+    @keyframes pulseDot {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+    .difficulty-card { transition: all 0.15s ease; cursor: pointer; }
+    .difficulty-card:hover { transform: translateY(-2px); }
+    .difficulty-card.selected {
+      border-color: rgb(16 185 129) !important;
+      background-color: rgb(5 150 105 / 0.08);
+    }
+    .streak-flame { display: inline-block; animation: flicker 1.6s ease-in-out infinite; }
+    @keyframes flicker {
+      0%, 100% { transform: scale(1) rotate(-2deg); }
+      50% { transform: scale(1.08) rotate(2deg); }
+    }
+    .qtype-chip {
+      display: inline-block;
+      font-size: 0.7rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 9999px;
+      background: rgb(245 245 244);
+      color: rgb(120 113 108);
+    }
+    .dark .qtype-chip {
+      background: rgb(41 37 36);
+      color: rgb(168 162 158);
+    }
+  </style>
+</head>
+<body class="bg-stone-50 dark:bg-stone-950 text-stone-800 dark:text-stone-200 min-h-screen">
+
+<header class="border-b border-stone-200 dark:border-stone-800">
+  <div class="max-w-3xl mx-auto px-4 py-3 flex items-center justify-between">
+    <a href="/" class="flex items-center gap-2 text-sm font-medium text-stone-600 dark:text-stone-300 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+      <span aria-hidden="true">&larr;</span>
+      <span>MyNextLanguage</span>
+    </a>
+    <div class="text-xs text-stone-400 dark:text-stone-500">Language Quiz</div>
+  </div>
+</header>
+
+<main x-data="quizApp()" x-cloak class="max-w-3xl mx-auto px-4 py-8 md:py-12">
+
+  <div x-show="status === 'loading'" class="text-center py-20">
+    <div class="inline-flex gap-1 mb-4">
+      <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot" style="animation-delay:0s"></span>
+      <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot" style="animation-delay:0.2s"></span>
+      <span class="w-2 h-2 rounded-full bg-emerald-500 pulse-dot" style="animation-delay:0.4s"></span>
+    </div>
+    <p class="text-stone-500 dark:text-stone-400">Loading language data&hellip;</p>
+  </div>
+
+  <div x-show="status === 'error'" class="text-center py-20">
+    <div class="text-4xl mb-4" aria-hidden="true">&#9888;</div>
+    <h1 class="text-xl font-semibold mb-2">Could not load the quiz</h1>
+    <p class="text-sm text-stone-500 dark:text-stone-400 mb-6" x-text="errorMessage"></p>
+    <button @click="loadData()" class="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">Retry</button>
+  </div>
+
+  <!-- ──────────────── WELCOME / DIFFICULTY ──────────────── -->
+  <section x-show="status === 'welcome'" class="space-y-8">
+    <div class="text-center">
+      <h1 class="text-3xl md:text-5xl font-bold tracking-tight mb-3">Can you read the world?</h1>
+      <p class="text-stone-500 dark:text-stone-400 max-w-xl mx-auto leading-relaxed">
+        10 questions across 8 formats &mdash; identify languages from a sentence, spot the odd one out,
+        decode cognates, fall into false-friend traps. Pick a difficulty:
+      </p>
+    </div>
+
+    <div class="grid sm:grid-cols-2 gap-3">
+      <template x-for="d in difficulties" :key="d.id">
+        <button @click="difficulty = d.id"
+                :class="['difficulty-card', 'text-left', 'p-4', 'rounded-xl', 'border-2',
+                         difficulty === d.id
+                            ? 'selected border-emerald-500 dark:border-emerald-400'
+                            : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-300 dark:hover:border-stone-700']">
+          <div class="flex items-center justify-between mb-1">
+            <h2 class="font-semibold" x-text="d.label"></h2>
+            <span class="text-xs px-2 py-0.5 rounded-full" :class="d.tone" x-text="d.badge"></span>
+          </div>
+          <p class="text-sm text-stone-500 dark:text-stone-400 leading-snug mb-2" x-text="d.desc"></p>
+          <p class="text-[10px] uppercase tracking-wide text-stone-400 dark:text-stone-500" x-text="d.types"></p>
+        </button>
+      </template>
+    </div>
+
+    <div class="text-center">
+      <button @click="startGame()"
+              class="px-8 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base shadow-sm transition-colors">
+        Start quiz &rarr;
+      </button>
+      <p class="text-xs text-stone-400 dark:text-stone-500 mt-3">
+        No signup. Plays in your browser. Press 1&ndash;4 to pick an answer, Enter to advance.
+      </p>
+    </div>
+
+    <details class="text-sm text-stone-500 dark:text-stone-400 max-w-xl mx-auto">
+      <summary class="cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">What kinds of questions?</summary>
+      <ul class="mt-3 space-y-1.5 list-disc list-inside text-stone-600 dark:text-stone-400">
+        <li><strong>Identify</strong> &mdash; what language is this sentence?</li>
+        <li><strong>Romanized</strong> &mdash; same, but no native script (Hard/Expert).</li>
+        <li><strong>Native name</strong> &mdash; what language calls itself "Polski"?</li>
+        <li><strong>Odd one out (family)</strong> &mdash; which is NOT a Slavic language?</li>
+        <li><strong>Odd one out (script)</strong> &mdash; which uses a different writing system?</li>
+        <li><strong>Closest to</strong> &mdash; which language is most similar to Italian?</li>
+        <li><strong>Hardest from English</strong> &mdash; which is FSI Category IV?</li>
+        <li><strong>Cognate decoding</strong> &mdash; Spanish <em>noche</em> + Italian <em>notte</em> = ?</li>
+        <li><strong>False friend</strong> &mdash; <em>sklep</em> is "shop" in Polish but… in Czech?</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- ──────────────── PLAYING ──────────────── -->
+  <section x-show="status === 'playing'" class="space-y-6">
+
+    <div class="flex items-center justify-between text-sm">
+      <div class="text-stone-500 dark:text-stone-400">
+        Question <span class="font-semibold text-stone-700 dark:text-stone-200" x-text="qIndex + 1"></span>
+        of <span x-text="questions.length"></span>
+      </div>
+      <div class="flex items-center gap-4">
+        <div x-show="streak > 1" class="text-amber-600 dark:text-amber-400 font-medium text-sm">
+          <span class="streak-flame">&#128293;</span>
+          <span x-text="streak"></span>-streak
+        </div>
+        <div class="text-stone-500 dark:text-stone-400">
+          Score: <span class="font-semibold text-stone-700 dark:text-stone-200" x-text="score"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="h-1.5 rounded-full bg-stone-200 dark:bg-stone-800 overflow-hidden">
+      <div class="h-full bg-emerald-500 transition-all duration-300 ease-out"
+           :style="'width: ' + (((qIndex + (feedback ? 1 : 0)) / questions.length) * 100) + '%'"></div>
+    </div>
+
+    <template x-if="currentQ">
+      <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-6 md:p-8 shadow-sm">
+
+        <div class="flex items-center gap-2 mb-3">
+          <span class="qtype-chip" x-text="currentQ.typeLabel"></span>
+        </div>
+
+        <!-- Prompt (may contain HTML for bold words) -->
+        <div class="text-base md:text-lg text-stone-700 dark:text-stone-200 mb-4 prompt-rich leading-snug"
+             x-html="currentQ.prompt"></div>
+
+        <!-- Big text display (phrase or native name) -->
+        <template x-if="currentQ.display.text">
+          <div :class="currentQ.display.style === 'native' ? 'native-name-display' : 'phrase-display'"
+               class="text-stone-800 dark:text-stone-100 mb-2"
+               x-text="currentQ.display.text"></div>
+        </template>
+
+        <!-- Subtitle (romanization, source language label, etc.) -->
+        <template x-if="currentQ.display.subtitle">
+          <div class="text-sm italic text-stone-500 dark:text-stone-400 mb-4"
+               x-text="currentQ.display.subtitle"></div>
+        </template>
+
+        <!-- Listen button (only when there's a known speak code AND there's spoken text) -->
+        <template x-if="currentQ.display.speakCode && currentQ.display.text">
+          <div class="flex items-center gap-2 mb-6">
+            <button @click="speakPhrase()"
+                    class="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+              <span aria-hidden="true">&#128264;</span>
+              <span>Listen</span>
+            </button>
+          </div>
+        </template>
+
+        <!-- Choices -->
+        <div class="grid sm:grid-cols-2 gap-3" :class="!currentQ.display.text ? 'mt-2' : ''">
+          <template x-for="(choice, i) in currentQ.choices" :key="i">
+            <button @click="answer(choice)"
+                    :disabled="feedback !== null"
+                    :class="[
+                      'choice-btn text-left p-3.5 rounded-xl border-2 font-medium',
+                      feedback && choice.key === currentQ.correctKey ? 'choice-correct' : '',
+                      feedback && choice.key === feedback.picked && choice.key !== currentQ.correctKey ? 'choice-wrong' : '',
+                      feedback && choice.key !== currentQ.correctKey && choice.key !== feedback.picked ? 'choice-faded' : '',
+                      !feedback ? 'border-stone-300 dark:border-stone-700 bg-white dark:bg-stone-900 hover:border-emerald-500 dark:hover:border-emerald-400' : ''
+                    ]">
+              <span class="text-stone-400 dark:text-stone-500 text-xs mr-1.5" x-text="(i + 1) + '.'"></span>
+              <span x-text="choice.label"></span>
+            </button>
+          </template>
+        </div>
+
+        <template x-if="feedback">
+          <div class="mt-5 p-4 rounded-xl feedback-enter"
+               :class="feedback.correct
+                    ? 'bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800'
+                    : 'bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800'">
+            <div class="flex items-start justify-between gap-3">
+              <div class="flex-1">
+                <div class="font-semibold mb-1"
+                     :class="feedback.correct ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-700 dark:text-rose-400'">
+                  <template x-if="feedback.correct">
+                    <span>Correct! <span aria-hidden="true">&#10003;</span></span>
+                  </template>
+                  <template x-if="!feedback.correct">
+                    <span>It was <span x-text="feedback.correctLabel"></span></span>
+                  </template>
+                </div>
+                <div x-show="feedback.fact" class="text-sm text-stone-600 dark:text-stone-300" x-html="feedback.fact"></div>
+              </div>
+              <button @click="next()"
+                      class="shrink-0 px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium">
+                <span x-text="qIndex + 1 === questions.length ? 'See result' : 'Next →'"></span>
+              </button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </template>
+  </section>
+
+  <!-- ──────────────── RESULT ──────────────── -->
+  <section x-show="status === 'result'" class="space-y-6 text-center">
+    <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-8 md:p-12 shadow-sm">
+      <div class="text-stone-400 dark:text-stone-500 text-xs uppercase tracking-wide mb-2">Your score</div>
+      <div class="text-6xl md:text-7xl font-bold tracking-tight mb-2" :class="scoreColor()">
+        <span x-text="score"></span><span class="text-stone-400 dark:text-stone-500 text-3xl md:text-4xl">/<span x-text="questions.length"></span></span>
+      </div>
+      <p class="text-lg font-medium mb-1" x-text="scoreVerdict()"></p>
+      <p class="text-sm text-stone-500 dark:text-stone-400" x-text="scoreSubtitle()"></p>
+
+      <div class="mt-6 flex items-center justify-center gap-6 text-sm">
+        <div>
+          <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500">Difficulty</div>
+          <div class="font-medium" x-text="difficultyLabel()"></div>
+        </div>
+        <div>
+          <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500">Max streak</div>
+          <div class="font-medium">
+            <span x-text="maxStreak"></span>
+            <span x-show="maxStreak >= 3" class="text-amber-500" aria-hidden="true">&#128293;</span>
+          </div>
+        </div>
+      </div>
+
+      <details class="mt-6 text-left">
+        <summary class="text-sm text-stone-500 dark:text-stone-400 cursor-pointer hover:text-emerald-600 dark:hover:text-emerald-400">
+          Show me the answers
+        </summary>
+        <div class="mt-3 space-y-2 max-h-72 overflow-auto">
+          <template x-for="(q, i) in questions" :key="i">
+            <div class="flex items-start gap-3 p-2 rounded-lg"
+                 :class="q.userPicked === q.correctKey ? 'bg-emerald-50 dark:bg-emerald-900/10' : 'bg-rose-50 dark:bg-rose-900/10'">
+              <span class="text-xs w-5 text-center font-semibold mt-0.5"
+                    :class="q.userPicked === q.correctKey ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'"
+                    x-text="q.userPicked === q.correctKey ? '✓' : '✗'"></span>
+              <div class="flex-1">
+                <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-0.5" x-text="q.typeLabel"></div>
+                <div class="text-sm text-stone-700 dark:text-stone-200" x-html="q.reviewPrompt || q.prompt"></div>
+                <div class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">
+                  <span>Answer: <span class="font-medium text-stone-700 dark:text-stone-200" x-text="q.correctLabel"></span></span>
+                  <template x-if="q.userPicked && q.userPicked !== q.correctKey">
+                    <span> &middot; You picked: <span class="text-rose-600 dark:text-rose-400" x-text="labelFor(q, q.userPicked)"></span></span>
+                  </template>
+                </div>
+              </div>
+            </div>
+          </template>
+        </div>
+      </details>
+    </div>
+
+    <div class="bg-white dark:bg-stone-900 rounded-2xl border border-stone-200 dark:border-stone-800 p-5">
+      <div class="text-xs uppercase tracking-wide text-stone-400 dark:text-stone-500 mb-3">Challenge a friend</div>
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <button @click="shareTwitter()" class="px-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Share on X</button>
+        <button @click="shareWhatsApp()" class="px-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">WhatsApp</button>
+        <button @click="shareReddit()" class="px-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">Reddit</button>
+        <button @click="copyLink()" class="px-3 py-2 text-sm rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors">
+          <span x-text="copied ? 'Copied ✓' : 'Copy link'"></span>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap items-center justify-center gap-3 pt-2">
+      <button @click="restart()" class="px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">Play again</button>
+      <button @click="restart(nextHarder())" x-show="nextHarder() !== null"
+              class="px-5 py-2.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
+        Try <span x-text="difficultyLabelFor(nextHarder())"></span> &rarr;
+      </button>
+      <a href="/" class="px-5 py-2.5 rounded-lg border border-stone-300 dark:border-stone-700 hover:border-emerald-500 hover:text-emerald-600 dark:hover:text-emerald-400 font-medium">
+        Find your next language &rarr;
+      </a>
+    </div>
+  </section>
+
+  <footer class="mt-12 pt-6 border-t border-stone-200 dark:border-stone-800 text-xs text-stone-400 dark:text-stone-500 text-center">
+    Built on the <a href="/" class="underline hover:text-emerald-500">MyNextLanguage</a> dataset
+    &mdash; 97 languages, hand-curated phrases &amp; cognates.
+  </footer>
+</main>
+
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+
+<script>
+// ──────────────────────────────────────────────────────────────────────────
+// Curated false-friends bank. Pairs use ISO-639-1 codes that match the
+// dataset. `meaning` is the answer; `wrong` are distractors of similar
+// register. Kept inline so this page stays single-file.
+// ──────────────────────────────────────────────────────────────────────────
+const FALSE_FRIENDS = [
+  // ── Slavic ─────────────────────────────────────────────────────
+  { word: 'sklep',    langA: 'pl', meaningA: 'shop',           langB: 'cs', meaningB: 'cellar',         wrong: ['attic', 'kitchen'] },
+  { word: 'pozor',    langA: 'cs', meaningA: 'attention!',     langB: 'ru', meaningB: 'shame/disgrace', wrong: ['gaze', 'warning'] },
+  { word: 'uroda',    langA: 'pl', meaningA: 'beauty',         langB: 'ru', meaningB: 'ugly person',    wrong: ['princess', 'gift'] },
+  { word: 'lustro',   langA: 'pl', meaningA: 'mirror',         langB: 'ru', meaningB: 'chandelier',     wrong: ['glass', 'window'] },
+  { word: 'miasto',   langA: 'pl', meaningA: 'city',           langB: 'ru', meaningB: 'place',          wrong: ['town', 'house'] },
+  { word: 'zapomnieć',langA: 'pl', meaningA: 'to forget',      langB: 'ru', meaningB: 'to remember',    wrong: ['to know', 'to lose'] },
+  { word: 'čerstvý',  langA: 'cs', meaningA: 'fresh',          langB: 'pl', meaningB: 'stale',          wrong: ['frozen', 'crusty'] },
+  { word: 'krásný',   langA: 'cs', meaningA: 'beautiful',      langB: 'ru', meaningB: 'red',            wrong: ['noble', 'shining'] },
+  { word: 'час',      langA: 'ru', meaningA: 'hour',           langB: 'uk', meaningB: 'time',           wrong: ['second', 'clock'] },
+
+  // ── Germanic ───────────────────────────────────────────────────
+  { word: 'Gift',     langA: 'en', meaningA: 'present',        langB: 'de', meaningB: 'poison',         wrong: ['talent', 'package'] },
+  { word: 'bekommen', langA: 'de', meaningA: 'to receive',     langB: 'en', meaningB: 'to become',      wrong: ['to give', 'to find'] },
+  { word: 'fast',     langA: 'en', meaningA: 'quick',          langB: 'de', meaningB: 'almost',         wrong: ['rigid', 'fixed'] },
+  { word: 'bald',     langA: 'en', meaningA: 'hairless',       langB: 'de', meaningB: 'soon',           wrong: ['brave', 'shiny'] },
+  { word: 'sensibel', langA: 'de', meaningA: 'sensitive',      langB: 'en', meaningB: 'reasonable (sensible)', wrong: ['noticeable', 'visible'] },
+  { word: 'rolig',    langA: 'sv', meaningA: 'funny',          langB: 'da', meaningB: 'calm',           wrong: ['silly', 'wild'] },
+  { word: 'slim',     langA: 'nl', meaningA: 'clever',         langB: 'en', meaningB: 'thin',           wrong: ['slick', 'wet'] },
+  { word: 'eventueel',langA: 'nl', meaningA: 'possibly',       langB: 'en', meaningB: 'eventually (in the end)', wrong: ['immediately', 'never'] },
+  { word: 'Rat',      langA: 'de', meaningA: 'advice/council', langB: 'en', meaningB: 'rodent (rat)',   wrong: ['rate', 'guess'] },
+
+  // ── Romance ────────────────────────────────────────────────────
+  { word: 'embarazada', langA: 'es', meaningA: 'pregnant',     langB: 'en', meaningB: 'embarrassed',    wrong: ['embargoed', 'tongue-tied'] },
+  { word: 'éxito',    langA: 'es', meaningA: 'success',        langB: 'en', meaningB: 'exit',           wrong: ['exam', 'effort'] },
+  { word: 'ropa',     langA: 'es', meaningA: 'clothes',        langB: 'en', meaningB: 'rope',           wrong: ['robe', 'soap'] },
+  { word: 'carpeta',  langA: 'es', meaningA: 'folder',         langB: 'en', meaningB: 'carpet',         wrong: ['carriage', 'carpenter'] },
+  { word: 'fábrica',  langA: 'es', meaningA: 'factory',        langB: 'en', meaningB: 'fabric',         wrong: ['fable', 'farm'] },
+  { word: 'caldo',    langA: 'es', meaningA: 'broth',          langB: 'it', meaningB: 'hot',            wrong: ['cold', 'thick'] },
+  { word: 'burro',    langA: 'es', meaningA: 'donkey',         langB: 'it', meaningB: 'butter',         wrong: ['bull', 'horse'] },
+  { word: 'magazzino',langA: 'it', meaningA: 'warehouse',      langB: 'en', meaningB: 'magazine',       wrong: ['magnet', 'majesty'] },
+  { word: 'librairie',langA: 'fr', meaningA: 'bookshop',       langB: 'en', meaningB: 'library',        wrong: ['liberty', 'liner'] },
+  { word: 'actuellement', langA: 'fr', meaningA: 'currently',  langB: 'en', meaningB: 'actually (in fact)', wrong: ['actively', 'occasionally'] },
+  { word: 'sensible', langA: 'fr', meaningA: 'sensitive',      langB: 'en', meaningB: 'reasonable',     wrong: ['noticeable', 'invisible'] },
+  { word: 'raisin',   langA: 'fr', meaningA: 'grape',          langB: 'en', meaningB: 'dried grape (raisin)', wrong: ['rice', 'rye'] },
+
+  // ── Other ──────────────────────────────────────────────────────
+  { word: 'angel',    langA: 'tr', meaningA: 'obstacle (engel)', langB: 'en', meaningB: 'heavenly being', wrong: ['angle', 'agent'] },
+];
+
+// Built-in pool of generic distractor meanings, used as fallback for
+// cognate-meaning questions when curated alternatives run dry.
+const GENERIC_MEANINGS = ['day','night','sun','moon','tree','child','book','water','house','road','star','river','mountain','bread','wine','horse','fire'];
+
+// ──────────────────────────────────────────────────────────────────────────
+// Quiz logic
+// ──────────────────────────────────────────────────────────────────────────
+function quizApp() {
+  return {
+    status: 'loading',
+    errorMessage: '',
+
+    LANG_PHRASES: {},
+    PARALLEL_SENTENCES: {},
+    LSG_COGNATES: {},
+    LANG_META: {},
+    LANG_NATIVE: {},
+    LANG_FLAG: {},
+    FSI_TIER: {},
+
+    difficulties: [
+      { id: 'easy',   label: 'Easy',   badge: 'Beginner',
+        tone: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-400',
+        desc: 'Top 30 most-spoken languages. Identify, family-grouping, FSI difficulty.',
+        types: 'Identify · Native name · Odd-out · FSI' },
+      { id: 'medium', label: 'Medium', badge: 'Tricky',
+        tone: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-400',
+        desc: 'Top 60 languages. Adds cognate decoding and "closest to" matching.',
+        types: '+ Cognates · Closest-to · Long sentences' },
+      { id: 'hard',   label: 'Hard',   badge: 'Tough',
+        tone: 'bg-orange-100 text-orange-700 dark:bg-orange-900/40 dark:text-orange-400',
+        desc: 'All 97 languages, with romanized-only prompts and false friends.',
+        types: '+ Romanized · False friends · Same-script distractors' },
+      { id: 'expert', label: 'Expert', badge: 'Brutal',
+        tone: 'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-400',
+        desc: 'Same-family distractors throughout. Czech vs Slovak vs Polish, every round.',
+        types: 'Same-branch · Romanized · False friends · Cognates' },
+    ],
+    difficulty: 'easy',
+
+    questions: [],
+    qIndex: 0,
+    score: 0,
+    streak: 0,
+    maxStreak: 0,
+    feedback: null,
+    copied: false,
+
+    init() {
+      this.loadData();
+      window.addEventListener('keydown', (e) => {
+        if (this.status !== 'playing') return;
+        if (this.feedback === null) {
+          var n = parseInt(e.key, 10);
+          if (n >= 1 && n <= 4 && this.currentQ) {
+            var c = this.currentQ.choices[n - 1];
+            if (c) this.answer(c);
+          }
+        } else if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          this.next();
+        }
+      });
+    },
+
+    async loadData() {
+      this.status = 'loading';
+      try {
+        const res = await fetch('/data/languages-matrix.json', { cache: 'force-cache' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const d = await res.json();
+        this.LANG_PHRASES       = d.lang_phrases       || {};
+        this.PARALLEL_SENTENCES = d.parallel_sentences || {};
+        this.LSG_COGNATES       = d.lsg_cognates       || {};
+        this.LANG_NATIVE        = d.lang_native        || {};
+        this.LANG_FLAG          = d.lang_flag          || {};
+        this.FSI_TIER           = d.fsi_tier           || {};
+
+        const meta = {};
+        const langs = (d.data && d.data.languages) || {};
+        for (const code of Object.keys(langs)) {
+          meta[code] = {
+            name: langs[code].name || code,
+            family: langs[code].family || '',
+            branch: langs[code].branch || '',
+            subbranch: langs[code].subbranch || '',
+            writing_system: langs[code].writing_system || '',
+            speakers_m: langs[code].speakers_m || null,
+          };
+        }
+        this.LANG_META = meta;
+        this.status = 'welcome';
+      } catch (err) {
+        this.errorMessage = err.message + ' — try refreshing or check that /data/languages-matrix.json is reachable.';
+        this.status = 'error';
+      }
+    },
+
+    // ── Pool selection ─────────────────────────────────────
+    poolForDifficulty(d) {
+      const all = Object.keys(this.LANG_PHRASES).filter(c => this.LANG_META[c]);
+      if (d === 'hard' || d === 'expert') return all;
+      const sorted = [...all].sort((a, b) =>
+        (this.LANG_META[b].speakers_m || 0) - (this.LANG_META[a].speakers_m || 0));
+      if (d === 'easy')   return sorted.slice(0, 30);
+      if (d === 'medium') return sorted.slice(0, 60);
+      return all;
+    },
+
+    // ── Game lifecycle ─────────────────────────────────────
+    startGame() {
+      const pool = this.poolForDifficulty(this.difficulty);
+      const plan = this._planQuestionTypes(this.difficulty);
+      const questions = [];
+      let safety = 0;
+      while (questions.length < 10 && safety++ < 80) {
+        const type = plan[questions.length % plan.length] || 'identify';
+        let q = null;
+        try { q = this._generators[type].call(this, pool, this.difficulty); } catch (e) { q = null; }
+        if (!q) q = this._generators.identify.call(this, pool, this.difficulty);
+        if (!q) continue;
+        q.userPicked = null;
+        questions.push(q);
+      }
+      this.questions = questions;
+      this.qIndex = 0;
+      this.score = 0;
+      this.streak = 0;
+      this.maxStreak = 0;
+      this.feedback = null;
+      this.status = 'playing';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    },
+
+    _planQuestionTypes(diff) {
+      // Weighted distribution per difficulty. We shuffle the resulting array
+      // and slice 10, so each game has a varied (but seeded-by-weight) mix.
+      const weights = {
+        easy: {
+          identify: 4, native_name: 2, odd_family: 2, odd_script: 1, fsi_hardest: 1,
+        },
+        medium: {
+          identify: 3, identify_long: 1, native_name: 1, odd_family: 1, odd_script: 1,
+          closest_to: 1, fsi_hardest: 1, cognate: 1,
+        },
+        hard: {
+          identify: 2, identify_rom: 2, identify_long: 1, native_name: 1,
+          odd_family: 1, closest_to: 1, cognate: 1, false_friend: 1,
+        },
+        expert: {
+          identify: 1, identify_rom: 2, identify_long: 1,
+          odd_family: 1, closest_to: 2, cognate: 1, false_friend: 2,
+        },
+      };
+      const w = weights[diff] || weights.easy;
+      const bag = [];
+      for (const k of Object.keys(w)) {
+        for (let i = 0; i < w[k]; i++) bag.push(k);
+      }
+      return this._shuffle(bag);
+    },
+
+    // ── Random helpers ─────────────────────────────────────
+    _shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    },
+    _sample(arr, n) { return this._shuffle(arr).slice(0, n); },
+    _pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; },
+
+    // ── Distractor builders ────────────────────────────────
+    _langChoices(correct, pool, diff, n) {
+      n = n || 3;
+      const m = this.LANG_META[correct] || {};
+      let candidates = pool.filter(c => c !== correct);
+
+      if (diff === 'expert') {
+        // Same subbranch > same branch > same family
+        const sameSub = candidates.filter(c => m.subbranch && this.LANG_META[c].subbranch === m.subbranch);
+        const sameBranch = candidates.filter(c => m.branch && this.LANG_META[c].branch === m.branch && !sameSub.includes(c));
+        const sameFam = candidates.filter(c => m.family && this.LANG_META[c].family === m.family && !sameSub.includes(c) && !sameBranch.includes(c));
+        let pool2 = [...sameSub, ...sameBranch, ...sameFam];
+        if (pool2.length < n) pool2 = [...pool2, ...candidates.filter(c => !pool2.includes(c))];
+        return this._sample(pool2, n);
+      }
+
+      if (diff === 'hard') {
+        // Same script > anything
+        const ws = (m.writing_system || '').split('/')[0];
+        const sameScript = candidates.filter(c => ((this.LANG_META[c].writing_system || '').split('/')[0]) === ws);
+        let pool2 = [...sameScript];
+        if (pool2.length < n) pool2 = [...pool2, ...candidates.filter(c => !pool2.includes(c))];
+        return this._sample(pool2, n);
+      }
+
+      // Easy/Medium: random
+      return this._sample(candidates, n);
+    },
+
+    _funFact(code) {
+      const m = this.LANG_META[code];
+      if (!m) return '';
+      const bits = [];
+      const flag = this.LANG_FLAG[code] || '';
+      const native = this.LANG_NATIVE[code] || '';
+      if (flag || native) bits.push((flag ? flag + ' ' : '') + '<strong>' + m.name + '</strong>' + (native ? ' (' + native + ')' : ''));
+      const lineage = [];
+      if (m.family) lineage.push(m.family);
+      if (m.branch && m.branch !== m.family) lineage.push(m.branch);
+      if (lineage.length) bits.push(lineage.join(' › '));
+      if (m.speakers_m) {
+        const s = m.speakers_m >= 100 ? Math.round(m.speakers_m) : m.speakers_m.toFixed(0);
+        bits.push('~' + s + 'M native speakers');
+      }
+      return bits.join(' &middot; ');
+    },
+
+    // ── Question generators ────────────────────────────────
+    _generators: {
+      // Plain identify: phrase shown in native script
+      identify(pool, diff) {
+        const code = this._pick(pool);
+        const phrases = this.LANG_PHRASES[code];
+        if (!phrases || !phrases.p || !phrases.p.length) return null;
+        const pi = Math.floor(Math.random() * phrases.p.length);
+        const phrase = phrases.p[pi];
+        const rom = (phrases.r && phrases.r[pi]) || '';
+        const distractors = this._langChoices(code, pool, diff, 3);
+        const choices = this._shuffle([code, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name,
+        }));
+        return {
+          type: 'identify',
+          typeLabel: 'Identify',
+          prompt: 'What language is this?',
+          reviewPrompt: '"' + phrase + '"',
+          display: { text: phrase, subtitle: rom, speakCode: code, style: 'phrase' },
+          choices,
+          correctKey: code,
+          correctLabel: this.LANG_META[code].name,
+          fact: this._funFact(code),
+        };
+      },
+
+      // Identify but show ONLY romanization — no script clues
+      identify_rom(pool, diff) {
+        // Need a language that has romanization (non-Latin script)
+        const candidates = pool.filter(c => this.LANG_PHRASES[c] && this.LANG_PHRASES[c].r);
+        if (!candidates.length) return null;
+        const code = this._pick(candidates);
+        const phrases = this.LANG_PHRASES[code];
+        const pi = Math.floor(Math.random() * phrases.r.length);
+        const rom = phrases.r[pi];
+        if (!rom) return null;
+        const distractors = this._langChoices(code, pool, diff, 3);
+        const choices = this._shuffle([code, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name,
+        }));
+        return {
+          type: 'identify_rom',
+          typeLabel: 'Romanized only',
+          prompt: 'No script clues this time. What language is this?',
+          reviewPrompt: '<em>' + rom + '</em>',
+          display: { text: rom, subtitle: '', speakCode: code, style: 'phrase' },
+          choices,
+          correctKey: code,
+          correctLabel: this.LANG_META[code].name,
+          fact: this._funFact(code) + '<br><span class="text-xs italic">Native: ' + (this.LANG_PHRASES[code].p[pi] || '—') + '</span>',
+        };
+      },
+
+      // Use a longer PARALLEL_SENTENCES entry — richer context, harder to fake
+      identify_long(pool, diff) {
+        const keys = Object.keys(this.PARALLEL_SENTENCES);
+        // For each PS key, the "t" side is the target language for that pair.
+        // We want a pool of (code, sentence) where code is in pool.
+        const candidates = [];
+        for (const k of keys) {
+          const parts = k.split('|');
+          const sents = this.PARALLEL_SENTENCES[k];
+          if (!sents || !sents.length) continue;
+          if (pool.includes(parts[1])) candidates.push({ code: parts[1], sents, side: 't' });
+          if (pool.includes(parts[0])) candidates.push({ code: parts[0], sents, side: 'b' });
+        }
+        if (!candidates.length) return null;
+        const pick = this._pick(candidates);
+        const sent = this._pick(pick.sents);
+        const phrase = pick.side === 'b' ? sent.b : sent.t;
+        if (!phrase) return null;
+        const distractors = this._langChoices(pick.code, pool, diff, 3);
+        const choices = this._shuffle([pick.code, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name,
+        }));
+        return {
+          type: 'identify_long',
+          typeLabel: 'Long sentence',
+          prompt: 'A full sentence this time. Which language?',
+          reviewPrompt: '"' + phrase + '"',
+          display: { text: phrase, subtitle: '', speakCode: pick.code, style: 'phrase' },
+          choices,
+          correctKey: pick.code,
+          correctLabel: this.LANG_META[pick.code].name,
+          fact: this._funFact(pick.code),
+        };
+      },
+
+      // Native autonym → identify
+      native_name(pool, diff) {
+        const candidates = pool.filter(c => this.LANG_NATIVE[c] && this.LANG_NATIVE[c] !== this.LANG_META[c].name);
+        if (!candidates.length) return null;
+        const code = this._pick(candidates);
+        const distractors = this._langChoices(code, pool, diff, 3);
+        const choices = this._shuffle([code, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name,
+        }));
+        return {
+          type: 'native_name',
+          typeLabel: 'Native name',
+          prompt: 'A language calls itself this. Which one?',
+          reviewPrompt: '<em>' + this.LANG_NATIVE[code] + '</em>',
+          display: { text: this.LANG_NATIVE[code], subtitle: '', speakCode: code, style: 'native' },
+          choices,
+          correctKey: code,
+          correctLabel: this.LANG_META[code].name,
+          fact: this._funFact(code),
+        };
+      },
+
+      // Odd one out (family)
+      odd_family(pool, diff) {
+        const byFam = {};
+        for (const c of pool) {
+          const f = this.LANG_META[c].family;
+          if (!f) continue;
+          (byFam[f] = byFam[f] || []).push(c);
+        }
+        const eligible = Object.entries(byFam).filter(([f, cs]) => cs.length >= 3);
+        if (!eligible.length) return null;
+        const [family, members] = this._pick(eligible);
+        const inFam = this._sample(members, 3);
+        const others = pool.filter(c => this.LANG_META[c].family !== family);
+        if (!others.length) return null;
+        const odd = this._pick(others);
+        const choices = this._shuffle([odd, ...inFam]).map(c => ({
+          key: c, label: this.LANG_META[c].name + (this.LANG_FLAG[c] ? ' ' + this.LANG_FLAG[c] : ''),
+        }));
+        return {
+          type: 'odd_family',
+          typeLabel: 'Odd one out (family)',
+          prompt: 'Which of these is <strong>NOT</strong> a ' + family + ' language?',
+          reviewPrompt: 'NOT in ' + family,
+          display: { text: '', subtitle: '' },
+          choices,
+          correctKey: odd,
+          correctLabel: this.LANG_META[odd].name,
+          fact: '<strong>' + this.LANG_META[odd].name + '</strong> belongs to <strong>' +
+                (this.LANG_META[odd].family || 'a different family') + '</strong>' +
+                (this.LANG_META[odd].branch ? ' (' + this.LANG_META[odd].branch + ')' : '') + '.',
+        };
+      },
+
+      // Odd one out (script)
+      odd_script(pool, diff) {
+        const byWS = {};
+        for (const c of pool) {
+          const w = (this.LANG_META[c].writing_system || '').split('/')[0];
+          if (!w) continue;
+          (byWS[w] = byWS[w] || []).push(c);
+        }
+        const eligible = Object.entries(byWS).filter(([w, cs]) => cs.length >= 3 && w !== '');
+        if (!eligible.length) return null;
+        const [ws, members] = this._pick(eligible);
+        const inWS = this._sample(members, 3);
+        const others = pool.filter(c => {
+          const w = (this.LANG_META[c].writing_system || '').split('/')[0];
+          return w && w !== ws;
+        });
+        if (!others.length) return null;
+        const odd = this._pick(others);
+        const choices = this._shuffle([odd, ...inWS]).map(c => ({
+          key: c, label: this.LANG_META[c].name,
+        }));
+        const oddWS = (this.LANG_META[odd].writing_system || '').split('/')[0];
+        return {
+          type: 'odd_script',
+          typeLabel: 'Odd one out (script)',
+          prompt: 'Three of these use the <strong>' + ws + '</strong> script. Which one doesn\'t?',
+          reviewPrompt: 'NOT ' + ws + ' script',
+          display: { text: '', subtitle: '' },
+          choices,
+          correctKey: odd,
+          correctLabel: this.LANG_META[odd].name,
+          fact: '<strong>' + this.LANG_META[odd].name + '</strong> uses <strong>' + oddWS + '</strong>.',
+        };
+      },
+
+      // Closest-to question — pick a "famous" language, ask for closest in pool
+      closest_to(pool, diff) {
+        const popular = ['en','es','fr','de','it','ru','pl','tr','pt','zh','ja','ar','nl','sv','ko','vi','id','el','he'];
+        const x = this._pick(popular.filter(c => pool.includes(c)));
+        if (!x) return null;
+        const mx = this.LANG_META[x];
+        const ranked = pool.filter(c => c !== x).map(c => {
+          const m = this.LANG_META[c];
+          let s = 0;
+          if (mx.subbranch && m.subbranch === mx.subbranch) s = 4;
+          else if (mx.branch && m.branch === mx.branch) s = 3;
+          else if (mx.family && m.family === mx.family) s = 1;
+          // Same script bonus
+          const wx = (mx.writing_system || '').split('/')[0];
+          const wc = (m.writing_system || '').split('/')[0];
+          if (wx && wx === wc) s += 0.3;
+          return { c, s };
+        }).sort((a, b) => b.s - a.s);
+        if (!ranked.length) return null;
+        const closest = ranked[0].c;
+        // Distractors: pick from the LOWER tier (further away) — different family/branch
+        const far = ranked.filter(r => r.s < 2);
+        const distractors = this._sample(far.length >= 3 ? far : ranked.slice(Math.ceil(ranked.length / 2)), 3).map(r => r.c);
+        if (distractors.length < 3) return null;
+        const choices = this._shuffle([closest, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name + (this.LANG_FLAG[c] ? ' ' + this.LANG_FLAG[c] : ''),
+        }));
+        return {
+          type: 'closest_to',
+          typeLabel: 'Closest relative',
+          prompt: 'Of these four, which language is most closely related to <strong>' + mx.name + '</strong>?',
+          reviewPrompt: 'Closest to ' + mx.name,
+          display: { text: '', subtitle: '' },
+          choices,
+          correctKey: closest,
+          correctLabel: this.LANG_META[closest].name,
+          fact: '<strong>' + this.LANG_META[closest].name + '</strong> shares ' +
+                (this.LANG_META[closest].subbranch === mx.subbranch ? 'the same subbranch' :
+                 this.LANG_META[closest].branch === mx.branch ? 'the same branch (' + mx.branch + ')' :
+                 'the same family (' + mx.family + ')') + ' with ' + mx.name + '.',
+        };
+      },
+
+      // FSI Hardest from English
+      fsi_hardest(pool, diff) {
+        const byTier = { 1: [], 2: [], 3: [], 4: [] };
+        for (const c of pool) {
+          const t = this.FSI_TIER[c];
+          if (t && c !== 'en') byTier[t].push(c);
+        }
+        const hardestTierAvail = byTier[4].length ? 4 : (byTier[3].length ? 3 : null);
+        if (!hardestTierAvail) return null;
+        const hardest = this._pick(byTier[hardestTierAvail]);
+        const easierPool = [];
+        for (let t = 1; t < hardestTierAvail; t++) easierPool.push(...byTier[t]);
+        if (easierPool.length < 3) return null;
+        const distractors = this._sample(easierPool, 3);
+        const choices = this._shuffle([hardest, ...distractors]).map(c => ({
+          key: c, label: this.LANG_META[c].name + (this.LANG_FLAG[c] ? ' ' + this.LANG_FLAG[c] : ''),
+        }));
+        const hrs = { 1: '~600', 2: '~900', 3: '~1,100', 4: '~2,200' }[hardestTierAvail];
+        return {
+          type: 'fsi_hardest',
+          typeLabel: 'FSI difficulty',
+          prompt: 'For a native English speaker, which of these takes the <strong>longest</strong> to learn?',
+          reviewPrompt: 'Hardest from English',
+          display: { text: '', subtitle: 'According to the US Foreign Service Institute' },
+          choices,
+          correctKey: hardest,
+          correctLabel: this.LANG_META[hardest].name,
+          fact: '<strong>' + this.LANG_META[hardest].name + '</strong> is FSI Category ' +
+                ['', 'I', 'II', 'III', 'IV'][hardestTierAvail] +
+                ' &mdash; ' + hrs + ' classroom hours to professional proficiency.',
+        };
+      },
+
+      // Cognate decoding: two cognates → what do they both mean?
+      cognate(pool, diff) {
+        const usable = Object.keys(this.LSG_COGNATES).filter(k => {
+          const [a, b] = k.split('|');
+          return pool.includes(a) && pool.includes(b);
+        });
+        if (!usable.length) return null;
+        const pairKey = this._pick(usable);
+        const [a, b] = pairKey.split('|');
+        const list = this.LSG_COGNATES[pairKey];
+        if (!list || !list.length) return null;
+        const c = this._pick(list);
+        const otherGlosses = list.filter(x => x.gloss !== c.gloss).map(x => x.gloss);
+        let pool2 = otherGlosses;
+        if (pool2.length < 3) {
+          pool2 = pool2.concat(GENERIC_MEANINGS.filter(g => g !== c.gloss && !otherGlosses.includes(g)));
+        }
+        const distractors = this._sample(pool2, 3);
+        const choices = this._shuffle([c.gloss, ...distractors]).map(g => ({
+          key: g, label: g,
+        }));
+        return {
+          type: 'cognate',
+          typeLabel: 'Decode the cognate',
+          prompt: 'In <strong>' + this.LANG_META[a].name + '</strong>: <em>' + c.a +
+                  '</em>. In <strong>' + this.LANG_META[b].name + '</strong>: <em>' + c.b +
+                  '</em>. They both mean&hellip;',
+          reviewPrompt: this.LANG_META[a].name + ' "' + c.a + '" / ' + this.LANG_META[b].name + ' "' + c.b + '"',
+          display: { text: '', subtitle: '' },
+          choices,
+          correctKey: c.gloss,
+          correctLabel: c.gloss,
+          fact: 'Both inherited from a common ancestor in the <strong>' +
+                (this.LANG_META[a].branch === this.LANG_META[b].branch ? this.LANG_META[a].branch :
+                 this.LANG_META[a].family) + '</strong> family.',
+        };
+      },
+
+      // False-friend trap
+      false_friend(pool, diff) {
+        const usable = FALSE_FRIENDS.filter(f =>
+          pool.includes(f.langA) && pool.includes(f.langB) &&
+          this.LANG_META[f.langA] && this.LANG_META[f.langB]);
+        if (!usable.length) return null;
+        const f = this._pick(usable);
+        const choices = this._shuffle([f.meaningB, ...f.wrong]).map(m => ({
+          key: m, label: m,
+        }));
+        return {
+          type: 'false_friend',
+          typeLabel: 'False friend trap',
+          prompt: 'In <strong>' + this.LANG_META[f.langA].name + '</strong>, "<em>' + f.word +
+                  '</em>" means <strong>' + f.meaningA + '</strong>.<br>' +
+                  'In <strong>' + this.LANG_META[f.langB].name + '</strong>, the same word actually means&hellip;',
+          reviewPrompt: '"' + f.word + '" in ' + this.LANG_META[f.langB].name,
+          display: { text: '', subtitle: '' },
+          choices,
+          correctKey: f.meaningB,
+          correctLabel: f.meaningB,
+          fact: 'False friends like this routinely trip up learners. Same spelling, opposite worlds.',
+        };
+      },
+    },
+
+    // ── Gameplay ───────────────────────────────────────────
+    get currentQ() { return this.questions[this.qIndex] || null; },
+
+    answer(choice) {
+      if (this.feedback !== null || !this.currentQ) return;
+      const q = this.currentQ;
+      q.userPicked = choice.key;
+      const correct = choice.key === q.correctKey;
+      if (correct) {
+        this.score += 1;
+        this.streak += 1;
+        if (this.streak > this.maxStreak) this.maxStreak = this.streak;
+      } else {
+        this.streak = 0;
+      }
+      this.feedback = {
+        correct,
+        picked: choice.key,
+        correctLabel: q.correctLabel,
+        fact: q.fact || '',
+      };
+    },
+
+    next() {
+      if (this.feedback === null) return;
+      this.feedback = null;
+      if (this.qIndex + 1 >= this.questions.length) {
+        this.status = 'result';
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } else {
+        this.qIndex += 1;
+      }
+    },
+
+    restart(diffOverride) {
+      if (diffOverride) this.difficulty = diffOverride;
+      this.startGame();
+    },
+
+    speakPhrase() {
+      try {
+        if (!('speechSynthesis' in window)) return;
+        const q = this.currentQ;
+        if (!q || !q.display.speakCode || !q.display.text) return;
+        window.speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(q.display.text);
+        u.lang = q.display.speakCode;
+        u.rate = 0.95;
+        window.speechSynthesis.speak(u);
+      } catch (e) {}
+    },
+
+    // ── Result helpers ─────────────────────────────────────
+    scoreColor() {
+      const r = this.score / this.questions.length;
+      if (r >= 0.9) return 'text-emerald-500';
+      if (r >= 0.7) return 'text-emerald-600 dark:text-emerald-400';
+      if (r >= 0.5) return 'text-amber-500';
+      return 'text-rose-500';
+    },
+    scoreVerdict() {
+      const r = this.score / this.questions.length;
+      if (r === 1)    return this.difficulty === 'expert' ? 'Linguist alert.' : 'Perfect round.';
+      if (r >= 0.8)   return 'Polyglot energy.';
+      if (r >= 0.6)   return 'Solid.';
+      if (r >= 0.4)   return 'Not bad.';
+      if (r >= 0.2)   return 'Tough crowd.';
+      return 'There’s nowhere to go but up.';
+    },
+    scoreSubtitle() {
+      if (this.difficulty === 'expert') return 'Expert mode &mdash; same-family distractors throughout.';
+      if (this.difficulty === 'hard')   return 'Hard mode &mdash; every language in the dataset was in play.';
+      if (this.difficulty === 'medium') return 'Drawn from the world’s 60 most-spoken languages.';
+      return 'Drawn from the world’s 30 most-spoken languages.';
+    },
+    difficultyLabel() { return this.difficultyLabelFor(this.difficulty); },
+    difficultyLabelFor(d) { return ({ easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' })[d] || d; },
+    nextHarder() {
+      const order = ['easy', 'medium', 'hard', 'expert'];
+      const i = order.indexOf(this.difficulty);
+      return (i >= 0 && i < order.length - 1) ? order[i + 1] : null;
+    },
+    labelFor(q, key) {
+      const c = q.choices.find(c => c.key === key);
+      return c ? c.label : key;
+    },
+
+    // ── Share ──────────────────────────────────────────────
+    _shareText() {
+      return 'I scored ' + this.score + '/' + this.questions.length +
+             ' on the ' + this.difficultyLabel() + ' Language Quiz at mynextlanguage.org' +
+             (this.maxStreak >= 3 ? ' (max streak ' + this.maxStreak + ' 🔥)' : '') +
+             '. Can you beat me?';
+    },
+    _shareUrl() { return 'https://mynextlanguage.org/quiz/'; },
+    shareTwitter() {
+      window.open('https://twitter.com/intent/tweet?text=' + encodeURIComponent(this._shareText()) +
+                  '&url=' + encodeURIComponent(this._shareUrl()), '_blank', 'noopener');
+    },
+    shareWhatsApp() {
+      window.open('https://wa.me/?text=' + encodeURIComponent(this._shareText() + ' ' + this._shareUrl()),
+                  '_blank', 'noopener');
+    },
+    shareReddit() {
+      window.open('https://www.reddit.com/submit?url=' + encodeURIComponent(this._shareUrl()) +
+                  '&title=' + encodeURIComponent('I scored ' + this.score + '/' + this.questions.length +
+                  ' on the ' + this.difficultyLabel() + ' Language Quiz'), '_blank', 'noopener');
+    },
+    async copyLink() {
+      try {
+        await navigator.clipboard.writeText(this._shareUrl());
+        this.copied = true;
+        const self = this;
+        setTimeout(function () { self.copied = false; }, 1800);
+      } catch (e) {}
+    },
+  };
+}
+window.quizApp = quizApp;
+</script>
+
+</body>
+</html>

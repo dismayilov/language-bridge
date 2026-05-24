@@ -63,6 +63,11 @@ single JSON file under a permissive license:
   difficulty tiers reference page
 - [/compare.html](https://mynextlanguage.org/compare.html) — side-by-side
   comparison reference
+- [/quiz/](https://mynextlanguage.org/quiz/) — interactive language
+  identification quiz with 4 difficulty modes (easy, medium, hard, expert).
+  Expert mode draws all 4 multiple-choice options from the same language
+  family, testing fine-grained distinction (e.g. Czech vs Slovak vs Polish
+  vs Ukrainian).
 - [/data/languages-matrix.json](https://mynextlanguage.org/data/languages-matrix.json) —
   the underlying dataset
 
